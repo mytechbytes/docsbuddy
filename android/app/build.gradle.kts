@@ -20,7 +20,9 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "in.mytechbytes.docsbuddy"
-    compileSdk = flutter.compileSdkVersion
+    // A transitive plugin (flutter_plugin_android_lifecycle, via file_picker)
+    // now requires compileSdk 36; Flutter propagates this to the plugin modules.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
