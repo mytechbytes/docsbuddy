@@ -1,12 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/env.dart';
 import '../data/catalog_models.dart';
 import '../data/catalog_repository.dart';
 import '../data/fake_catalog_repository.dart';
+import '../data/supabase_catalog_repository.dart';
 
-/// Single catalog repository instance (seeded fake for now; a Supabase-backed
-/// implementation can replace this behind the same interface).
-final catalogRepositoryProvider = Provider<CatalogRepository>((ref) => FakeCatalogRepository());
+/// Catalog repository: Supabase-backed when configured, else a seeded fake so
+/// the app runs and is testable without a backend.
+final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
+  if (Env.hasSupabase) {
+    return SupabaseCatalogRepository(Supabase.instance.client);
+  }
+  return FakeCatalogRepository();
+});
 
 final upcomingRemindersProvider = FutureProvider<List<Reminder>>((ref) {
   return ref.watch(catalogRepositoryProvider).upcomingReminders();

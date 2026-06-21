@@ -13,6 +13,7 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Auth — sign in/up, OTP reset, secure session'),
       (true, 'Families & invites'),
       (true, 'Assets, locations & reminders (core)'),
+      (true, 'Supabase-backed catalog (persists when configured)'),
       (true, 'App Links / deep-link auth redirect'),
       (true, 'Play release setup — signed AAB, versionCode 30'),
     ]),
@@ -25,7 +26,6 @@ class RoadmapPage extends StatelessWidget {
     ('Pending — next features', [
       (false, 'Documents — pick, upload, view (Supabase Storage)'),
       (false, 'Push notifications — FCM + on-device scheduler'),
-      (false, 'Supabase-backed catalog (assets/reminders sync)'),
       (false, 'App icon & splash branding'),
     ]),
   ];

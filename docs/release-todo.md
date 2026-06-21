@@ -59,8 +59,10 @@ Status of what's needed to ship a Play **internal testing** build.
 
 ## G. Known gaps / next features
 - [x] Core features: assets, locations & reminders (dashboard, asset CRUD, add
-      reminder) — **fake/in-memory for now**
-- [ ] Back the catalog with Supabase (assets/reminders persist + sync)
+      reminder)
+- [x] Supabase-backed catalog — persists when `SUPABASE_*` is configured (maps
+      to the 0001 tables; falls back to the seeded fake otherwise). **Needs live
+      testing against a real project.**
 - [ ] Documents — pick / upload / view (Supabase Storage)
 - [ ] Push notifications — **FCM not implemented yet** (no `firebase_messaging`,
       no `google-services.json`); the reminder pipeline depends on it
