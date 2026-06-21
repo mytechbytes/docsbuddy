@@ -19,7 +19,11 @@ class SupabaseFamilyRepository implements FamilyRepository {
       throw FamilyFailure(e.message);
     } on AuthException catch (e) {
       throw FamilyFailure(e.message);
-    } catch (_) {
+    } catch (e) {
+      final s = e.toString();
+      if (s.contains('SocketException') || s.contains('Failed host lookup') || s.contains('ClientException') || s.contains('Connection')) {
+        throw const FamilyFailure('Can’t reach the server. Check your internet connection.');
+      }
       throw const FamilyFailure('Something went wrong. Please try again.');
     }
   }
