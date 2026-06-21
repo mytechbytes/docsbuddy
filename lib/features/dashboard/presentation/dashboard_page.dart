@@ -78,6 +78,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 child: Text('Backend: $backend', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.ink2)),
               ),
               const SizedBox(height: 28),
+              GhostButton(label: 'Manage family', onPressed: () => context.push('/family')),
+              const SizedBox(height: 10),
               PrimaryButton(label: 'Sign out', isLoading: loading, onPressed: _signOut),
               const SizedBox(height: 12),
               TextButton(

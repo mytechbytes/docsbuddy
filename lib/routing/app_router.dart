@@ -11,6 +11,7 @@ import '../features/auth/presentation/reset_password_page.dart';
 import '../features/auth/presentation/sign_in_page.dart';
 import '../features/auth/presentation/sign_up_page.dart';
 import '../features/dashboard/presentation/dashboard_page.dart';
+import '../features/family/presentation/family_page.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
 
@@ -62,6 +63,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ── App ──
       GoRoute(path: '/dashboard', builder: (_, _) => const DashboardPage()),
+      GoRoute(path: '/family', builder: (_, _) => const FamilyPage()),
     ],
   );
 });
