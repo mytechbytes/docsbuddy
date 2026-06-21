@@ -12,6 +12,12 @@ abstract final class AppColors {
   static const line = Color(0xFFE7EBF2); // borders / dividers
   static const indicatorIdle = Color(0xFFD6DCE6);
 
+  // Form inputs (auth)
+  static const fieldBorder = Color(0xFFE6EBF3); // input idle border
+  static const hairline = Color(0xFFE1E6EF); // dividers / social button border
+  static const placeholder = Color(0xFFA3ACBA); // input placeholder text
+  static const eyeIcon = Color(0xFF94A0B3); // password visibility toggle
+
   // Brand
   static const navy = Color(0xFF1F3A5F);
   static const teal = Color(0xFF2A7F9E);

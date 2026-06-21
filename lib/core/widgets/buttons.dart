@@ -4,10 +4,18 @@ import '../theme/app_colors.dart';
 
 /// Filled dark CTA — matches `PrimaryBtn` in the design handoff.
 class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({super.key, required this.label, required this.onPressed});
+  const PrimaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.isLoading = false,
+  });
 
   final String label;
   final VoidCallback onPressed;
+
+  /// When true the button shows a spinner and ignores taps.
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -15,10 +23,12 @@ class PrimaryButton extends StatelessWidget {
       height: 54,
       width: double.infinity,
       child: FilledButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.ink,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: AppColors.ink,
+          disabledForegroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -28,7 +38,13 @@ class PrimaryButton extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        child: Text(label),
+        child: isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
+              )
+            : Text(label),
       ),
     );
   }

@@ -1,0 +1,129 @@
+# Configuring Supabase for DocsBuddy
+
+By default the app runs with **no backend** — an in-memory fake auth/family
+repository — so every screen works offline. This guide turns on real Supabase.
+
+- [Part A — Supabase dashboard](#part-a--supabase-dashboard-configuration)
+- [Part B — Database schema](#part-b--apply-the-database-schema)
+- [Part C — Run the app with credentials](#part-c--run-the-app-with-credentials)
+- [Part D — Where this maps in the codebase](#part-d--where-this-maps-in-the-codebase)
+- [Part E — Deep links (only for OAuth / magic links)](#part-e--deep-links-only-for-oauth--magic-links)
+
+---
+
+## Part A — Supabase dashboard configuration
+
+1. **Create a project** at <https://supabase.com/dashboard>.
+2. **Project Settings → API** — copy two values:
+   | Dashboard value | Used as |
+   |---|---|
+   | Project URL | `SUPABASE_URL` |
+   | `anon` / publishable key | `SUPABASE_ANON_KEY` |
+3. **Authentication → Providers / Sign In:**
+   - **Email** — enable. For dev you may turn **Confirm email** off so sign-up
+     logs in immediately; keep it on for production.
+   - **Email OTP** — enable, length **6**. The forgot-password flow uses a
+     6-digit code (`signInWithOtp` → `verifyOTP` → `updateUser`).
+   - **Google / Apple** (optional, for the social buttons) — create OAuth
+     credentials in Google Cloud / Apple Developer, paste client ID/secret here,
+     and add the redirect URLs from Part E.
+4. **Authentication → URL Configuration** — add the deep-link redirect URL from
+   Part E (only needed for OAuth / magic links).
+
+## Part B — Apply the database schema
+
+Run both migrations once, in order, against your project (SQL Editor or CLI):
+
+```bash
+# Option 1 — Supabase SQL Editor: paste each file's contents and Run.
+# Option 2 — psql:
+psql "$DATABASE_URL" -f supabase/migrations/0001_init.sql
+psql "$DATABASE_URL" -f supabase/migrations/0002_family_rpcs.sql
+```
+
+- `0001_init.sql` — tables, RLS, `updated_at` triggers, `handle_new_user`,
+  `is_family_member`, `accept_invite`, `complete_asset_date`.
+- `0002_family_rpcs.sql` — `create_family` + `create_invite` (SECURITY DEFINER;
+  required because the first-owner insert can't satisfy the membership RLS).
+
+## Part C — Run the app with credentials
+
+Pass the two values via `--dart-define` — **never commit keys**:
+
+```bash
+flutter run \
+  --dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=YOUR_ANON_OR_PUBLISHABLE_KEY
+```
+
+Same flags for release builds (source from CI secrets):
+
+```bash
+flutter build apk --release \
+  --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+```
+
+Tip: put them in a JSON file and use `--dart-define-from-file=env.json` (add the
+file to `.gitignore`).
+
+**Verify:** the Dashboard screen shows a **"Backend: Supabase"** chip when init
+succeeded (vs **"Local (fake auth)"** when the defines are absent).
+
+## Part D — Where this maps in the codebase
+
+You normally **don't edit Dart files** to switch backends — passing the two
+`--dart-define`s is enough. Here's what each piece touches:
+
+| Concern | File | What happens / when to edit |
+|---|---|---|
+| Reads the two env vars | `lib/core/config/env.dart` | `Env.supabaseUrl/anonKey`; `Env.hasSupabase` flips the app to Supabase. No edit needed. |
+| Initializes the SDK | `lib/main.dart` | Calls `Supabase.initialize(...)` only when `Env.hasSupabase`. |
+| Secure session storage | `lib/core/storage/secure_supabase_storage.dart` | Keychain/Keystore adapters passed to `authOptions`. No edit needed. |
+| Auth: fake ↔ Supabase | `lib/features/auth/application/auth_providers.dart` | `authRepositoryProvider` picks `SupabaseAuthRepository` when configured. |
+| Auth backend calls | `lib/features/auth/data/supabase_auth_repository.dart` | Edit only to change a flow (e.g. recovery-by-link vs OTP). |
+| Family: fake ↔ Supabase | `lib/features/family/application/family_controller.dart` | `familyRepositoryProvider` picks the Supabase impl when configured. |
+| Family backend calls | `lib/features/family/data/supabase_family_repository.dart` | Calls `create_family` / `create_invite` / `accept_invite` RPCs. |
+| DB schema | `supabase/migrations/0001_init.sql`, `0002_family_rpcs.sql` | Run in the dashboard (Part B). |
+| Deep links | `android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`, `macos/Runner/Info.plist` | Only for OAuth / magic links (Part E). |
+
+**To change the recovery flow** to a reset link instead of a 6-digit code:
+in `supabase_auth_repository.dart`, swap `sendPasswordResetCode` from
+`signInWithOtp(email:)` to `resetPasswordForEmail(email)` and adjust the
+verify/reset screens accordingly.
+
+## Part E — Deep links (only for OAuth / magic links)
+
+Email/password sign-in needs **none** of this. OAuth and magic-link flows return
+to the app via a custom-scheme deep link. Pick one, e.g.
+`in.mytechbytes.docsbuddy://login-callback`, then:
+
+1. **Supabase → Authentication → URL Configuration → Redirect URLs**: add it.
+2. **Android** — in `android/app/src/main/AndroidManifest.xml`, add an
+   `<intent-filter>` on `.MainActivity`:
+   ```xml
+   <intent-filter android:autoVerify="false">
+     <action android:name="android.intent.action.VIEW"/>
+     <category android:name="android.intent.category.DEFAULT"/>
+     <category android:name="android.intent.category.BROWSABLE"/>
+     <data android:scheme="in.mytechbytes.docsbuddy" android:host="login-callback"/>
+   </intent-filter>
+   ```
+3. **iOS / macOS** — in `Info.plist`, add a URL type:
+   ```xml
+   <key>CFBundleURLTypes</key>
+   <array><dict>
+     <key>CFBundleURLSchemes</key>
+     <array><string>in.mytechbytes.docsbuddy</string></array>
+   </dict></array>
+   ```
+4. Pass the same `redirectTo` to `signInWithOAuth` in
+   `supabase_auth_repository.dart` (e.g. `signInWithOAuth(OAuthProvider.google,
+   redirectTo: 'in.mytechbytes.docsbuddy://login-callback')`).
+
+## Still stubbed / follow-ups
+
+- **Google/Apple** call `signInWithOAuth` — they only complete once providers +
+  redirects (Parts A & E) are configured.
+- The recovery flow assumes **email OTP** (Part A).
+- No live project was used to smoke-test the real GoTrue/PostgREST round-trips;
+  the fake path is fully tested.

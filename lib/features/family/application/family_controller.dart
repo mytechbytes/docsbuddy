@@ -1,0 +1,64 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Family;
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/config/env.dart';
+import '../data/family_models.dart';
+import '../data/family_repository.dart';
+import '../data/fake_family_repository.dart';
+import '../data/supabase_family_repository.dart';
+
+/// Binds the active [FamilyRepository] — Supabase when configured, else fake.
+final familyRepositoryProvider = Provider<FamilyRepository>((ref) {
+  if (Env.hasSupabase) {
+    return SupabaseFamilyRepository(Supabase.instance.client);
+  }
+  return FakeFamilyRepository();
+});
+
+/// Current family + its members.
+typedef FamilyView = ({Family? family, List<FamilyMember> members});
+
+/// Loads and mutates the caller's family. Display state lives in `state`;
+/// action methods throw [FamilyFailure] so pages can show specific messages.
+class FamilyController extends AsyncNotifier<FamilyView> {
+  FamilyRepository get _repo => ref.read(familyRepositoryProvider);
+
+  @override
+  Future<FamilyView> build() => _load();
+
+  Future<FamilyView> _load() async {
+    final family = await _repo.currentFamily();
+    final members = family == null ? <FamilyMember>[] : await _repo.members(family.id);
+    return (family: family, members: members);
+  }
+
+  Future<void> refresh() async {
+    state = await AsyncValue.guard(_load);
+  }
+
+  Future<void> createFamily(String name) async {
+    await _repo.createFamily(name);
+    await refresh();
+  }
+
+  Future<FamilyInvite> invite(FamilyRole role) async {
+    final family = state.valueOrNull?.family;
+    if (family == null) throw const FamilyFailure('No active family.');
+    return _repo.createInvite(familyId: family.id, role: role);
+  }
+
+  Future<void> acceptInvite(String code) async {
+    await _repo.acceptInvite(code);
+    await refresh();
+  }
+
+  Future<void> leave() async {
+    final family = state.valueOrNull?.family;
+    if (family == null) return;
+    await _repo.leaveFamily(family.id);
+    await refresh();
+  }
+}
+
+final familyControllerProvider =
+    AsyncNotifierProvider<FamilyController, FamilyView>(FamilyController.new);

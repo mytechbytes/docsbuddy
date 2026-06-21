@@ -23,6 +23,12 @@ class OnboardingController extends Notifier<bool> {
     await ref.read(sharedPreferencesProvider).setBool(_key, true);
     state = true;
   }
+
+  /// Clears the flag so the walkthrough shows again (used for testing/replay).
+  Future<void> reset() async {
+    await ref.read(sharedPreferencesProvider).remove(_key);
+    state = false;
+  }
 }
 
 final onboardingControllerProvider =
