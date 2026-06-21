@@ -11,8 +11,8 @@ name: Build APK
 on:
   push:
     branches:
-      - claude/dosbuddy-flutter-review-1rpat2
       - main
+      - production
   workflow_dispatch:
 
 jobs:
