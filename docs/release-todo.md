@@ -66,7 +66,8 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] Documents — attach / upload / view via Supabase Storage (bucket +
       RLS in 0004_storage.sql). **Needs live testing.**
 - [x] On-device reminder notifications (local scheduler, 30/7/1-day @ 09:00)
-- [ ] FCM silent push (cross-device freshness) — needs a Firebase project +
-      `google-services.json`; steps in docs/push-setup.md
+- [x] FCM wired (Android): google-services.json + firebase_messaging +
+      device-token registration to user_devices
+- [ ] FCM sender — Supabase Edge Function to push on row change (+ iOS plist/APNs)
 - [ ] App icon / splash branding still the Flutter default
 - [ ] iOS signing + provisioning (Team ID, certs) if you ship iOS
