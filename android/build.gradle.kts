@@ -19,36 +19,30 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// Some plugins (e.g. flutter_timezone) compile their Kotlin at JVM 1.8 / their
-// Java at 11, which AGP rejects with "Inconsistent JVM-target compatibility".
-// Pin both to 17 for every plugin module so they match the app module.
+// Third-party Flutter plugin modules need two things aligned with the app:
+//  - JVM target: some compile Kotlin at 1.8 / Java at 11, which AGP rejects as
+//    "Inconsistent JVM-target compatibility". Pin both to 17.
+//  - compileSdk: Flutter doesn't propagate the app's compileSdk to plugins, so
+//    they sit at flutter.compileSdkVersion (34); a transitive dependency
+//    (flutter_plugin_android_lifecycle) now requires consumers to compile
+//    against 36. Bump to 36.
 //
-// For an Android module the Java target comes from android.compileOptions
-// (setting it on the JavaCompile task is silently overridden by AGP), but that
-// value gets finalized during evaluation — so configure it from a
-// `plugins.withId` hook that fires the moment the Android-library plugin is
-// applied, before finalization. Keying on "com.android.library" naturally
-// targets only the third-party plugin modules; the app applies
-// "com.android.application" and already pins 17/17 itself. Kotlin's jvmTarget
-// isn't AGP-managed, so a lazy configureEach override is enough.
+// Both are set via the AGP variant API's finalizeDsl hook — it runs after the
+// plugin's own build script has configured its `android {}` block, but before
+// AGP locks/reads the DSL. Earlier attempts (plugins.withId immediate set, or
+// afterEvaluate) lost to the plugin's own script body, or hit "too late to set
+// compileSdk … already been read". Keyed on com.android.library so the app
+// (com.android.application, already pinned to 36 / 17 itself) is untouched.
+// Kotlin's jvmTarget isn't AGP-managed, so a lazy configureEach override is
+// enough for that half.
 subprojects {
     plugins.withId("com.android.library") {
-        extensions.findByName("android")?.withGroovyBuilder {
-            "compileOptions" {
-                setProperty("sourceCompatibility", JavaVersion.VERSION_17)
-                setProperty("targetCompatibility", JavaVersion.VERSION_17)
+        extensions.findByType(com.android.build.api.variant.LibraryAndroidComponentsExtension::class.java)
+            ?.finalizeDsl { ext ->
+                ext.compileSdk = 36
+                ext.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+                ext.compileOptions.targetCompatibility = JavaVersion.VERSION_17
             }
-        }
-        // Flutter does not propagate the app's compileSdk to plugin modules, and
-        // a plugin's own build script sets its compileSdk (34) in its body — which
-        // runs after this hook. A transitive plugin now requires consumers to
-        // compile against 36, so override it in afterEvaluate (runs after the
-        // plugin's script body, before AGP finalizes the DSL) to win.
-        afterEvaluate {
-            extensions.findByName("android")?.withGroovyBuilder {
-                setProperty("compileSdk", 36)
-            }
-        }
     }
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         compilerOptions {
