@@ -21,37 +21,31 @@ user-facing step: **tap Settings → Enable reminders** once to grant permission
 
 Per the local-first design, FCM is only **silent data pushes** that wake the app
 to sync when *another family member* changes something. It's optional; reminders
-fire locally without it. It needs a Firebase project, so it's not wired yet
-(adding the google-services plugin without the config file breaks the build).
+fire locally without it.
 
-### Step by step
+### ✅ Now wired (Android)
 
-1. **Create a Firebase project** → <https://console.firebase.google.com>.
-2. **Add an Android app**, package name **`in.mytechbytes.docsbuddy`**. Download
-   **`google-services.json`** → put it in **`android/app/`**.
-3. *(iOS, later)* Add an iOS app, download **`GoogleService-Info.plist`**, add it
-   to `ios/Runner/` via Xcode.
-4. **Gradle** — apply the Google services plugin:
-   - `android/settings.gradle.kts` plugins block:
-     `id("com.google.gms.google-services") version "4.4.2" apply false`
-   - `android/app/build.gradle.kts` plugins block:
-     `id("com.google.gms.google-services")`
-5. **pubspec** — add `firebase_core` and `firebase_messaging`, then `flutter pub get`.
-   Run `flutterfire configure` (FlutterFire CLI) to generate `firebase_options.dart`.
-6. **Init + token** in `main()`:
-   ```dart
-   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-   await FirebaseMessaging.instance.requestPermission();
-   final token = await FirebaseMessaging.instance.getToken();
-   // upsert into Supabase user_devices(user_id, fcm_token, platform)
-   ```
-7. **Handle messages** — on a `data` message, refresh the catalog / reschedule:
-   ```dart
-   FirebaseMessaging.onMessage.listen((m) => /* invalidate catalog providers */);
-   FirebaseMessaging.onBackgroundMessage(_bgHandler); // top-level fn
-   ```
-8. **Send a silent push** from a Supabase Edge Function when a row changes
-   (Realtime/trigger → FCM `data` message to the family's device tokens).
+- `android/app/google-services.json` + the `com.google.gms.google-services`
+  Gradle plugin (app + settings).
+- `firebase_core` + `firebase_messaging` in `pubspec.yaml`.
+- `lib/core/notifications/fcm_service.dart` — initialises Firebase, requests
+  permission, **registers the device token into Supabase `user_devices`**, and on
+  a foreground message refreshes the catalog. A top-level background handler is
+  registered. Started from `HomeShell` after sign-in (all guarded, so platforms
+  without config are a no-op).
 
-Until you do the above, leave `firebase_*` out of `pubspec.yaml` so the build
-stays green.
+Nothing else to do for Android to *receive* pushes.
+
+### Still on you
+
+1. **iOS** (when you ship it): add an iOS app in Firebase → download
+   **`GoogleService-Info.plist`** into `ios/Runner/` (via Xcode), enable the
+   **Push Notifications** + **Background Modes → Remote notifications**
+   capabilities, and upload an **APNs key** in Firebase → Cloud Messaging.
+2. **Sending the pushes** — nothing sends them yet. Add a **Supabase Edge
+   Function** (or a Postgres trigger + `pg_net`) that, when a reminder/asset row
+   changes, looks up the family's `user_devices.fcm_token`s and calls the **FCM
+   HTTP v1 API** with a `data`-only message. That's the server half of the
+   local-first sync wake.
+3. **Test:** Firebase Console → Cloud Messaging → send a test message to the
+   device token (printed/registered on first run).

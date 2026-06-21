@@ -1,0 +1,41 @@
+{
+  "project_info": {
+    "project_number": "1011229930015",
+    "project_id": "docs-buddy-ee458",
+    "storage_bucket": "docs-buddy-ee458.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011229930015:android:0dec5ef2ccc8e5267edb2a",
+        "android_client_info": {
+          "package_name": "in.mytechbytes.docsbuddy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMftd_086WNmqBSfYOqpjQ0rATPqBG0XE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1011229930015-14qa9rc93od02dih9jvfunl2b4drq4e3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1011229930015-lbu600gt5n3jksp69otk90hrtlasmjqk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "in.mytechbytes.docsbuddy"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
