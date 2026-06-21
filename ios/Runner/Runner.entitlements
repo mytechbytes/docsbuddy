@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  iOS Universal Links for Supabase auth redirects.
+	  NOT yet wired into the Xcode project on purpose: enable it via Xcode
+	  (Runner target → Signing & Capabilities → + Associated Domains) once iOS
+	  signing + an App ID with the Associated Domains capability exist, otherwise
+	  signed iOS builds fail. That action sets CODE_SIGN_ENTITLEMENTS to this file.
+	  Requires /.well-known/apple-app-site-association on docsbuddy.mytechbytes.in.
+	-->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:docsbuddy.mytechbytes.in</string>
+	</array>
+</dict>
+</plist>

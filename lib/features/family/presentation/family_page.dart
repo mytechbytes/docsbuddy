@@ -83,7 +83,7 @@ class FamilyPage extends ConsumerWidget {
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.characters,
-          decoration: const InputDecoration(hintText: '6-character code'),
+          decoration: const InputDecoration(hintText: 'Invite code (e.g. AB12CD34)'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -300,9 +300,12 @@ class _InviteSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.fieldBorder),
               ),
-              child: Text(
-                invite.code,
-                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 8, color: AppColors.ink),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  invite.code,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 6, color: AppColors.ink),
+                ),
               ),
             ),
             const SizedBox(height: 18),

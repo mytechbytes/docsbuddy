@@ -1,23 +1,35 @@
-name: Release AAB (manual)
+name: Release AAB + Play deploy (manual)
 
-# Builds a signed Android App Bundle for Play Store upload. Manual-only.
+# Builds a signed Android App Bundle and (optionally) uploads it straight to a
+# Google Play track. Manual-only.
 #
-# Required repo secrets (Settings → Secrets and variables → Actions):
+# Required repo secrets for the signed build:
 #   ANDROID_KEYSTORE_BASE64   base64 of your upload keystore (.jks)
 #   ANDROID_KEYSTORE_PASSWORD store password
 #   ANDROID_KEY_ALIAS         key alias (e.g. upload)
 #   ANDROID_KEY_PASSWORD      key password
-#   SUPABASE_URL / SUPABASE_ANON_KEY  (optional) bake real backend into the build
+#   SUPABASE_URL / SUPABASE_ANON_KEY  (optional) bake the backend into the build
 #
-# See docs/play-store-release.md for how to generate the keystore + set secrets.
+# Extra secret to enable direct Play upload (otherwise the AAB is just an artifact):
+#   PLAY_SERVICE_ACCOUNT_JSON  full JSON of a Google Cloud service account that
+#                              has Play Console access (see docs/play-store-release.md)
 
 on:
   workflow_dispatch:
+    inputs:
+      track:
+        description: "Play track to deploy to (needs PLAY_SERVICE_ACCOUNT_JSON)"
+        type: choice
+        options: [internal, alpha, beta, production]
+        default: internal
 
 jobs:
   aab:
     name: Signed AAB
     runs-on: ubuntu-latest
+    env:
+      # secrets can't be used in step `if:`, so resolve to a plain flag here.
+      HAS_PLAY_SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,6 +90,20 @@ jobs:
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 14
+
+      - name: Deploy to Google Play (${{ inputs.track }})
+        if: env.HAS_PLAY_SA == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: in.mytechbytes.docsbuddy
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ inputs.track }}
+          status: completed
+
+      - name: Note when Play deploy is skipped
+        if: env.HAS_PLAY_SA != 'true'
+        run: echo "::notice::PLAY_SERVICE_ACCOUNT_JSON not set — built the AAB artifact but did not upload to Play. Download the artifact and upload manually, or add the secret to auto-deploy."
 
       - name: Clean up signing material
         if: always()

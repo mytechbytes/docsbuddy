@@ -91,9 +91,64 @@ Privacy policy URL, data-safety form, content rating, target audience, and a few
 store-listing assets (icon, screenshots). These are one-time and live in the
 Console, not the repo.
 
-## Optional — fully automated upload (fastlane)
+## Push directly from GitHub to Play (auto-deploy)
 
-To push to the internal track from CI, add a Google Cloud **service account** with
-Play access, then use `fastlane supply` / the `r0adkll/upload-google-play` action
-with the service-account JSON as a secret. Ask and I'll wire up the lane — it
-needs that service account from your side.
+The `Release AAB + Play deploy (manual)` workflow already includes the upload
+step — it runs **only when** the `PLAY_SERVICE_ACCOUNT_JSON` secret is set
+(otherwise it just produces the AAB artifact). Set it up once:
+
+1. **Create a service account** (Google Cloud):
+   - In the project linked to your Play account: **IAM & Admin → Service
+     Accounts → Create**. Name it e.g. `play-publisher`. No GCP roles needed.
+   - On the account → **Keys → Add key → JSON** → download the JSON.
+2. **Enable the API:** in Google Cloud, enable **Google Play Android Developer
+   API** for that project.
+3. **Grant Play access:** Play Console → **Users & permissions → Invite new
+   user** → paste the service-account email → grant app access with at least
+   **Release to testing tracks** (and **Release to production** if you want that
+   track). Save.
+4. **Add the GitHub secret:** repo → Settings → Secrets and variables → Actions →
+   `PLAY_SERVICE_ACCOUNT_JSON` = the **entire JSON file contents**.
+5. **Run it:** Actions → *Release AAB + Play deploy (manual)* → **Run workflow**,
+   pick the **track** (default `internal`). It builds the signed AAB and uploads
+   it to that track.
+
+> **First upload must be manual.** Google requires the very first AAB for a new
+> app to be uploaded through the Console (step 3 of the manual flow above). After
+> that one manual upload, the API/workflow can publish every subsequent build.
+
+## Lost your upload key?
+
+What you can recover depends on **Play App Signing** (step 4):
+
+- **If Play App Signing is enabled** (recommended, and the default for new apps):
+  the key you lost is only the **upload key** — it's resettable.
+  1. Generate a **new** keystore (step 1 above).
+  2. Export its certificate:
+     ```bash
+     keytool -export -rfc -keystore ~/docsbuddy-upload.jks \
+       -alias upload -file upload_certificate.pem
+     ```
+  3. Play Console → your app → **Test and release → App integrity → App signing
+     → Request upload key reset**, upload `upload_certificate.pem`. Google
+     approves it (often within a day or two).
+  4. Update the GitHub secrets to the new keystore (below). The **app signing
+     key Google holds is unchanged**, so existing installs keep updating.
+
+- **If Play App Signing is NOT enabled** and you lost the **app signing** key:
+  that key is unrecoverable and you **cannot update** that listing — you'd have
+  to publish a **new app with a new `applicationId`**. (Strongly consider
+  enabling Play App Signing on the new app to avoid this.)
+
+### Point GitHub at the new key
+
+After creating the new keystore, just refresh the four signing secrets — no code
+change needed:
+
+```bash
+base64 -w0 ~/docsbuddy-upload.jks   # → ANDROID_KEYSTORE_BASE64  (macOS: base64 -i ...)
+```
+
+Update in **Settings → Secrets and variables → Actions**:
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+`ANDROID_KEY_PASSWORD`. The next workflow run signs with the new key.

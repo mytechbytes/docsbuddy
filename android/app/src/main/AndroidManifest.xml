@@ -2,6 +2,9 @@
     <!-- Required for Supabase / any network access in release & profile builds.
          Flutter only injects this into the debug manifest automatically. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Local reminder notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="DocsBuddy"
         android:name="${applicationName}"
@@ -27,7 +30,39 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Supabase auth — App Link (verified): opens the app directly for
+                 https://docsbuddy.mytechbytes.in/login-callback. Requires
+                 /.well-known/assetlinks.json on the domain (Play App Signing SHA-256). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"
+                      android:host="docsbuddy.mytechbytes.in"
+                      android:pathPrefix="/login-callback"/>
+            </intent-filter>
+            <!-- Custom-scheme fallback (works without domain verification). -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="in.mytechbytes.docsbuddy" android:host="login-callback"/>
+            </intent-filter>
         </activity>
+        <!-- flutter_local_notifications: re-arm scheduled reminders after reboot. -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false"/>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
