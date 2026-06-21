@@ -1,0 +1,62 @@
+name: Build APK
+
+# Builds an installable Android APK on GitHub's runners (which already have the
+# Android SDK), so no local network-egress changes are needed. The APK is
+# uploaded as a downloadable artifact on each run.
+#
+# The app's release build is signed with the debug keystore (see
+# android/app/build.gradle.kts), so the produced APK installs directly on a
+# device for testing — it is NOT a Play Store upload artifact.
+
+on:
+  push:
+    branches:
+      - claude/dosbuddy-flutter-review-1rpat2
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.2
+          channel: stable
+          cache: true
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build release APK (debug-signed, installable)
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docsbuddy-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
