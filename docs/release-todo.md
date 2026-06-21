@@ -68,6 +68,8 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] On-device reminder notifications (local scheduler, 30/7/1-day @ 09:00)
 - [x] FCM wired (Android): google-services.json + firebase_messaging +
       device-token registration to user_devices
-- [ ] FCM sender — Supabase Edge Function to push on row change (+ iOS plist/APNs)
+- [x] FCM sender scaffolded — supabase/functions/notify-family (deploy + set
+      FIREBASE_SERVICE_ACCOUNT + add a Database Webhook)
+- [ ] iOS push: GoogleService-Info.plist + APNs key (when shipping iOS)
 - [ ] App icon / splash branding still the Flutter default
 - [ ] iOS signing + provisioning (Team ID, certs) if you ship iOS

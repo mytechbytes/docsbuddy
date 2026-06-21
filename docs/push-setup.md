@@ -42,10 +42,9 @@ Nothing else to do for Android to *receive* pushes.
    **`GoogleService-Info.plist`** into `ios/Runner/` (via Xcode), enable the
    **Push Notifications** + **Background Modes → Remote notifications**
    capabilities, and upload an **APNs key** in Firebase → Cloud Messaging.
-2. **Sending the pushes** — nothing sends them yet. Add a **Supabase Edge
-   Function** (or a Postgres trigger + `pg_net`) that, when a reminder/asset row
-   changes, looks up the family's `user_devices.fcm_token`s and calls the **FCM
-   HTTP v1 API** with a `data`-only message. That's the server half of the
-   local-first sync wake.
+2. **Sending the pushes** — scaffolded at **`supabase/functions/notify-family`**.
+   Set the `FIREBASE_SERVICE_ACCOUNT` secret, `supabase functions deploy
+   notify-family`, then add a **Database Webhook** on `asset_dates`/`assets`/
+   `documents` → the function. Full steps in that folder's README.
 3. **Test:** Firebase Console → Cloud Messaging → send a test message to the
    device token (printed/registered on first run).
