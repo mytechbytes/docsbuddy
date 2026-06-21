@@ -27,8 +27,19 @@ repository — so every screen works offline. This guide turns on real Supabase.
    - **Google / Apple** (optional, for the social buttons) — create OAuth
      credentials in Google Cloud / Apple Developer, paste client ID/secret here,
      and add the redirect URLs from Part E.
-4. **Authentication → URL Configuration** — add the deep-link redirect URL from
-   Part E (only needed for OAuth / magic links).
+4. **Authentication → URL Configuration** — **required so confirm-email / magic
+   links return to the app instead of `localhost`:**
+   - **Redirect URLs** → add `in.mytechbytes.docsbuddy://login-callback`
+     (this is `Env.authRedirectUrl`; the app already passes it as
+     `emailRedirectTo` / OAuth `redirectTo`, and registers it as a deep link on
+     Android + iOS).
+   - **Site URL** defaults to `http://localhost:3000` — that's what opens in the
+     browser after a user taps the confirm-email link if you don't override it.
+     For a mobile-only app, set it to the deep link above (or a real web landing
+     page you control).
+   - **Dev shortcut:** while testing, you can turn **Confirm email = off**
+     (Authentication → Providers → Email) so sign-up logs in immediately and
+     skips the email round-trip entirely. Turn it back on for production.
 
 ## Part B — Apply the database schema
 

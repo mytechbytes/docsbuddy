@@ -28,5 +28,19 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- Supabase auth deep link (Env.authRedirectUrl). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>in.mytechbytes.docsbuddy</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>in.mytechbytes.docsbuddy</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
