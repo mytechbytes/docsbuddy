@@ -14,6 +14,7 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Families & invites'),
       (true, 'Assets, locations & reminders (core)'),
       (true, 'Supabase-backed catalog (persists when configured)'),
+      (true, 'Documents — attach / upload / view (Supabase Storage)'),
       (true, 'App Links / deep-link auth redirect'),
       (true, 'Play release setup — signed AAB, versionCode 30'),
     ]),
@@ -24,7 +25,6 @@ class RoadmapPage extends StatelessWidget {
       (false, 'Play Console: internal track, privacy policy, data safety'),
     ]),
     ('Pending — next features', [
-      (false, 'Documents — pick, upload, view (Supabase Storage)'),
       (false, 'Push notifications — FCM + on-device scheduler'),
       (false, 'App icon & splash branding'),
     ]),

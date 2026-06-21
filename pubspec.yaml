@@ -47,6 +47,9 @@ dependencies:
   supabase_flutter: ^2.8.0
   # Date formatting
   intl: ^0.20.2
+  # Document pick + open
+  file_picker: ^8.1.4
+  url_launcher: ^6.3.1
   # Keychain/Keystore-backed token vault (architecture review #9)
   flutter_secure_storage: ^9.2.2
 

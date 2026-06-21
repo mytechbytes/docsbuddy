@@ -63,7 +63,8 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] Supabase-backed catalog — persists when `SUPABASE_*` is configured (maps
       to the 0001 tables; falls back to the seeded fake otherwise). **Needs live
       testing against a real project.**
-- [ ] Documents — pick / upload / view (Supabase Storage)
+- [x] Documents — attach / upload / view via Supabase Storage (bucket +
+      RLS in 0004_storage.sql). **Needs live testing.**
 - [ ] Push notifications — **FCM not implemented yet** (no `firebase_messaging`,
       no `google-services.json`); the reminder pipeline depends on it
 - [ ] App icon / splash branding still the Flutter default

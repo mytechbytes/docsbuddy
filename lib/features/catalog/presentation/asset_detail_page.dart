@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/catalog_widgets.dart';
+import '../../documents/presentation/asset_documents_section.dart';
 import '../application/catalog_providers.dart';
 import '../data/catalog_models.dart';
 
@@ -51,6 +52,8 @@ class AssetDetailPage extends ConsumerWidget {
                   ? const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No reminders for this asset yet.', style: TextStyle(color: AppColors.muted))))
                   : Column(children: [for (final r in list) _ReminderRow(reminder: r)]),
             ),
+            const SizedBox(height: 22),
+            AssetDocumentsSection(assetId: a.id),
           ],
         ),
       ),
