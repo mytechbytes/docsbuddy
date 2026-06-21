@@ -10,10 +10,12 @@ abstract final class Env {
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  /// Deep link the auth emails / OAuth redirect back into the app. Must be
-  /// registered as a platform deep link (Android intent-filter, iOS URL type)
-  /// AND added to Supabase → Authentication → URL Configuration → Redirect URLs.
-  static const authRedirectUrl = 'in.mytechbytes.docsbuddy://login-callback';
+  /// Where auth emails / OAuth redirect back into the app. An Android App Link /
+  /// iOS Universal Link served from the marketing site, with the custom scheme
+  /// (in.mytechbytes.docsbuddy://login-callback) still registered as a fallback.
+  /// Must also be listed in Supabase → Authentication → URL Configuration →
+  /// Redirect URLs.
+  static const authRedirectUrl = 'https://docsbuddy.mytechbytes.in/login-callback';
 
   static bool get hasSupabase =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
