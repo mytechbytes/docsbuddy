@@ -1,13 +1,12 @@
-name: Build (Android + macOS)
+name: Build Android
 
-# Builds installable artifacts on GitHub's runners (no local Android SDK or
-# network-egress changes needed) and uploads them for download.
-#
-#   - Android: release APK, debug-signed (see android/app/build.gradle.kts) so it
-#     installs directly for testing — NOT a Play Store upload artifact.
-#   - macOS:   release .app bundle, zipped.
+# Builds the Android release APK on GitHub's runners (no local Android SDK or
+# network-egress changes needed) and uploads it for download. The release build
+# is debug-signed (see android/app/build.gradle.kts), so the APK installs
+# directly for testing — it is NOT a Play Store upload artifact.
 #
 # Triggers on pushes to main / production, or manually via "Run workflow".
+# Apple platforms (iOS + macOS) live in build-apple.yml and are manual-only.
 
 on:
   push:
@@ -60,45 +59,5 @@ jobs:
         with:
           name: docsbuddy-android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 14
-
-  macos:
-    name: macOS app
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.44.2
-          channel: stable
-          cache: true
-
-      - name: Flutter version
-        run: flutter --version
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Enable macOS desktop
-        run: flutter config --enable-macos-desktop
-
-      - name: Build release macOS app
-        run: flutter build macos --release
-
-      - name: Zip .app bundle
-        run: |
-          cd build/macos/Build/Products/Release
-          APP="$(ls -d *.app | head -1)"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" docsbuddy-macos.zip
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docsbuddy-macos-app
-          path: build/macos/Build/Products/Release/docsbuddy-macos.zip
           if-no-files-found: error
           retention-days: 14
