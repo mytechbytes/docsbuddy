@@ -41,6 +41,12 @@ dependencies:
   go_router: ^14.6.2
   # First-launch flag persistence (device-local, not synced)
   shared_preferences: ^2.3.3
+  # Backend auth/db/storage (per ADR-0001). Active only when SUPABASE_URL +
+  # SUPABASE_ANON_KEY are provided via --dart-define; otherwise a local fake
+  # auth repository is used so the app runs without credentials.
+  supabase_flutter: ^2.8.0
+  # Keychain/Keystore-backed token vault (architecture review #9)
+  flutter_secure_storage: ^9.2.2
 
 dev_dependencies:
   flutter_test:

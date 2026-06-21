@@ -13,6 +13,7 @@ Widget _harness(SharedPreferences prefs) {
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
       GoRoute(path: '/home', builder: (_, _) => const Scaffold(body: Text('HOME'))),
       GoRoute(path: '/sign-in', builder: (_, _) => const Scaffold(body: Text('SIGN-IN'))),
+      GoRoute(path: '/sign-up', builder: (_, _) => const Scaffold(body: Text('SIGN-UP'))),
     ],
   );
   return ProviderScope(
@@ -47,7 +48,7 @@ void main() {
     expect(find.text('Create Account'), findsOneWidget);
   });
 
-  testWidgets('finishing onboarding persists the flag and routes home', (tester) async {
+  testWidgets('finishing onboarding persists the flag and routes to sign-up', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(_harness(prefs));
@@ -64,7 +65,7 @@ void main() {
     await tester.tap(find.text('Create Account'));
     await tester.pumpAndSettle();
 
-    expect(find.text('HOME'), findsOneWidget);
+    expect(find.text('SIGN-UP'), findsOneWidget);
     expect(prefs.getBool('onboarding_complete'), isTrue);
   });
 }

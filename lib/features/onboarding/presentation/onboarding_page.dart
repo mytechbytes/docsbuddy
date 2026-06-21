@@ -83,7 +83,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   index: i,
                   total: _slides.length,
                   illustration: _illustrationFor(i),
-                  onPrimary: i < _slides.length - 1 ? _next : () => _finish('/home'),
+                  onPrimary: i < _slides.length - 1 ? _next : () => _finish('/sign-up'),
                   primaryLabel: switch (i) { 0 => 'Get Started', 3 => 'Create Account', _ => 'Next' },
                   secondaryLabel: i == _slides.length - 1 ? 'I already have an account' : null,
                   onSecondary: i == _slides.length - 1 ? () => _finish('/sign-in') : null,
