@@ -14,7 +14,6 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { create } from "https://deno.land/x/djwt@v3.0.4/mod.ts";
 
 interface WebhookPayload {
   type: "INSERT" | "UPDATE" | "DELETE";
@@ -39,6 +38,14 @@ function pemToPkcs8(pem: string): ArrayBuffer {
   return buf.buffer;
 }
 
+/// base64url-encode a string or byte array (no padding) — for JWT segments.
+function b64url(data: Uint8Array | string): string {
+  const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 async function fcmAccessToken(sa: { client_email: string; private_key: string }): Promise<string> {
   const key = await crypto.subtle.importKey(
     "pkcs8",
@@ -48,17 +55,22 @@ async function fcmAccessToken(sa: { client_email: string; private_key: string })
     ["sign"],
   );
   const now = Math.floor(Date.now() / 1000);
-  const jwt = await create(
-    { alg: "RS256", typ: "JWT" },
-    {
-      iss: sa.client_email,
-      scope: "https://www.googleapis.com/auth/firebase.messaging",
-      aud: "https://oauth2.googleapis.com/token",
-      iat: now,
-      exp: now + 3600,
-    },
+  // Sign the JWT directly with Web Crypto — no external djwt module needed.
+  const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claim = b64url(JSON.stringify({
+    iss: sa.client_email,
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  }));
+  const signingInput = `${header}.${claim}`;
+  const sig = await crypto.subtle.sign(
+    { name: "RSASSA-PKCS1-v1_5" },
     key,
+    new TextEncoder().encode(signingInput),
   );
+  const jwt = `${signingInput}.${b64url(new Uint8Array(sig))}`;
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
