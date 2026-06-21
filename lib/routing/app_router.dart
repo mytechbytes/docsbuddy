@@ -10,10 +10,12 @@ import '../features/auth/presentation/otp_verify_page.dart';
 import '../features/auth/presentation/reset_password_page.dart';
 import '../features/auth/presentation/sign_in_page.dart';
 import '../features/auth/presentation/sign_up_page.dart';
-import '../features/dashboard/presentation/dashboard_page.dart';
-import '../features/family/presentation/family_page.dart';
+import '../features/catalog/presentation/add_asset_page.dart';
+import '../features/catalog/presentation/asset_detail_page.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
+import '../features/roadmap/presentation/roadmap_page.dart';
+import '../features/shell/presentation/home_shell.dart';
 
 const _authRoutes = {
   '/sign-in',
@@ -62,8 +64,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/reset-password', builder: (_, _) => const ResetPasswordPage()),
 
       // ── App ──
-      GoRoute(path: '/dashboard', builder: (_, _) => const DashboardPage()),
-      GoRoute(path: '/family', builder: (_, _) => const FamilyPage()),
+      GoRoute(path: '/dashboard', builder: (_, _) => const HomeShell()),
+      GoRoute(path: '/asset-new', builder: (_, _) => const AddAssetPage()),
+      GoRoute(path: '/asset/:id', builder: (_, state) => AssetDetailPage(assetId: state.pathParameters['id']!)),
+      GoRoute(path: '/roadmap', builder: (_, _) => const RoadmapPage()),
     ],
   );
 });

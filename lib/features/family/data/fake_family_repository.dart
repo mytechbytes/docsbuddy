@@ -14,7 +14,7 @@ class FakeFamilyRepository implements FamilyRepository {
 
   String _code() {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    return List.generate(6, (_) => alphabet[_rng.nextInt(alphabet.length)]).join();
+    return List.generate(8, (_) => alphabet[_rng.nextInt(alphabet.length)]).join();
   }
 
   @override
@@ -50,7 +50,7 @@ class FakeFamilyRepository implements FamilyRepository {
   @override
   Future<Family> acceptInvite(String code) async {
     await _delay();
-    if (code.trim().length != 6) throw const FamilyFailure('Enter the 6-character invite code.');
+    if (code.trim().length < 6) throw const FamilyFailure('Enter a valid invite code.');
     // Demo behaviour: joining lands you in a shared family with an existing owner.
     _family ??= const Family(id: 'fam_shared', name: 'Shared Home', ownerId: 'owner');
     if (_members.isEmpty) {
