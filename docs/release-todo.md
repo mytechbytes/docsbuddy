@@ -57,9 +57,12 @@ Status of what's needed to ship a Play **internal testing** build.
 - [ ] Confirm **Play App Signing** is enabled
 - [ ] Store listing assets (icon, screenshots) — for testing tracks these are light
 
-## G. Known gaps / next features (not blockers for an auth-only test)
+## G. Known gaps / next features
+- [x] Core features: assets, locations & reminders (dashboard, asset CRUD, add
+      reminder) — **fake/in-memory for now**
+- [ ] Back the catalog with Supabase (assets/reminders persist + sync)
+- [ ] Documents — pick / upload / view (Supabase Storage)
 - [ ] Push notifications — **FCM not implemented yet** (no `firebase_messaging`,
       no `google-services.json`); the reminder pipeline depends on it
-- [ ] Core features: locations → assets → reminders → documents (per shipping order)
 - [ ] App icon / splash branding still the Flutter default
 - [ ] iOS signing + provisioning (Team ID, certs) if you ship iOS
