@@ -69,6 +69,22 @@ file to `.gitignore`).
 **Verify:** the Dashboard screen shows a **"Backend: Supabase"** chip when init
 succeeded (vs **"Local (fake auth)"** when the defines are absent).
 
+### CI builds (GitHub Actions)
+
+The build workflows already forward the keys into `--dart-define` from repo
+secrets — you only need to create the secrets:
+
+1. **Repo → Settings → Secrets and variables → Actions → New repository secret:**
+   - `SUPABASE_URL` = `https://YOUR_PROJECT.supabase.co`
+   - `SUPABASE_ANON_KEY` = your anon/publishable key
+2. The build steps that consume them:
+   - `.github/workflows/build.yml` → Android `flutter build apk`
+   - `.github/workflows/build-apple.yml` → macOS + iOS builds
+
+Until the secrets exist, `${{ secrets.* }}` expands to empty → empty defines →
+the artifact falls back to the local fake auth. So it's safe before secrets are
+set, and "just works" once they are. Never hardcode keys in the workflow files.
+
 ## Part D — Where this maps in the codebase
 
 You normally **don't edit Dart files** to switch backends — passing the two
