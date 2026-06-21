@@ -27,8 +27,20 @@ repository — so every screen works offline. This guide turns on real Supabase.
    - **Google / Apple** (optional, for the social buttons) — create OAuth
      credentials in Google Cloud / Apple Developer, paste client ID/secret here,
      and add the redirect URLs from Part E.
-4. **Authentication → URL Configuration** — add the deep-link redirect URL from
-   Part E (only needed for OAuth / magic links).
+4. **Authentication → URL Configuration** — **required so confirm-email / magic
+   links return to the app instead of `localhost`:**
+   - **Redirect URLs** → add **`https://docsbuddy.mytechbytes.in/login-callback`**
+     (this is `Env.authRedirectUrl`; the app passes it as `emailRedirectTo` /
+     OAuth `redirectTo`). Also add the custom-scheme fallback
+     `in.mytechbytes.docsbuddy://login-callback`.
+   - **Site URL** → set to `https://docsbuddy.mytechbytes.in` (defaults to
+     `http://localhost:3000`, which is what opens in the browser otherwise).
+   - The HTTPS URL opens the app directly via **App Links / Universal Links** once
+     the site serves `/.well-known/assetlinks.json` (Android) and
+     `/.well-known/apple-app-site-association` (iOS) — see Part E.
+   - **Dev shortcut:** while testing, you can turn **Confirm email = off**
+     (Authentication → Providers → Email) so sign-up logs in immediately and
+     skips the email round-trip entirely. Turn it back on for production.
 
 ## Part B — Apply the database schema
 
@@ -107,34 +119,30 @@ in `supabase_auth_repository.dart`, swap `sendPasswordResetCode` from
 `signInWithOtp(email:)` to `resetPasswordForEmail(email)` and adjust the
 verify/reset screens accordingly.
 
-## Part E — Deep links (only for OAuth / magic links)
+## Part E — Deep links (App Links / Universal Links)
 
-Email/password sign-in needs **none** of this. OAuth and magic-link flows return
-to the app via a custom-scheme deep link. Pick one, e.g.
-`in.mytechbytes.docsbuddy://login-callback`, then:
+Email/password sign-in without email-confirm needs **none** of this. Confirm-email,
+magic link, and OAuth use `Env.authRedirectUrl` =
+`https://docsbuddy.mytechbytes.in/login-callback`.
 
-1. **Supabase → Authentication → URL Configuration → Redirect URLs**: add it.
-2. **Android** — in `android/app/src/main/AndroidManifest.xml`, add an
-   `<intent-filter>` on `.MainActivity`:
-   ```xml
-   <intent-filter android:autoVerify="false">
-     <action android:name="android.intent.action.VIEW"/>
-     <category android:name="android.intent.category.DEFAULT"/>
-     <category android:name="android.intent.category.BROWSABLE"/>
-     <data android:scheme="in.mytechbytes.docsbuddy" android:host="login-callback"/>
-   </intent-filter>
-   ```
-3. **iOS / macOS** — in `Info.plist`, add a URL type:
-   ```xml
-   <key>CFBundleURLTypes</key>
-   <array><dict>
-     <key>CFBundleURLSchemes</key>
-     <array><string>in.mytechbytes.docsbuddy</string></array>
-   </dict></array>
-   ```
-4. Pass the same `redirectTo` to `signInWithOAuth` in
-   `supabase_auth_repository.dart` (e.g. `signInWithOAuth(OAuthProvider.google,
-   redirectTo: 'in.mytechbytes.docsbuddy://login-callback')`).
+**App side — already wired in this repo:**
+- `signUp`/OAuth pass the URL (`supabase_auth_repository.dart`).
+- **Android App Link** — verified `https` intent-filter on `MainActivity`
+  (`autoVerify="true"`) + a custom-scheme fallback
+  (`in.mytechbytes.docsbuddy://login-callback`).
+- **iOS** — `ios/Runner/Runner.entitlements` is ready with
+  `applinks:docsbuddy.mytechbytes.in`, plus the custom scheme in `Info.plist`.
+  ⚠️ **Not yet enabled in Xcode** — turn on *Signing & Capabilities → Associated
+  Domains* once iOS signing is set up (see the release TODO).
+
+**Site side — you host on `docsbuddy.mytechbytes.in`** (these make the HTTPS link
+open the app directly):
+- `/.well-known/assetlinks.json` — Android, with the **Play App Signing** key's
+  SHA-256.
+- `/.well-known/apple-app-site-association` — iOS, with your **Apple Team ID**.
+  Both must be served over HTTPS, `Content-Type: application/json`, no redirects.
+
+**Supabase side:** add both URLs to **Redirect URLs** and set **Site URL** (Part A).
 
 ## Still stubbed / follow-ups
 

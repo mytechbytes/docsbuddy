@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/env.dart';
 import 'auth_repository.dart';
 
 /// Real backend implementation, active when SUPABASE_URL + SUPABASE_ANON_KEY
@@ -49,13 +50,22 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signUp({required String name, required String email, required String password}) =>
-      _guard(() => _auth.signUp(email: email, password: password, data: {'full_name': name}));
+      _guard(() => _auth.signUp(
+            email: email,
+            password: password,
+            data: {'full_name': name},
+            // Sends the confirm-email link back into the app instead of the
+            // project's Site URL (which defaults to http://localhost:3000).
+            emailRedirectTo: Env.authRedirectUrl,
+          ));
 
   @override
-  Future<void> signInWithGoogle() => _guard(() => _auth.signInWithOAuth(OAuthProvider.google));
+  Future<void> signInWithGoogle() =>
+      _guard(() => _auth.signInWithOAuth(OAuthProvider.google, redirectTo: Env.authRedirectUrl));
 
   @override
-  Future<void> signInWithApple() => _guard(() => _auth.signInWithOAuth(OAuthProvider.apple));
+  Future<void> signInWithApple() =>
+      _guard(() => _auth.signInWithOAuth(OAuthProvider.apple, redirectTo: Env.authRedirectUrl));
 
   @override
   Future<void> sendPasswordResetCode(String email) =>

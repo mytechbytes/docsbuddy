@@ -27,6 +27,24 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Supabase auth — App Link (verified): opens the app directly for
+                 https://docsbuddy.mytechbytes.in/login-callback. Requires
+                 /.well-known/assetlinks.json on the domain (Play App Signing SHA-256). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"
+                      android:host="docsbuddy.mytechbytes.in"
+                      android:pathPrefix="/login-callback"/>
+            </intent-filter>
+            <!-- Custom-scheme fallback (works without domain verification). -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="in.mytechbytes.docsbuddy" android:host="login-callback"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
