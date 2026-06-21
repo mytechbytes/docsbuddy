@@ -34,13 +34,19 @@ subprojects {
 subprojects {
     plugins.withId("com.android.library") {
         extensions.findByName("android")?.withGroovyBuilder {
-            // Flutter does not propagate the app's compileSdk to plugin modules,
-            // so they default to flutter.compileSdkVersion (34). A transitive
-            // plugin now requires consumers to compile against 36 — pin it here.
-            setProperty("compileSdk", 36)
             "compileOptions" {
                 setProperty("sourceCompatibility", JavaVersion.VERSION_17)
                 setProperty("targetCompatibility", JavaVersion.VERSION_17)
+            }
+        }
+        // Flutter does not propagate the app's compileSdk to plugin modules, and
+        // a plugin's own build script sets its compileSdk (34) in its body — which
+        // runs after this hook. A transitive plugin now requires consumers to
+        // compile against 36, so override it in afterEvaluate (runs after the
+        // plugin's script body, before AGP finalizes the DSL) to win.
+        afterEvaluate {
+            extensions.findByName("android")?.withGroovyBuilder {
+                setProperty("compileSdk", 36)
             }
         }
     }
