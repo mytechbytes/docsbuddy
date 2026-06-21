@@ -37,7 +37,13 @@ jobs:
         run: flutter config --enable-macos-desktop
 
       - name: Build release macOS app
-        run: flutter build macos --release
+        run: |
+          flutter build macos --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
       - name: Zip .app bundle
         run: |
@@ -74,7 +80,13 @@ jobs:
         run: flutter pub get
 
       - name: Build iOS app (unsigned)
-        run: flutter build ios --release --no-codesign
+        run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
       - name: Zip Runner.app
         run: |
