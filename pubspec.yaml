@@ -50,6 +50,10 @@ dependencies:
   # Document pick + open
   file_picker: ^8.1.4
   url_launcher: ^6.3.1
+  # On-device reminder delivery (local-first; no Firebase needed)
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  flutter_timezone: ^3.0.1
   # Keychain/Keystore-backed token vault (architecture review #9)
   flutter_secure_storage: ^9.2.2
 

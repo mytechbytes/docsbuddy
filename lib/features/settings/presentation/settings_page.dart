@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/env.dart';
+import '../../../core/notifications/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../onboarding/application/onboarding_controller.dart';
@@ -29,6 +30,22 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.cloud_outlined,
               title: 'Backend',
               trailing: Text(Env.hasSupabase ? 'Supabase' : 'Local (fake)', style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600)),
+            ),
+            _Row(
+              icon: Icons.notifications_active_outlined,
+              title: 'Enable reminders',
+              onTap: () async {
+                final svc = ref.read(notificationServiceProvider);
+                final ok = await svc.requestPermission();
+                await svc.showTest();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(ok ? 'Reminders enabled — sent a test notification.' : 'Notifications are blocked in system settings.'),
+                    backgroundColor: ok ? AppColors.green : AppColors.red,
+                  ));
+                }
+              },
+              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             _Row(
               icon: Icons.checklist_outlined,

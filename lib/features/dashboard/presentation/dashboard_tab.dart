@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/notifications/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/catalog_widgets.dart';
 import '../../../core/widgets/db_logo.dart';
@@ -14,6 +15,10 @@ class DashboardTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Re-arm local notifications whenever the reminder set changes.
+    ref.listen(upcomingRemindersProvider, (_, next) {
+      next.whenData((list) => ref.read(notificationServiceProvider).rescheduleFor(list));
+    });
     final reminders = ref.watch(upcomingRemindersProvider);
 
     return Scaffold(
