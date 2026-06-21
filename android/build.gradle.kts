@@ -30,7 +30,7 @@ subprojects {
 // task-level override sticks. Both run in afterEvaluate, once the plugin (and
 // its `android {}` extension) has been applied to the subproject.
 subprojects {
-    afterEvaluate {
+    val applyJvm17: Project.() -> Unit = {
         extensions.findByName("android")?.withGroovyBuilder {
             "compileOptions" {
                 setProperty("sourceCompatibility", JavaVersion.VERSION_17)
@@ -43,6 +43,9 @@ subprojects {
             }
         }
     }
+    // evaluationDependsOn(":app") above forces :app to evaluate early, so it may
+    // already be evaluated here — afterEvaluate would then throw. Guard on state.
+    if (state.executed) applyJvm17() else afterEvaluate { applyJvm17() }
 }
 
 tasks.register<Delete>("clean") {
