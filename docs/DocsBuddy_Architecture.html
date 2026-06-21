@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DocsBuddy — System Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --paper: #ffffff;
+    --ink: #0d1a2b;
+    --ink-2: #324159;
+    --muted: #6b7891;
+    --line: #e3e8f0;
+    --line-2: #eef1f6;
+    --navy: #1f3a5f;
+    --navy-2: #294a76;
+    --teal: #2a7f9e;
+    --teal-2: #4ca8c3;
+    --green: #1ea765;
+    --amber: #d8901a;
+    --red: #d24b54;
+    --blue: #2476e8;
+    --code-bg: #0f1b2d;
+    --code-ink: #e6edf7;
+    --chip-bg: #eef3fb;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  body {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  .page { max-width: 980px; margin: 0 auto; padding: 56px 32px 120px; }
+
+  /* ── Cover ───────────────────────────────────────── */
+  .cover {
+    background: linear-gradient(135deg, #1f3a5f 0%, #2a7f9e 100%);
+    border-radius: 28px;
+    color: #fff;
+    padding: 48px 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content:""; position:absolute; right:-80px; top:-80px; width:320px; height:320px;
+    background: radial-gradient(closest-side, rgba(255,255,255,0.18), transparent 70%);
+  }
+  .cover::after {
+    content:""; position:absolute; left:-60px; bottom:-90px; width:260px; height:260px;
+    background: radial-gradient(closest-side, rgba(255,255,255,0.10), transparent 70%);
+  }
+  .brand { display:flex; align-items:center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
+  .brand .dot { width: 28px; height: 28px; border-radius: 8px; background: #fff; color: var(--navy); display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+  .brand .light { opacity: 0.7; font-weight: 600; }
+  .cover h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; margin: 32px 0 12px; max-width: 720px; }
+  .cover .sub { font-size: 17px; opacity: 0.85; max-width: 640px; }
+  .cover .meta { display:flex; gap: 24px; margin-top: 36px; font-size: 13px; opacity: 0.85; }
+  .cover .meta b { display:block; font-weight: 600; opacity: 1; }
+
+  /* ── Sections ────────────────────────────────────── */
+  section { margin-top: 64px; }
+  .sec-num {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px; font-weight: 600;
+    color: var(--teal); letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .sec-num .bar { width: 32px; height: 2px; background: var(--teal); border-radius: 2px; }
+  h2 { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin: 12px 0 8px; }
+  .lede { font-size: 16px; color: var(--ink-2); max-width: 740px; margin: 0 0 28px; }
+
+  h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.005em; margin: 28px 0 10px; }
+  h4 { font-size: 14px; font-weight: 700; color: var(--ink-2); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+  p { margin: 0 0 12px; color: var(--ink-2); font-size: 15px; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; color: var(--ink-2); font-size: 15px; }
+  li { margin: 4px 0; }
+  strong { color: var(--ink); font-weight: 600; }
+  code { font-family: "JetBrains Mono", monospace; font-size: 13px; background: var(--chip-bg); color: var(--navy); padding: 2px 6px; border-radius: 4px; }
+
+  /* ── Cards ───────────────────────────────────────── */
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 16px 0;
+  }
+  .card.tight { padding: 18px 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .stat-card .k { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-card .v { font-size: 18px; font-weight: 700; margin-top: 4px; color: var(--ink); }
+
+  /* ── Code blocks ─────────────────────────────────── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 20px 22px;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    margin: 16px 0;
+    border: 1px solid #1a2840;
+  }
+  pre .kw { color: #ff9ec3; }
+  pre .ty { color: #7cd7ff; }
+  pre .st { color: #c3e88d; }
+  pre .nu { color: #ffcb6b; }
+  pre .cm { color: #7d8aa1; font-style: italic; }
+  pre .fn { color: #82aaff; }
+
+  .file-tree {
+    background: #fbfcfe;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 22px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--ink-2);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .file-tree .dir { color: var(--teal); font-weight: 600; }
+  .file-tree .cm { color: var(--muted); }
+
+  /* ── Flow diagram (CSS-only) ─────────────────────── */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 20px 0 8px;
+  }
+  .flow .step {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+    position: relative;
+  }
+  .flow .step .n {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; color: var(--teal); font-weight: 600;
+  }
+  .flow .step .t { font-size: 13px; font-weight: 600; margin-top: 4px; color: var(--ink); }
+  .flow .step .d { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .flow .step:not(:last-child)::after {
+    content: "→"; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-weight: 600; z-index: 1;
+  }
+  @media (max-width: 720px) { .flow { grid-template-columns: 1fr; } .flow .step::after { display:none; } }
+
+  /* ── Tables ──────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+  th { background: #fafbfd; font-weight: 600; color: var(--ink); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  td { color: var(--ink-2); }
+  td code { font-size: 12px; }
+
+  /* ── Pills / chips ───────────────────────────────── */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    background: var(--chip-bg); color: var(--navy); letter-spacing: 0.02em;
+  }
+  .pill.green { background: #e3f5ec; color: #18854f; }
+  .pill.amber { background: #fbf0d8; color: #8a5a08; }
+  .pill.red { background: #f9dfe1; color: #a02530; }
+  .pill.teal { background: #dbf0f6; color: #186577; }
+
+  /* ── Callout ─────────────────────────────────────── */
+  .callout {
+    display: flex; gap: 14px;
+    background: linear-gradient(180deg, #f7faff, #eef3fb);
+    border: 1px solid #d8e3f3;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin: 16px 0;
+  }
+  .callout .glyph {
+    width: 28px; height: 28px; flex: 0 0 28px;
+    border-radius: 8px; background: var(--teal); color: #fff;
+    display: grid; place-items: center; font-weight: 700; font-size: 14px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .callout .body { font-size: 14px; color: var(--ink-2); }
+  .callout .body b { color: var(--ink); }
+
+  /* ── Stack comparison ────────────────────────────── */
+  .vs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0 8px;
+  }
+  .vs .opt {
+    background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+    position: relative;
+  }
+  .vs .opt.pick { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(42,127,158,0.08); }
+  .vs .opt .name { font-weight: 700; font-size: 15px; display:flex; align-items:center; gap: 8px; }
+  .vs .opt .verdict { font-size: 11px; font-family: "JetBrains Mono", monospace; color: var(--muted); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .vs .opt ul { font-size: 13px; padding-left: 18px; margin: 10px 0 0; }
+  .vs .opt ul li { margin: 3px 0; }
+  .vs .opt .badge {
+    position: absolute; top: -10px; right: 14px;
+    background: var(--teal); color: #fff; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 999px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  @media (max-width: 720px) { .vs { grid-template-columns: 1fr; } }
+
+  /* ── ERD-style diagram ───────────────────────────── */
+  .erd {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .ent {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    font-family: "JetBrains Mono", monospace; font-size: 11.5px;
+  }
+  .ent .h {
+    background: var(--navy); color: #fff; padding: 8px 12px; font-weight: 700;
+    display:flex; align-items:center; justify-content: space-between;
+  }
+  .ent .h .tag { font-size: 10px; opacity: 0.7; font-weight: 500; }
+  .ent .row { padding: 5px 12px; border-bottom: 1px solid var(--line-2); color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+  .ent .row:last-child { border-bottom: none; }
+  .ent .row .k { color: var(--ink); }
+  .ent .row .t { color: var(--teal); font-size: 10.5px; }
+  .ent .row.pk .k::before { content: "🔑 "; }
+  .ent .row.fk .k::before { content: "↗ "; color: var(--amber); }
+  @media (max-width: 720px) { .erd { grid-template-columns: 1fr; } }
+
+  /* ── Permissions matrix ──────────────────────────── */
+  .matrix th:not(:first-child), .matrix td:not(:first-child) { text-align: center; }
+  .matrix .yes { color: var(--green); font-weight: 700; }
+  .matrix .no { color: #c0c8d4; }
+  .matrix .partial { color: var(--amber); font-weight: 700; }
+
+  /* ── Timeline (notification pipeline) ─────────────── */
+  .timeline {
+    background: #fbfcfe;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 18px 8px;
+    margin: 16px 0;
+  }
+  .tl-bar {
+    position: relative; height: 56px; margin: 0 24px 18px;
+    background: linear-gradient(90deg, #e3f5ec, #fff7e3 60%, #fbe1e3);
+    border-radius: 12px;
+  }
+  .tl-bar .marker {
+    position: absolute; top: -6px; bottom: -6px;
+    width: 2px; background: var(--ink);
+  }
+  .tl-bar .marker .lbl {
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600; white-space: nowrap; color: var(--ink);
+  }
+  .tl-bar .marker .sub {
+    position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: var(--muted); white-space: nowrap;
+  }
+  .tl-bar .marker.due { background: var(--red); }
+  .tl-bar .marker.due .lbl { color: var(--red); }
+
+  /* ── Mode-conditional content ─────────────────────── */
+  /* Default: server-driven mode shown, local-first hidden */
+  .mode-only-local  { display: none; }
+  body.mode-local .mode-only-local  { display: block; }
+  body.mode-local .mode-only-server { display: none; }
+  body.mode-local .erd.mode-only-local,
+  body.mode-local .vs.mode-only-local,
+  body.mode-local .flow.mode-only-local { display: grid; }
+
+  /* Backend pick: highlight the chosen card in §6.1 */
+  body.backend-supabase .vs .opt[data-backend="supabase"],
+  body.backend-firebase .vs .opt[data-backend="firebase"],
+  body.backend-aws      .vs .opt[data-backend="aws"] {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(42,127,158,0.08);
+  }
+  .vs .opt[data-backend] .badge { display: none; }
+  body.backend-supabase .vs .opt[data-backend="supabase"] .badge,
+  body.backend-firebase .vs .opt[data-backend="firebase"] .badge,
+  body.backend-aws      .vs .opt[data-backend="aws"]      .badge { display: inline; }
+
+  /* Cover mode badge */
+  .mode-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+    margin-top: 24px;
+  }
+  .mode-badge .dot-pulse {
+    width: 8px; height: 8px; border-radius: 999px; background: #6ce0a4;
+    box-shadow: 0 0 0 4px rgba(108,224,164,0.25);
+  }
+  .mode-badge .mode-label::before { content: 'Server-driven'; }
+  body.mode-local .mode-badge .mode-label::before { content: 'Local-first · WhatsApp-style sync'; }
+  body.mode-local .mode-badge .dot-pulse { background: #fbb567; box-shadow: 0 0 0 4px rgba(251,181,103,0.25); }
+
+  /* ── Footer ──────────────────────────────────────── */
+  .foot {
+    margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ── TOC ─────────────────────────────────────────── */
+  .toc {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
+    padding: 22px 24px; margin-top: 36px;
+  }
+  .toc h4 { margin-top: 0; }
+  .toc ol { list-style: none; padding: 0; margin: 8px 0 0; counter-reset: t; }
+  .toc ol li {
+    counter-increment: t; padding: 8px 0; border-bottom: 1px dashed var(--line-2);
+    display: flex; align-items: baseline; gap: 14px; font-size: 14px; color: var(--ink-2);
+  }
+  .toc ol li:last-child { border-bottom: none; }
+  .toc ol li::before {
+    content: "0" counter(t); font-family: "JetBrains Mono", monospace; color: var(--teal); font-weight: 600; font-size: 12px;
+  }
+  .toc ol li a { color: var(--ink); text-decoration: none; font-weight: 600; flex: 1; }
+  .toc ol li a:hover { color: var(--teal); }
+  .toc ol li span { color: var(--muted); font-size: 12px; font-family: "JetBrains Mono", monospace; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ─── Cover ─── -->
+  <div class="cover">
+    <div class="brand"><span class="dot">D</span>Docs<span class="light">Buddy</span></div>
+    <h1>System architecture &amp; implementation blueprint</h1>
+    <div class="sub">An end-to-end design for the Asset Due Date Notification System — covering auth, hierarchical asset modelling, family sharing, document storage, the notification pipeline, and the Flutter app architecture.</div>
+    <div class="meta">
+      <div><b>Document</b>v1.1 · Engineering spec</div>
+      <div><b>Audience</b>Solo founder / lead dev</div>
+      <div><b>Target stack</b>Flutter + Supabase + FCM</div>
+    </div>
+    <div class="mode-badge"><span class="dot-pulse"></span>Architecture mode: <b class="mode-label"></b></div>
+  </div>
+
+  <!-- ─── TOC ─── -->
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#s1">Authentication &amp; user management</a><span>Firebase Auth · OAuth · Secure storage</span></li>
+      <li><a href="#s2">Hierarchical location &amp; asset management</a><span>Postgres schema · Asset metadata</span></li>
+      <li><a href="#s3">Family / group sharing &amp; permissions</a><span>Invites · RBAC matrix</span></li>
+      <li><a href="#s4">Document storage architecture</a><span>Object store · Signed URLs · RLS</span></li>
+      <li><a href="#s5">Intelligent notification pipeline</a><span>Cron · Thresholds · FCM / APNS</span></li>
+      <li><a href="#s6">Flutter tech stack &amp; folder structure</a><span>Riverpod · Drift · Clean architecture</span></li>
+    </ol>
+  </div>
+
+  <!-- ─── Corrections banner ─── -->
+  <div class="callout" style="margin-top:28px;border-color:#cfe7d8;background:linear-gradient(180deg,#f3fbf6,#e9f6ef)">
+    <div class="glyph" style="background:var(--green)">✓</div>
+    <div class="body"><b>v1.1 — corrections applied.</b> This document has been revised per the
+    architecture review in <code>docs/architecture-review.md</code>. The corrected, runnable schema —
+    <code>updated_at</code> triggers, <code>security definer</code> RLS, split delete policies,
+    <code>notification_log</code>, the recurrence RPC, per-field sync versions, and the
+    <code>sync_state</code> cursor — lives in <code>supabase/migrations/0001_init.sql</code>, which is
+    authoritative where snippets below differ.</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+        SECTION 1 — AUTH
+       ═══════════════════════════════════════════════ -->
+  <section id="s1">
+    <div class="sec-num"><span class="bar"></span>Section 01</div>
+    <h2>Authentication &amp; user management</h2>
+    <p class="lede">A secure, low-friction sign-in flow with three providers, a centralised user profile, and token handling that survives app restarts on both iOS and Android.</p>
+
+    <h3>1.1 — Provider choice</h3>
+    <p>Use <strong>Supabase Auth</strong> (or Firebase Auth if you commit to that stack — see §6). Both expose the same three providers cleanly:</p>
+    <div class="grid-3">
+      <div class="stat-card"><div class="k">Provider A</div><div class="v">Email &amp; Password</div></div>
+      <div class="stat-card"><div class="k">Provider B</div><div class="v">Google Sign-In</div></div>
+      <div class="stat-card"><div class="k">Provider C</div><div class="v">Sign in with Apple</div></div>
+    </div>
+    <p style="margin-top:14px"><span class="pill amber">Required</span> &nbsp; Apple Sign-In is mandatory by App Store policy if you ship Google Sign-In on iOS. Configure both in the Apple Developer console and the auth provider dashboard.</p>
+
+    <h3>1.2 — Onboarding flow</h3>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><div class="t">Splash</div><div class="d">Restore session</div></div>
+      <div class="step"><div class="n">02</div><div class="t">Auth</div><div class="d">Sign in / up</div></div>
+      <div class="step"><div class="n">03</div><div class="t">Profile</div><div class="d">Name · avatar</div></div>
+      <div class="step"><div class="n">04</div><div class="t">Family</div><div class="d">Create or join</div></div>
+      <div class="step"><div class="n">05</div><div class="t">Permissions</div><div class="d">Push · biometric</div></div>
+    </div>
+    <p style="margin-top:18px">Each step is idempotent and can be re-entered from settings. The session is restored silently on launch — if a valid refresh token exists, the user lands directly on the home dashboard.</p>
+
+    <h3>1.3 — Token strategy</h3>
+    <table>
+      <thead><tr><th>Token</th><th>Lifetime</th><th>Storage</th><th>Refresh</th></tr></thead>
+      <tbody>
+        <tr><td><code>access_token</code> (JWT)</td><td>1 hour</td><td>In-memory only</td><td>Auto, before expiry</td></tr>
+        <tr><td><code>refresh_token</code></td><td>30–60 days (rotating)</td><td><code>flutter_secure_storage</code></td><td>Used to mint new access tokens</td></tr>
+        <tr><td>FCM device token</td><td>Until rotated by OS</td><td>Server-side in <code>user_devices</code></td><td>On launch + on rotate event</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <div class="glyph">🔒</div>
+      <div class="body"><b>Why secure storage?</b> <code>flutter_secure_storage</code> persists the refresh token to iOS Keychain and Android Keystore — both hardware-backed where available. Never write refresh tokens to <code>SharedPreferences</code>, plain files, or Hive without an encryption key derived from Keystore.</div>
+    </div>
+    <div class="callout" style="border-color:#f3dcc0;background:linear-gradient(180deg,#fffaf2,#fdf1e2)">
+      <div class="glyph" style="background:var(--amber)">!</div>
+      <div class="body"><b>Gotcha (review #9).</b> <code>supabase_flutter</code> persists the session to <code>SharedPreferences</code> <i>by default</i> — exactly what the rule above forbids. You must inject a <code>flutter_secure_storage</code>-backed <code>LocalStorage</code> adapter into <code>Supabase.initialize(authOptions: FlutterAuthClientOptions(localStorage: ...))</code>, or the refresh token lands in plaintext.</div>
+    </div>
+
+    <h3>1.4 — The <code>users</code> table</h3>
+    <pre><span class="cm">-- Mirrors auth.users (managed by Supabase) but adds app fields.</span>
+<span class="kw">create table</span> <span class="ty">public.users</span> (
+  <span class="fn">id</span>            <span class="ty">uuid</span> <span class="kw">primary key references</span> auth.users(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">email</span>         <span class="ty">text</span> <span class="kw">not null unique</span>,
+  <span class="fn">display_name</span>  <span class="ty">text</span>,
+  <span class="fn">avatar_url</span>    <span class="ty">text</span>,
+  <span class="fn">phone</span>         <span class="ty">text</span>,
+  <span class="fn">locale</span>        <span class="ty">text</span> <span class="kw">default</span> <span class="st">'en'</span>,
+  <span class="fn">timezone</span>      <span class="ty">text</span> <span class="kw">default</span> <span class="st">'UTC'</span>,   <span class="cm">-- used to schedule daily notifications</span>
+  <span class="fn">onboarded_at</span>  <span class="ty">timestamptz</span>,
+  <span class="fn">created_at</span>    <span class="ty">timestamptz</span> <span class="kw">default</span> now(),
+  <span class="fn">updated_at</span>    <span class="ty">timestamptz</span> <span class="kw">default</span> now()   <span class="cm">-- review #1: maintained by a moddatetime trigger</span>
+);
+
+<span class="cm">-- review #10: auto-provision public.users on auth signup (full body in 0001_init.sql)</span>
+<span class="kw">create trigger</span> on_auth_user_created <span class="kw">after insert on</span> auth.users
+  <span class="kw">for each row execute function</span> public.handle_new_user();
+
+<span class="cm">-- review #1: every mutable table gets this so delta-sync (updated_at &gt; last_sync) works.</span>
+<span class="kw">create trigger</span> set_updated_at <span class="kw">before update on</span> public.users
+  <span class="kw">for each row execute function</span> moddatetime(updated_at);
+
+<span class="kw">create table</span> <span class="ty">public.user_devices</span> (
+  <span class="fn">id</span>           <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">user_id</span>      <span class="ty">uuid</span> <span class="kw">references</span> users(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">fcm_token</span>    <span class="ty">text</span> <span class="kw">not null</span>,
+  <span class="fn">platform</span>     <span class="ty">text</span> <span class="kw">check</span> (platform <span class="kw">in</span> (<span class="st">'ios'</span>,<span class="st">'android'</span>)),
+  <span class="fn">app_version</span>  <span class="ty">text</span>,
+  <span class="fn">last_seen_at</span> <span class="ty">timestamptz</span> <span class="kw">default</span> now(),
+  <span class="kw">unique</span>(user_id, fcm_token)
+);</pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+        SECTION 2 — ASSETS
+       ═══════════════════════════════════════════════ -->
+  <section id="s2">
+    <div class="sec-num"><span class="bar"></span>Section 02</div>
+    <h2>Hierarchical location &amp; asset management</h2>
+    <p class="lede">Locations form a tree (Home → Kitchen → Counter). Assets attach to any node in the tree. Asset metadata is flexible per-category through JSONB, while core dates live in a dedicated table so notifications can index them cheaply.</p>
+
+    <h3>2.1 — Core entities</h3>
+    <div class="erd">
+      <div class="ent">
+        <div class="h">locations <span class="tag">tree</span></div>
+        <div class="row pk"><span class="k">id</span><span class="t">uuid</span></div>
+        <div class="row fk"><span class="k">family_id</span><span class="t">uuid</span></div>
+        <div class="row fk"><span class="k">parent_id</span><span class="t">uuid?</span></div>
+        <div class="row"><span class="k">name</span><span class="t">text</span></div>
+        <div class="row"><span class="k">kind</span><span class="t">enum</span></div>
+        <div class="row"><span class="k">image_url</span><span class="t">text?</span></div>
+        <div class="row"><span class="k">created_by</span><span class="t">uuid</span></div>
+      </div>
+      <div class="ent">
+        <div class="h">assets</div>
+        <div class="row pk"><span class="k">id</span><span class="t">uuid</span></div>
+        <div class="row fk"><span class="k">location_id</span><span class="t">uuid</span></div>
+        <div class="row fk"><span class="k">family_id</span><span class="t">uuid</span></div>
+        <div class="row fk"><span class="k">category_id</span><span class="t">uuid</span></div>
+        <div class="row"><span class="k">name</span><span class="t">text</span></div>
+        <div class="row"><span class="k">brand</span><span class="t">text?</span></div>
+        <div class="row"><span class="k">model</span><span class="t">text?</span></div>
+        <div class="row"><span class="k">serial_no</span><span class="t">text?</span></div>
+        <div class="row"><span class="k">purchase_date</span><span class="t">date?</span></div>
+        <div class="row"><span class="k">purchase_price</span><span class="t">numeric?</span></div>
+        <div class="row"><span class="k">metadata</span><span class="t">jsonb</span></div>
+      </div>
+      <div class="ent">
+        <div class="h">asset_dates</div>
+        <div class="row pk"><span class="k">id</span><span class="t">uuid</span></div>
+        <div class="row fk"><span class="k">asset_id</span><span class="t">uuid</span></div>
+        <div class="row"><span class="k">label</span><span class="t">text</span></div>
+        <div class="row"><span class="k">due_date</span><span class="t">date</span></div>
+        <div class="row"><span class="k">recurrence</span><span class="t">enum?</span></div>
+        <div class="row"><span class="k">notify_offsets</span><span class="t">int[]</span></div>
+        <div class="row"><span class="k">last_notified_offset</span><span class="t">int?</span></div>
+        <div class="row"><span class="k">completed_at</span><span class="t">timestamptz?</span></div>
+      </div>
+    </div>
+
+    <h3>2.2 — Schema (Postgres)</h3>
+    <pre><span class="kw">create type</span> location_kind <span class="kw">as enum</span> (<span class="st">'home'</span>,<span class="st">'office'</span>,<span class="st">'vehicle'</span>,<span class="st">'room'</span>,<span class="st">'shelf'</span>,<span class="st">'custom'</span>);
+
+<span class="kw">create table</span> <span class="ty">locations</span> (
+  <span class="fn">id</span>          <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">family_id</span>   <span class="ty">uuid</span> <span class="kw">not null references</span> families(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">parent_id</span>   <span class="ty">uuid</span> <span class="kw">references</span> locations(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">name</span>        <span class="ty">text</span> <span class="kw">not null</span>,
+  <span class="fn">kind</span>        <span class="ty">location_kind</span> <span class="kw">not null default</span> <span class="st">'custom'</span>,
+  <span class="fn">image_url</span>   <span class="ty">text</span>,
+  <span class="fn">sort_order</span>  <span class="ty">int</span> <span class="kw">default</span> 0,
+  <span class="fn">created_by</span>  <span class="ty">uuid</span> <span class="kw">references</span> users(id),
+  <span class="fn">created_at</span>  <span class="ty">timestamptz</span> <span class="kw">default</span> now()
+);
+<span class="kw">create index on</span> locations (family_id, parent_id);
+
+<span class="kw">create table</span> <span class="ty">asset_categories</span> (
+  <span class="fn">id</span>             <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">slug</span>           <span class="ty">text</span> <span class="kw">unique</span>,         <span class="cm">-- 'vehicle', 'appliance', 'electronics'</span>
+  <span class="fn">name</span>           <span class="ty">text</span>,
+  <span class="fn">icon</span>           <span class="ty">text</span>,
+  <span class="fn">default_dates</span>  <span class="ty">jsonb</span>,             <span class="cm">-- e.g. [{label:'Insurance', recur:'yearly'}, ...]</span>
+  <span class="fn">schema</span>         <span class="ty">jsonb</span>              <span class="cm">-- list of metadata fields w/ types</span>
+);
+
+<span class="kw">create table</span> <span class="ty">assets</span> (
+  <span class="fn">id</span>             <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">family_id</span>      <span class="ty">uuid</span> <span class="kw">not null references</span> families(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">location_id</span>    <span class="ty">uuid</span> <span class="kw">references</span> locations(id) <span class="kw">on delete set null</span>,
+  <span class="fn">category_id</span>    <span class="ty">uuid</span> <span class="kw">references</span> asset_categories(id),
+  <span class="fn">name</span>           <span class="ty">text</span> <span class="kw">not null</span>,
+  <span class="fn">brand</span>          <span class="ty">text</span>,
+  <span class="fn">model</span>          <span class="ty">text</span>,
+  <span class="fn">serial_no</span>      <span class="ty">text</span>,
+  <span class="fn">purchase_date</span>  <span class="ty">date</span>,
+  <span class="fn">purchase_price</span> <span class="ty">numeric</span>(12,2),
+  <span class="fn">store</span>          <span class="ty">text</span>,
+  <span class="fn">image_url</span>      <span class="ty">text</span>,
+  <span class="fn">metadata</span>       <span class="ty">jsonb</span> <span class="kw">default</span> <span class="st">'{}'</span>,    <span class="cm">-- flexible per category</span>
+  <span class="fn">created_by</span>     <span class="ty">uuid</span> <span class="kw">references</span> users(id),
+  <span class="fn">created_at</span>     <span class="ty">timestamptz</span> <span class="kw">default</span> now(),
+  <span class="fn">updated_at</span>     <span class="ty">timestamptz</span> <span class="kw">default</span> now()
+);
+<span class="kw">create index on</span> assets (family_id);
+<span class="kw">create index on</span> assets (location_id);
+
+<span class="kw">create type</span> recurrence <span class="kw">as enum</span> (<span class="st">'none'</span>,<span class="st">'monthly'</span>,<span class="st">'quarterly'</span>,<span class="st">'half_yearly'</span>,<span class="st">'yearly'</span>);
+
+<span class="kw">create table</span> <span class="ty">asset_dates</span> (
+  <span class="fn">id</span>                    <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">asset_id</span>              <span class="ty">uuid</span> <span class="kw">not null references</span> assets(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">label</span>                 <span class="ty">text</span> <span class="kw">not null</span>,    <span class="cm">-- 'Insurance', 'Pollution', 'AMC', 'Warranty'</span>
+  <span class="fn">due_date</span>              <span class="ty">date</span> <span class="kw">not null</span>,
+  <span class="fn">recurrence</span>            <span class="ty">recurrence</span> <span class="kw">default</span> <span class="st">'none'</span>,
+  <span class="fn">notify_offsets</span>        <span class="ty">int</span>[] <span class="kw">default</span> <span class="st">'{30,7,1}'</span>,    <span class="cm">-- days before due</span>
+  <span class="fn">completed_at</span>          <span class="ty">timestamptz</span>,
+  <span class="fn">field_versions</span>        <span class="ty">jsonb</span> <span class="kw">default</span> <span class="st">'{}'</span>,        <span class="cm">-- review #4: per-field LWW versions</span>
+  <span class="fn">updated_at</span>            <span class="ty">timestamptz</span> <span class="kw">default</span> now(),
+  <span class="fn">deleted_at</span>            <span class="ty">timestamptz</span>                  <span class="cm">-- review #5: tombstone</span>
+);
+<span class="kw">create index on</span> asset_dates (due_date);
+<span class="kw">create index on</span> asset_dates (asset_id);
+
+<span class="cm">-- review #7: replaces the fragile scalar last_notified_offset. One row per</span>
+<span class="cm">-- (reminder, offset, channel) keeps the worker idempotent and dedupes per</span>
+<span class="cm">-- channel, even after a due_date edit.</span>
+<span class="kw">create table</span> <span class="ty">notification_log</span> (
+  <span class="fn">asset_date_id</span> <span class="ty">uuid</span> <span class="kw">not null references</span> asset_dates(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">offset_days</span>   <span class="ty">int</span> <span class="kw">not null</span>,
+  <span class="fn">channel</span>       <span class="ty">text</span> <span class="kw">not null default</span> <span class="st">'push'</span>,   <span class="cm">-- push | local | email</span>
+  <span class="fn">sent_at</span>       <span class="ty">timestamptz</span> <span class="kw">default</span> now(),
+  <span class="kw">primary key</span> (asset_date_id, offset_days, channel)
+);
+
+<span class="cm">-- review #8: completing a recurring reminder rolls due_date forward and clears</span>
+<span class="cm">-- its log, instead of firing once and dying (full body in 0001_init.sql).</span>
+<span class="kw">create function</span> complete_asset_date(p_id <span class="ty">uuid</span>) <span class="kw">returns</span> asset_dates ...;</pre>
+
+    <h3>2.3 — Flexible metadata via category schema</h3>
+    <p>Rather than adding columns for every asset type, each <code>asset_category</code> declares its fields. The client renders the form dynamically and stores values in <code>assets.metadata</code> JSONB.</p>
+    <pre><span class="cm">-- example: asset_categories.schema for a 'vehicle'</span>
+{
+  <span class="st">"fields"</span>: [
+    { <span class="st">"key"</span>: <span class="st">"reg_no"</span>,      <span class="st">"label"</span>: <span class="st">"Registration No."</span>, <span class="st">"type"</span>: <span class="st">"text"</span>, <span class="st">"required"</span>: <span class="kw">true</span> },
+    { <span class="st">"key"</span>: <span class="st">"fuel_type"</span>,   <span class="st">"label"</span>: <span class="st">"Fuel"</span>,           <span class="st">"type"</span>: <span class="st">"enum"</span>,
+      <span class="st">"options"</span>: [<span class="st">"petrol"</span>,<span class="st">"diesel"</span>,<span class="st">"electric"</span>,<span class="st">"hybrid"</span>] },
+    { <span class="st">"key"</span>: <span class="st">"engine_cc"</span>,   <span class="st">"label"</span>: <span class="st">"Engine (cc)"</span>,    <span class="st">"type"</span>: <span class="st">"number"</span> }
+  ],
+  <span class="st">"suggested_dates"</span>: [
+    { <span class="st">"label"</span>: <span class="st">"Insurance"</span>,   <span class="st">"recurrence"</span>: <span class="st">"yearly"</span> },
+    { <span class="st">"label"</span>: <span class="st">"Pollution"</span>,   <span class="st">"recurrence"</span>: <span class="st">"yearly"</span> },
+    { <span class="st">"label"</span>: <span class="st">"Service"</span>,     <span class="st">"recurrence"</span>: <span class="st">"half_yearly"</span> }
+  ]
+}</pre>
+
+    <h3>2.4 — Tree queries</h3>
+    <p>Pull a full location subtree (and its assets) using a recursive CTE — fast enough for the ~hundreds of nodes a household will ever have:</p>
+    <pre><span class="kw">with recursive</span> sub <span class="kw">as</span> (
+  <span class="kw">select</span> * <span class="kw">from</span> locations <span class="kw">where</span> id = $1
+  <span class="kw">union all</span>
+  <span class="kw">select</span> l.* <span class="kw">from</span> locations l <span class="kw">join</span> sub <span class="kw">on</span> l.parent_id = sub.id
+)
+<span class="kw">select</span> a.* <span class="kw">from</span> assets a <span class="kw">where</span> a.location_id <span class="kw">in</span> (<span class="kw">select</span> id <span class="kw">from</span> sub);</pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+        SECTION 3 — FAMILY / RBAC
+       ═══════════════════════════════════════════════ -->
+  <section id="s3">
+    <div class="sec-num"><span class="bar"></span>Section 03</div>
+    <h2>Family / group sharing &amp; permissions</h2>
+    <p class="lede">A user belongs to one or more <em>families</em>. Every location, asset, document, and reminder is scoped to a family — that single foreign key is the heart of multi-tenant data isolation.</p>
+
+    <h3>3.1 — Entities</h3>
+    <pre><span class="kw">create table</span> <span class="ty">families</span> (
+  <span class="fn">id</span>          <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">name</span>        <span class="ty">text</span> <span class="kw">not null</span>,
+  <span class="fn">owner_id</span>    <span class="ty">uuid</span> <span class="kw">not null references</span> users(id),
+  <span class="fn">created_at</span>  <span class="ty">timestamptz</span> <span class="kw">default</span> now()
+);
+
+<span class="kw">create type</span> family_role <span class="kw">as enum</span> (<span class="st">'owner'</span>,<span class="st">'admin'</span>,<span class="st">'member'</span>,<span class="st">'viewer'</span>);
+
+<span class="kw">create table</span> <span class="ty">family_members</span> (
+  <span class="fn">family_id</span>     <span class="ty">uuid</span> <span class="kw">references</span> families(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">user_id</span>       <span class="ty">uuid</span> <span class="kw">references</span> users(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">role</span>          <span class="ty">family_role</span> <span class="kw">not null default</span> <span class="st">'member'</span>,
+  <span class="fn">joined_at</span>     <span class="ty">timestamptz</span> <span class="kw">default</span> now(),
+  <span class="kw">primary key</span> (family_id, user_id)
+);
+
+<span class="kw">create table</span> <span class="ty">family_invites</span> (
+  <span class="fn">id</span>          <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">family_id</span>   <span class="ty">uuid</span> <span class="kw">references</span> families(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">email</span>       <span class="ty">text</span>,
+  <span class="fn">code</span>        <span class="ty">text</span> <span class="kw">unique</span>,                <span class="cm">-- 6-char short code for share link</span>
+  <span class="fn">role</span>        <span class="ty">family_role</span> <span class="kw">default</span> <span class="st">'member'</span>,
+  <span class="fn">invited_by</span>  <span class="ty">uuid</span> <span class="kw">references</span> users(id),
+  <span class="fn">expires_at</span>  <span class="ty">timestamptz</span> <span class="kw">default</span> now() + <span class="kw">interval</span> <span class="st">'7 days'</span>,
+  <span class="fn">accepted_at</span> <span class="ty">timestamptz</span>
+);</pre>
+
+    <h3>3.2 — Permission matrix</h3>
+    <table class="matrix">
+      <thead>
+        <tr><th>Capability</th><th>Owner</th><th>Admin</th><th>Member</th><th>Viewer</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>View assets, docs &amp; reminders</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+        <tr><td>Receive notifications</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+        <tr><td>Create / edit assets &amp; dates</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="no">○</td></tr>
+        <tr><td>Upload documents</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="no">○</td></tr>
+        <tr><td>Delete assets</td><td class="yes">●</td><td class="yes">●</td><td class="partial">own</td><td class="no">○</td></tr>
+        <tr><td>Invite / remove members</td><td class="yes">●</td><td class="yes">●</td><td class="no">○</td><td class="no">○</td></tr>
+        <tr><td>Change member roles</td><td class="yes">●</td><td class="partial">≤ admin</td><td class="no">○</td><td class="no">○</td></tr>
+        <tr><td>Delete / transfer family</td><td class="yes">●</td><td class="no">○</td><td class="no">○</td><td class="no">○</td></tr>
+      </tbody>
+    </table>
+
+    <h3>3.3 — Enforcing it with Postgres RLS</h3>
+    <p>One helper function + one policy per table replaces hand-rolled middleware. Supabase runs every query under <code>auth.uid()</code>, so the database itself becomes the security boundary.</p>
+    <pre><span class="cm">-- review #2: security definer + pinned search_path so the helper's own read of</span>
+<span class="cm">-- family_members bypasses RLS and cannot recurse into this same policy.</span>
+<span class="kw">create or replace function</span> <span class="fn">is_family_member</span>(fid <span class="ty">uuid</span>, min_role family_role <span class="kw">default</span> <span class="st">'viewer'</span>)
+<span class="kw">returns</span> <span class="ty">boolean language</span> sql <span class="kw">stable security definer set</span> search_path = public <span class="kw">as</span> $$
+  <span class="kw">select exists</span> (
+    <span class="kw">select</span> 1 <span class="kw">from</span> family_members fm
+    <span class="kw">where</span> fm.family_id = fid
+      <span class="kw">and</span> fm.user_id = auth.uid()
+      <span class="kw">and case</span> min_role
+            <span class="kw">when</span> <span class="st">'viewer'</span> <span class="kw">then true</span>
+            <span class="kw">when</span> <span class="st">'member'</span> <span class="kw">then</span> fm.role <span class="kw">in</span> (<span class="st">'owner'</span>,<span class="st">'admin'</span>,<span class="st">'member'</span>)
+            <span class="kw">when</span> <span class="st">'admin'</span>  <span class="kw">then</span> fm.role <span class="kw">in</span> (<span class="st">'owner'</span>,<span class="st">'admin'</span>)
+            <span class="kw">when</span> <span class="st">'owner'</span>  <span class="kw">then</span> fm.role = <span class="st">'owner'</span>
+          <span class="kw">end</span>
+  );
+$$;
+
+<span class="kw">alter table</span> assets <span class="kw">enable row level security</span>;
+
+<span class="kw">create policy</span> <span class="st">"read assets in my family"</span> <span class="kw">on</span> assets
+  <span class="kw">for select using</span> (is_family_member(family_id));
+
+<span class="cm">-- review #3: split policies so "member deletes only OWN" matches the matrix;</span>
+<span class="cm">-- admin+ can delete anything. "for all" could not express per-row ownership.</span>
+<span class="kw">create policy</span> <span class="st">"insert assets"</span> <span class="kw">on</span> assets
+  <span class="kw">for insert with check</span> (is_family_member(family_id, <span class="st">'member'</span>));
+<span class="kw">create policy</span> <span class="st">"update assets"</span> <span class="kw">on</span> assets
+  <span class="kw">for update using</span> (is_family_member(family_id, <span class="st">'member'</span>))
+             <span class="kw">with check</span> (is_family_member(family_id, <span class="st">'member'</span>));
+<span class="kw">create policy</span> <span class="st">"delete own assets or admin"</span> <span class="kw">on</span> assets
+  <span class="kw">for delete using</span> (
+    is_family_member(family_id, <span class="st">'admin'</span>)
+    <span class="kw">or</span> (is_family_member(family_id, <span class="st">'member'</span>) <span class="kw">and</span> created_by = auth.uid())
+  );</pre>
+
+    <h3>3.4 — Invitation flow</h3>
+    <ol>
+      <li>Owner/admin generates an invite → row in <code>family_invites</code> with a short <code>code</code>.</li>
+      <li>App produces a <strong>deep link</strong> (<code>docsbuddy://join?c=AB12CD</code>) + a fallback web URL.</li>
+      <li>Invitee opens the link → if signed in, app calls <code>rpc.accept_invite(code)</code>; if not, sign-in first.</li>
+      <li>RPC validates expiry, inserts into <code>family_members</code>, marks invite accepted, atomically.</li>
+    </ol>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+        SECTION 4 — DOCUMENT STORAGE
+       ═══════════════════════════════════════════════ -->
+  <section id="s4">
+    <div class="sec-num"><span class="bar"></span>Section 04</div>
+    <h2>Document storage architecture</h2>
+    <p class="lede">PDFs, images, and receipts attach to assets. Files live in object storage; only metadata sits in Postgres. Access is gated by the same family RBAC, with short-lived signed URLs for downloads.</p>
+
+    <h3>4.1 — Storage layout</h3>
+    <div class="card">
+      <div class="file-tree">
+<span class="dir">📁 docsbuddy-files/</span>          <span class="cm"># single private bucket</span>
+  <span class="dir">📁 {family_id}/</span>            <span class="cm"># top-level folder = tenant boundary</span>
+    <span class="dir">📁 assets/</span>
+      <span class="dir">📁 {asset_id}/</span>
+        <span class="dir">📁 documents/</span>
+          📄 {doc_id}_invoice.pdf
+          📄 {doc_id}_warranty.pdf
+        <span class="dir">📁 thumbnails/</span>
+          🖼  {doc_id}_w400.jpg     <span class="cm"># generated by edge fn</span>
+    <span class="dir">📁 locations/</span>
+      🖼  {location_id}_cover.jpg
+      </div>
+    </div>
+    <p>The leading <code>{family_id}</code> segment lets a single Storage RLS policy enforce isolation:</p>
+    <pre><span class="kw">create policy</span> <span class="st">"family members read their files"</span> <span class="kw">on</span> storage.objects
+  <span class="kw">for select using</span> (
+    bucket_id = <span class="st">'docsbuddy-files'</span>
+    <span class="kw">and</span> is_family_member((storage.foldername(name))[1]::uuid)
+  );</pre>
+
+    <h3>4.2 — Document metadata</h3>
+    <pre><span class="kw">create type</span> doc_kind <span class="kw">as enum</span> (<span class="st">'invoice'</span>,<span class="st">'warranty'</span>,<span class="st">'insurance'</span>,<span class="st">'manual'</span>,<span class="st">'photo'</span>,<span class="st">'other'</span>);
+
+<span class="kw">create table</span> <span class="ty">documents</span> (
+  <span class="fn">id</span>            <span class="ty">uuid</span> <span class="kw">primary key default</span> gen_random_uuid(),
+  <span class="fn">family_id</span>     <span class="ty">uuid</span> <span class="kw">not null references</span> families(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">asset_id</span>      <span class="ty">uuid</span> <span class="kw">references</span> assets(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">asset_date_id</span> <span class="ty">uuid</span> <span class="kw">references</span> asset_dates(id) <span class="kw">on delete set null</span>,
+  <span class="fn">kind</span>          <span class="ty">doc_kind</span> <span class="kw">default</span> <span class="st">'other'</span>,
+  <span class="fn">title</span>         <span class="ty">text</span>,
+  <span class="fn">storage_path</span>  <span class="ty">text</span> <span class="kw">not null</span>,        <span class="cm">-- key inside the bucket</span>
+  <span class="fn">mime_type</span>     <span class="ty">text</span>,
+  <span class="fn">size_bytes</span>    <span class="ty">bigint</span>,
+  <span class="fn">thumb_path</span>    <span class="ty">text</span>,
+  <span class="fn">uploaded_by</span>   <span class="ty">uuid</span> <span class="kw">references</span> users(id),
+  <span class="fn">created_at</span>    <span class="ty">timestamptz</span> <span class="kw">default</span> now()
+);</pre>
+
+    <h3>4.3 — Upload &amp; download flow</h3>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><div class="t">Pick file</div><div class="d">image_picker / file_picker</div></div>
+      <div class="step"><div class="n">02</div><div class="t">Compress</div><div class="d">Images → WebP 80%</div></div>
+      <div class="step"><div class="n">03</div><div class="t">Direct upload</div><div class="d">Client → Storage</div></div>
+      <div class="step"><div class="n">04</div><div class="t">Insert row</div><div class="d">documents table</div></div>
+      <div class="step"><div class="n">05</div><div class="t">Thumb job</div><div class="d">Edge fn on insert</div></div>
+    </div>
+    <p style="margin-top:18px">Downloads use 15-minute signed URLs — short enough that a leaked link doesn't become a long-term credential, long enough for a user to view + share within one session.</p>
+
+    <div class="callout">
+      <div class="glyph">!</div>
+      <div class="body"><b>Never proxy file bytes through your API.</b> The mobile app uploads and downloads <i>directly</i> against Storage; your edge functions only mint signed URLs and write metadata rows. Proxying murders bandwidth costs and latency.</div>
+    </div>
+
+    <h3>4.4 — Client-side cache</h3>
+    <p>Cache downloaded docs in the OS cache directory keyed by <code>document.id</code>. When the row's <code>updated_at</code> changes, evict and refetch. Use <code>flutter_cache_manager</code> for the eviction policy.</p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+        SECTION 5 — NOTIFICATIONS
+       ═══════════════════════════════════════════════ -->
+  <section id="s5">
+    <div class="sec-num"><span class="bar"></span>Section 05</div>
+    <h2>Intelligent notification pipeline</h2>
+    <div class="callout" style="border-color:#cfe7d8;background:linear-gradient(180deg,#f3fbf6,#e9f6ef)">
+      <div class="glyph" style="background:var(--green)">★</div>
+      <div class="body"><b>Recommended: run both as a hybrid (review #6).</b> The on-device scheduler gives offline immediacy, but on iOS the queue-refill background task and silent <code>content-available</code> pushes are throttled and not guaranteed — a reminder months out on a rarely-opened phone may never fire. So keep the device scheduler <i>and</i> keep the daily server cron as a guaranteed backstop, deduping on the client via <code>notification_log</code>. The two modes below are the components of that hybrid, not an either/or.</div>
+    </div>
+    <p class="lede mode-only-server">A single daily cron computes who should hear about which reminder, dispatches a push to every relevant device, and is idempotent — running twice on the same day never produces duplicate alerts.</p>
+    <p class="lede mode-only-local">Reminders live on the device. The phone schedules its own local notifications and never depends on the network to fire them. The server is a sync target — it stores the canonical copy and fans changes out to other family members' devices, WhatsApp-style.</p>
+
+    <div class="mode-only-server">
+    <h3>5.1 — Threshold model</h3>
+    <p>Each <code>asset_dates</code> row carries a per-reminder array of offsets in days. Defaults are configurable in user settings and propagate to new reminders.</p>
+    <div class="timeline">
+      <div class="tl-bar">
+        <div class="marker" style="left:0%"><div class="lbl">−30 days</div><div class="sub">First nudge</div></div>
+        <div class="marker" style="left:62%"><div class="lbl">−7 days</div><div class="sub">Reminder</div></div>
+        <div class="marker" style="left:90%"><div class="lbl">−1 day</div><div class="sub">Final</div></div>
+        <div class="marker due" style="left:100%"><div class="lbl">Due</div><div class="sub">Date</div></div>
+      </div>
+    </div>
+    <p>Users can override globally (<em>Settings → Notifications</em>) or per-reminder (e.g. "remind me 60/14/3 days before insurance").</p>
+
+    <h3>5.2 — The daily worker</h3>
+    <p>A Supabase Scheduled Edge Function (or a Cloud Function / EventBridge rule on other clouds) runs every hour on the hour. At each tick it processes users whose local time is 08:00.</p>
+    <pre><span class="cm">// pseudocode for the scheduled worker (TypeScript / Deno on Supabase)</span>
+<span class="kw">export default async function</span> <span class="fn">tick</span>() {
+  <span class="kw">const</span> nowUtc = <span class="kw">new</span> Date();
+
+  <span class="cm">// 1. Find users whose local clock is 08:00 right now.</span>
+  <span class="kw">const</span> users = <span class="kw">await</span> db.users.where(<span class="fn">localHour</span>(timezone, nowUtc) === 8);
+
+  <span class="cm">// 2. Pull reminders that hit a threshold today, for any family those users belong to.</span>
+  <span class="kw">const</span> rows = <span class="kw">await</span> db.raw(`
+    select ad.*, a.name as asset_name, a.family_id, fm.user_id, ud.fcm_token, ud.platform,
+           (ad.due_date - current_date) as days_left
+    from asset_dates ad
+    join assets a            on a.id = ad.asset_id
+    join family_members fm   on fm.family_id = a.family_id
+    join user_devices ud     on ud.user_id = fm.user_id
+    where ad.completed_at is null
+      and ad.deleted_at is null
+      and (ad.due_date - current_date) = any(ad.notify_offsets)
+      and fm.user_id = any($1)
+      -- review #7: dedup against the log instead of a fragile scalar.
+      and not exists (
+        select 1 from notification_log nl
+        where nl.asset_date_id = ad.id
+          and nl.offset_days   = (ad.due_date - current_date)
+          and nl.channel       = 'push')
+  `, [users.map(u =&gt; u.id)]);
+
+  <span class="cm">// 3. Group by reminder; one push per device with a payload that the app deep-links.</span>
+  <span class="kw">for</span> (<span class="kw">const</span> r <span class="kw">of</span> rows) {
+    <span class="kw">await</span> fcm.send({
+      token: r.fcm_token,
+      notification: {
+        title: <span class="st">`${r.asset_name} — ${r.label} in ${r.days_left} days`</span>,
+        body:  <span class="st">`Due ${formatDate(r.due_date)}`</span>
+      },
+      data: { asset_id: r.asset_id, asset_date_id: r.id, deep_link: <span class="st">`docsbuddy://asset/${r.asset_id}`</span> },
+      apns: { headers: { <span class="st">'apns-priority'</span>: <span class="st">'10'</span> } }
+    });
+  }
+
+  <span class="cm">// 4. Record each (reminder, offset, channel) so we never re-fire it.</span>
+  <span class="kw">await</span> db.notification_log.insertIgnore(
+    rows.map(r =&gt; ({ asset_date_id: r.id, offset_days: r.days_left, channel: <span class="st">'push'</span> })));
+}</pre>
+
+    <h3>5.3 — Why a <code>notification_log</code> table?</h3>
+    <p>It makes the worker <strong>idempotent (review #7)</strong>. A single <code>last_notified_offset</code> scalar could not represent "fired the 7-day nudge but not the 1-day," broke whenever <code>due_date</code> was edited, and could not dedup per channel or device. A row per <code>(asset_date_id, offset_days, channel)</code> with a composite primary key makes re-runs, timezone/DST hops, and retries all no-ops.</p>
+
+    <h3>5.4 — Local notifications as a fallback</h3>
+    <p>On every login/sync, schedule a small ring buffer (next ~30 days of reminders) as <strong>local</strong> notifications using <code>flutter_local_notifications</code>. This guarantees that even if the device is offline when the FCM push fires, the user still gets reminded — and you get a free graceful degradation if FCM ever has an outage.</p>
+
+    <h3>5.5 — Per-user preferences</h3>
+    <pre><span class="kw">create table</span> <span class="ty">notification_prefs</span> (
+  <span class="fn">user_id</span>         <span class="ty">uuid</span> <span class="kw">primary key references</span> users(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">push_enabled</span>    <span class="ty">boolean</span> <span class="kw">default true</span>,
+  <span class="fn">email_enabled</span>   <span class="ty">boolean</span> <span class="kw">default false</span>,
+  <span class="fn">default_offsets</span> <span class="ty">int</span>[] <span class="kw">default</span> <span class="st">'{30,7,1}'</span>,
+  <span class="fn">quiet_start</span>     <span class="ty">time</span> <span class="kw">default</span> <span class="st">'22:00'</span>,
+  <span class="fn">quiet_end</span>       <span class="ty">time</span> <span class="kw">default</span> <span class="st">'07:00'</span>
+);</pre>
+    </div>
+
+    <!-- ─── LOCAL-FIRST ALTERNATIVE ────────────────────── -->
+    <div class="mode-only-local">
+
+    <div class="callout">
+      <div class="glyph">⇄</div>
+      <div class="body"><b>Mental model.</b> Think of the phone as the source of truth at the edge — like WhatsApp. The server holds the canonical copy for backup and cross-device sync, but it does <i>not</i> orchestrate when notifications fire. The device's own scheduler does, even with the network unplugged.</div>
+    </div>
+
+    <h3>5.1 — Where reminders live</h3>
+    <p>Every reminder is a row in a local SQLite (Drift) database the moment the user taps Save. It is mirrored to the server in the background — but the local row is the primary, and the schedule is computed from it.</p>
+    <pre><span class="cm">// Drift table — primary store on device</span>
+<span class="kw">class</span> <span class="ty">LocalReminders</span> <span class="kw">extends</span> <span class="ty">Table</span> {
+  TextColumn  get id            =&gt; text()();
+  TextColumn  get assetId       =&gt; text()();
+  TextColumn  get label         =&gt; text()();
+  DateTimeColumn get dueDate    =&gt; dateTime()();
+  TextColumn  get recurrence    =&gt; text().withDefault(<span class="st">'none'</span>)();
+  TextColumn  get notifyOffsets =&gt; text().withDefault(<span class="st">'30,7,1'</span>)();
+  <span class="cm">// ── sync fields ──</span>
+  IntColumn   get version       =&gt; integer().withDefault(0)();   <span class="cm">// monotonic, per-row</span>
+  <span class="cm">// review #4: per-field versions ({field: version} as JSON) — REQUIRED for the</span>
+  <span class="cm">// last-write-wins-PER-FIELD merge in 5.4, which reads field_versions[field].</span>
+  TextColumn  get fieldVersions =&gt; text().withDefault(<span class="st">'{}'</span>)();
+  TextColumn  get syncStatus    =&gt; text().withDefault(<span class="st">'dirty'</span>)(); <span class="cm">// dirty | syncing | clean</span>
+  DateTimeColumn get updatedAt  =&gt; dateTime()();
+  DateTimeColumn get deletedAt  =&gt; dateTime().nullable()();      <span class="cm">// tombstone</span>
+}</pre>
+
+    <h3>5.2 — On-device scheduler</h3>
+    <p>When a reminder is created or edited, the app computes every threshold date and schedules an OS-level local notification for each one. No server round-trip required — the alert fires even in airplane mode.</p>
+    <pre><span class="cm">// services/reminder_scheduler.dart</span>
+<span class="kw">Future</span>&lt;<span class="ty">void</span>&gt; <span class="fn">rescheduleFor</span>(<span class="ty">Reminder</span> r) <span class="kw">async</span> {
+  <span class="kw">await</span> _plugin.cancelAll(tag: <span class="st">'r:${r.id}'</span>);
+  <span class="kw">for</span> (<span class="kw">final</span> offset <span class="kw">in</span> r.notifyOffsets) {
+    <span class="kw">final</span> when = r.dueDate.subtract(<span class="ty">Duration</span>(days: offset));
+    <span class="kw">if</span> (when.isBefore(DateTime.now())) <span class="kw">continue</span>;
+    <span class="kw">await</span> _plugin.zonedSchedule(
+      id:   <span class="fn">stableInt</span>(r.id, offset),
+      tzTime: tz.TZDateTime.from(when, tz.local).<span class="fn">withHour</span>(8),
+      title: <span class="st">'${r.assetName} — ${r.label} in $offset days'</span>,
+      body:  <span class="st">'Due ${formatDate(r.dueDate)}'</span>,
+      payload: <span class="st">'docsbuddy://asset/${r.assetId}'</span>,
+      tag:   <span class="st">'r:${r.id}'</span>,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
+}</pre>
+    <p>iOS &amp; Android allow ~64 scheduled local notifications per app, plenty for hundreds of reminders since most are months out — only the next ~30 days are actually queued at a time. A background task (<code>workmanager</code>) re-fills the queue weekly so the schedule stays current.</p>
+    <div class="callout" style="border-color:#f3dcc0;background:linear-gradient(180deg,#fffaf2,#fdf1e2)">
+      <div class="glyph" style="background:var(--amber)">!</div>
+      <div class="body"><b>Two platform caveats (review).</b> (1) <code>exactAllowWhileIdle</code> needs the <code>SCHEDULE_EXACT_ALARM</code> permission on Android 13+, with runtime handling and a Play Store policy justification — request it or fall back to inexact mode. (2) The weekly <code>workmanager</code> refill is <i>not guaranteed</i> on iOS (<code>BGTaskScheduler</code> is throttled), which is exactly why the server cron backstop in review #6 matters.</div>
+    </div>
+
+    <h3>5.3 — Background sync (WhatsApp-style)</h3>
+    <p>The phone never blocks UI on the network. A background isolate runs <em>three</em> kinds of work, in this order:</p>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><div class="t">Push outbox</div><div class="d">dirty rows → server</div></div>
+      <div class="step"><div class="n">02</div><div class="t">Pull deltas</div><div class="d">since last_sync_at</div></div>
+      <div class="step"><div class="n">03</div><div class="t">Resolve</div><div class="d">LWW per-field</div></div>
+      <div class="step"><div class="n">04</div><div class="t">Files</div><div class="d">chunked up/down</div></div>
+      <div class="step"><div class="n">05</div><div class="t">Reschedule</div><div class="d">re-arm OS alarms</div></div>
+    </div>
+    <p style="margin-top:14px">Triggered on app foreground, on network regain, by silent FCM ping (when another family member made a change), and at fixed intervals (~15 min) via <code>workmanager</code>.</p>
+    <div class="callout" style="border-color:#cfe1f3;background:linear-gradient(180deg,#f5f9ff,#eaf2fc)">
+      <div class="glyph" style="background:var(--blue)">⇄</div>
+      <div class="body"><b>Use Realtime while online (review #11).</b> The silent FCM ping is only needed when the app is backgrounded or killed. While it is foreground and online, subscribe to <b>Supabase Realtime</b> on the family's rows instead — it is more reliable than a throttled silent push and you already depend on Supabase. FCM stays the wake-from-background channel only.</div>
+    </div>
+
+    <h3>5.4 — Conflict resolution</h3>
+    <p>Two devices can edit the same reminder offline. On sync, the server compares the per-field <code>field_versions</code> map (added to the row model in 5.1 per review #4 — without it this merge has nothing to read) and resolves <strong>last-write-wins per field</strong> (not per row) so changes from both edits survive when they touch different fields. Tombstones (<code>deleted_at</code>) win against any concurrent edit — deletes are sticky for 30 days, then garbage-collected.</p>
+    <div class="callout" style="border-color:#f3dcc0;background:linear-gradient(180deg,#fffaf2,#fdf1e2)">
+      <div class="glyph" style="background:var(--amber)">!</div>
+      <div class="body"><b>Tombstone caveat.</b> A device offline for longer than the 30-day GC window can resurrect a deleted row on next sync. Acceptable for a household app, but make the GC window a deliberate, documented choice.</div>
+    </div>
+    <pre><span class="cm">// server-side merge — runs inside a transaction</span>
+<span class="kw">function</span> <span class="fn">merge</span>(server, incoming) {
+  <span class="kw">if</span> (server.deleted_at || incoming.deleted_at)
+    <span class="kw">return</span> { ...server, deleted_at: server.deleted_at ?? incoming.deleted_at };
+
+  <span class="kw">const</span> out = { ...server };
+  <span class="kw">for</span> (<span class="kw">const</span> field <span class="kw">of</span> EDITABLE_FIELDS) {
+    <span class="kw">const</span> sStamp = server.field_versions[field]   ?? 0;
+    <span class="kw">const</span> iStamp = incoming.field_versions[field] ?? 0;
+    <span class="kw">if</span> (iStamp &gt; sStamp) out[field] = incoming[field];
+  }
+  out.version    = Math.max(server.version, incoming.version) + 1;
+  out.updated_at = <span class="kw">new</span> Date();
+  <span class="kw">return</span> out;
+}</pre>
+
+    <h3>5.5 — Files: chunked, deduped, lazy</h3>
+    <p>Invoices, receipts and screenshots follow the WhatsApp media model — the file's bytes and its database row sync independently. The row arrives first (small), the bytes follow when bandwidth allows.</p>
+    <table>
+      <thead><tr><th>Concern</th><th>How it works</th></tr></thead>
+      <tbody>
+        <tr><td>Upload</td><td>File hashed (SHA-256) on capture. If hash already on server (deduped across family), skip body upload — just create the link row.</td></tr>
+        <tr><td>Chunking</td><td>Files &gt; 1 MB split into 256 KB chunks, uploaded with resumable PUT. Background isolate retries on flaky network without user noticing.</td></tr>
+        <tr><td>Download</td><td>Other family members see the row immediately (with a placeholder thumb). Body fetches lazily on first view, or eagerly in background for recently-edited assets.</td></tr>
+        <tr><td>Storage</td><td>Files live under <code>app_documents/</code> in the OS scoped cache. Drift keeps <code>local_path</code> + <code>remote_path</code>; either can be null while the other catches up.</td></tr>
+        <tr><td>Encryption</td><td>Optional E2E: a family key (32 bytes) is generated on family creation, sealed to each member's public key, and used to AES-GCM the file body before upload. Metadata stays unencrypted so search/sort works. <b>Review:</b> this needs a full key-management story (device keypair storage, key rotation when a member is removed) before it is safe — <b>cut it from v1</b> or spec it fully; do not ship it half-built.</td></tr>
+      </tbody>
+    </table>
+    <pre><span class="cm">// Drift table for tracked media — mirrors documents but local-first</span>
+<span class="kw">class</span> <span class="ty">LocalDocuments</span> <span class="kw">extends</span> <span class="ty">Table</span> {
+  TextColumn  get id          =&gt; text()();
+  TextColumn  get assetId     =&gt; text()();
+  TextColumn  get title       =&gt; text()();
+  TextColumn  get sha256      =&gt; text()();
+  TextColumn  get mimeType    =&gt; text()();
+  IntColumn   get sizeBytes   =&gt; integer()();
+  TextColumn  get localPath   =&gt; text().nullable()();   <span class="cm">// null until downloaded</span>
+  TextColumn  get remotePath  =&gt; text().nullable()();   <span class="cm">// null until uploaded</span>
+  TextColumn  get uploadState =&gt; text().withDefault(<span class="st">'queued'</span>)(); <span class="cm">// queued|uploading|uploaded</span>
+  IntColumn   get uploadedBytes =&gt; integer().withDefault(0)();
+  DateTimeColumn get updatedAt  =&gt; dateTime()();
+  DateTimeColumn get deletedAt  =&gt; dateTime().nullable()();
+}</pre>
+
+    <h3>5.6 — When the server <em>does</em> push</h3>
+    <p>The only push notifications the server sends are <strong>silent data pushes</strong> to wake the app and trigger a sync. The phone, not the server, decides what alerts to actually display. This means:</p>
+    <ul>
+      <li>If your laptop edits a reminder, all family devices get a silent FCM ping → background sync → local OS notification ("Anand changed insurance date to 17 Jun").</li>
+      <li>If you're offline when the threshold passes, the local alarm still fires.</li>
+      <li>If the server is down, the app keeps working. Sync just queues up.</li>
+    </ul>
+
+    <h3>5.7 — Per-user preferences (still server-stored)</h3>
+    <pre><span class="kw">create table</span> <span class="ty">notification_prefs</span> (
+  <span class="fn">user_id</span>         <span class="ty">uuid</span> <span class="kw">primary key references</span> users(id) <span class="kw">on delete cascade</span>,
+  <span class="fn">channels</span>        <span class="ty">text</span>[] <span class="kw">default</span> <span class="st">'{push,local}'</span>,  <span class="cm">-- push|local|email|whatsapp</span>
+  <span class="fn">default_offsets</span> <span class="ty">int</span>[] <span class="kw">default</span> <span class="st">'{30,7,1}'</span>,
+  <span class="fn">quiet_start</span>     <span class="ty">time</span> <span class="kw">default</span> <span class="st">'22:00'</span>,
+  <span class="fn">quiet_end</span>       <span class="ty">time</span> <span class="kw">default</span> <span class="st">'07:00'</span>
+);</pre>
+
+    <div class="callout">
+      <div class="glyph">✓</div>
+      <div class="body"><b>Trade-offs.</b> You buy resilience and offline-first UX, but inherit conflict resolution complexity and a fatter mobile codebase. Skip this mode if your data is dominantly server-derived (e.g. enriched with API lookups) — the simpler server-cron model wins. Choose it if your users frequently work offline, change devices, or expect WhatsApp-like immediacy.</div>
+    </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+        SECTION 6 — FLUTTER STACK
+       ═══════════════════════════════════════════════ -->
+  <section id="s6">
+    <div class="sec-num"><span class="bar"></span>Section 06</div>
+    <h2>Flutter tech stack &amp; folder structure</h2>
+    <p class="lede">For a solo developer, picking a tightly-integrated backend is the single highest-leverage decision. The recommendation below minimises moving parts while leaving every escape hatch open.</p>
+
+    <h3>6.1 — Backend ecosystem</h3>
+    <div class="vs">
+      <div class="opt" data-backend="supabase">
+        <span class="badge">Recommended</span>
+        <div class="name">Supabase</div>
+        <div class="verdict">Best fit · Solo dev</div>
+        <ul>
+          <li>Postgres → real relational schema (your data <em>is</em> relational)</li>
+          <li>Auth, Storage, Edge Functions, Cron, Realtime in one console</li>
+          <li>Row Level Security replaces a custom permission layer</li>
+          <li>SQL is portable — you can leave any time</li>
+        </ul>
+      </div>
+      <div class="opt" data-backend="firebase">
+        <span class="badge">Recommended</span>
+        <div class="name">Firebase</div>
+        <div class="verdict">Tight Google stack</div>
+        <ul>
+          <li>Best-in-class FCM &amp; Crashlytics</li>
+          <li>Firestore queries get awkward for hierarchical/recursive data</li>
+          <li>Cloud Functions cold starts; lock-in is real</li>
+        </ul>
+      </div>
+      <div class="opt" data-backend="aws">
+        <span class="badge">Recommended</span>
+        <div class="name">AWS Amplify</div>
+        <div class="verdict">Most flexible</div>
+        <ul>
+          <li>Most powerful, most flexible</li>
+          <li>Steepest learning curve; biggest ops surface</li>
+          <li>Overkill until you're past 50k users</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>6.2 — Mobile stack</h3>
+    <table>
+      <thead><tr><th>Concern</th><th>Pick</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>State management</td><td><code>flutter_riverpod</code> 2.x</td><td>Compile-safe, testable, no <code>BuildContext</code> coupling, code-gen for providers</td></tr>
+        <tr><td>Routing</td><td><code>go_router</code></td><td>Declarative, deep-link first (critical for invite + notification taps)</td></tr>
+        <tr><td>Local DB / cache</td><td><code>drift</code> (SQLite)</td><td>Type-safe, supports complex joins, plays nicely with the Supabase schema</td></tr>
+        <tr><td>Network</td><td><code>supabase_flutter</code> + <code>dio</code></td><td>SDK for auth/db/storage; <code>dio</code> for any custom endpoints</td></tr>
+        <tr><td>Push</td><td><code>firebase_messaging</code> + <code>flutter_local_notifications</code></td><td>FCM dispatches APNs on iOS automatically; local notifs are your offline fallback</td></tr>
+        <tr><td>Secure storage</td><td><code>flutter_secure_storage</code></td><td>Keychain / Keystore-backed refresh-token vault</td></tr>
+        <tr><td>Forms</td><td><code>reactive_forms</code></td><td>Reactive validation pairs well with Riverpod</td></tr>
+        <tr><td>Images</td><td><code>cached_network_image</code> + <code>flutter_image_compress</code></td><td>On-device compression before upload; disk cache for downloads</td></tr>
+        <tr><td>Date / time</td><td><code>timezone</code> package</td><td>Required for correct local-8am scheduling across DST</td></tr>
+      </tbody>
+    </table>
+
+    <h3>6.3 — Folder structure (feature-first, clean layers)</h3>
+    <div class="card">
+      <div class="file-tree">
+<span class="dir">lib/</span>
+  📄 main.dart
+  📄 app.dart                       <span class="cm"># MaterialApp + GoRouter + ProviderScope</span>
+  <span class="dir">core/</span>                            <span class="cm"># shared, framework-agnostic</span>
+    <span class="dir">config/</span>     env.dart · flavors.dart
+    <span class="dir">theme/</span>      colors.dart · text_styles.dart · app_theme.dart
+    <span class="dir">errors/</span>     failure.dart · exception.dart
+    <span class="dir">network/</span>    supabase_client.dart · interceptors.dart
+    <span class="dir">storage/</span>    secure_storage.dart · key_value.dart
+    <span class="dir">utils/</span>      date_x.dart · result.dart · logger.dart
+    <span class="dir">widgets/</span>    primary_button.dart · loading_state.dart · empty_state.dart
+  <span class="dir">data/</span>                            <span class="cm"># DB schemas + remote / local data sources</span>
+    <span class="dir">local/</span>      app_database.dart · daos/...
+    <span class="dir">models/</span>     user.dart · family.dart · asset.dart · ... (with freezed)
+  <span class="dir">features/</span>                        <span class="cm"># one folder per vertical slice</span>
+    <span class="dir">auth/</span>
+      <span class="dir">data/</span>      auth_repository.dart
+      <span class="dir">application/</span> auth_controller.dart · session_provider.dart
+      <span class="dir">presentation/</span> sign_in_page.dart · onboarding_page.dart
+    <span class="dir">family/</span>
+      <span class="dir">data/</span>      family_repository.dart · invite_repository.dart
+      <span class="dir">application/</span> family_controller.dart
+      <span class="dir">presentation/</span> family_page.dart · invite_sheet.dart · member_tile.dart
+    <span class="dir">locations/</span>
+      <span class="dir">data/</span>      location_repository.dart
+      <span class="dir">application/</span> location_tree_provider.dart
+      <span class="dir">presentation/</span> location_list_page.dart · location_detail_page.dart
+    <span class="dir">assets/</span>
+      <span class="dir">data/</span>      asset_repository.dart · category_repository.dart
+      <span class="dir">application/</span> asset_form_controller.dart · asset_list_provider.dart
+      <span class="dir">presentation/</span> asset_list_page.dart · asset_form_page.dart · asset_detail_page.dart
+    <span class="dir">documents/</span>
+      <span class="dir">data/</span>      document_repository.dart · storage_service.dart
+      <span class="dir">application/</span> upload_controller.dart
+      <span class="dir">presentation/</span> document_viewer.dart · upload_sheet.dart
+    <span class="dir">reminders/</span>
+      <span class="dir">data/</span>      reminder_repository.dart
+      <span class="dir">application/</span> reminder_provider.dart · local_scheduler.dart
+      <span class="dir">presentation/</span> dashboard_page.dart · upcoming_page.dart
+    <span class="dir">notifications/</span>
+      <span class="dir">data/</span>      fcm_service.dart · prefs_repository.dart
+      <span class="dir">application/</span> notification_handler.dart
+      <span class="dir">presentation/</span> notification_settings_page.dart
+  <span class="dir">routing/</span>
+    📄 app_router.dart                <span class="cm"># GoRouter config, deep links, guards</span>
+    📄 routes.dart
+<span class="dir">test/</span>                              <span class="cm"># mirror lib/ structure</span>
+      </div>
+    </div>
+
+    <h3>6.4 — Offline strategy</h3>
+    <p>The repository layer is the seam. Every repository reads from Drift first, returns a stream, and reconciles with Supabase in the background.</p>
+    <ol>
+      <li><strong>Read</strong> — UI subscribes to a Drift stream. Latest local data renders immediately.</li>
+      <li><strong>Sync</strong> — On startup, on pull-to-refresh, and on Supabase realtime events, repository fetches deltas (rows where <code>updated_at &gt; last_sync</code>) and upserts into Drift.</li>
+      <li><strong>Write</strong> — Mutations write to a local <code>outbox</code> table first, then attempt remote. On success they're cleared; on failure they retry with exponential backoff.</li>
+      <li><strong>Files</strong> — Documents are downloaded on-demand to the cache directory; recently-viewed docs survive offline. Uploads queued in the outbox carry a local file path until they succeed.</li>
+    </ol>
+
+    <h3>6.5 — Riverpod sketch</h3>
+    <pre><span class="cm">// features/reminders/application/reminder_provider.dart</span>
+@riverpod
+<span class="kw">class</span> <span class="ty">UpcomingReminders</span> <span class="kw">extends</span> _$UpcomingReminders {
+  @override
+  Stream&lt;<span class="ty">List</span>&lt;<span class="ty">ReminderView</span>&gt;&gt; <span class="fn">build</span>() {
+    <span class="kw">final</span> repo = ref.watch(reminderRepositoryProvider);
+    <span class="kw">return</span> repo.watchUpcoming(within: <span class="kw">const</span> <span class="ty">Duration</span>(days: 90));
+  }
+
+  Future&lt;<span class="ty">void</span>&gt; <span class="fn">markDone</span>(<span class="ty">String</span> id) <span class="kw">async</span> {
+    <span class="kw">await</span> ref.read(reminderRepositoryProvider).markCompleted(id);
+  }
+}</pre>
+
+    <h3>6.6 — Cross-cutting items from the review</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Active-family context</td><td>A user can belong to multiple families. Hold a "current family" in app state (a Riverpod provider) and scope every repository query to it; add a family switcher in the UI.</td></tr>
+        <tr><td>Invite codes</td><td>6-char codes are enumerable. Use a long random token and validate expiry/used atomically in an <code>accept_invite()</code> RPC (implemented in <code>0001_init.sql</code>).</td></tr>
+        <tr><td>Email channel</td><td><code>notification_prefs.channels</code> includes <code>email</code> but the worker only sends push. Implement the email path or drop the option — don't imply it works.</td></tr>
+        <tr><td>Observability</td><td>Add Sentry or Crashlytics from day one; wire a global error boundary + zoned error capture.</td></tr>
+        <tr><td>CI &amp; codegen</td><td>CI runs <code>flutter analyze</code> + <code>flutter test</code>. Note <code>build_runner</code> codegen for Riverpod, Drift, and Freezed; commit generated files or generate in CI.</td></tr>
+        <tr><td>Storage RLS</td><td>Guard the <code>(...)[1]::uuid</code> cast against non-UUID keys with a regex check (see <code>0001_init.sql</code>).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <div class="glyph">▶</div>
+      <div class="body"><b>Shipping order.</b> Build in the order of this document — auth → schema → families → assets → docs → notifications → polish. Each section unblocks the next; trying to nail notifications before families exist is the most common solo-dev trap on this kind of app.</div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <div>DocsBuddy · System Architecture · v1.1 · corrections applied (see docs/architecture-review.md)</div>
+    <div>End of document</div>
+  </div>
+</div>
+
+<!-- ═══ TWEAKS PANEL ═══════════════════════════════════════════ -->
+<div id="tweaks-root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "mode": "local",
+  "backend": "supabase"
+}/*EDITMODE-END*/;
+
+function applyTweaks(t) {
+  const body = document.body;
+  body.classList.remove('mode-server', 'mode-local');
+  body.classList.add(t.mode === 'local' ? 'mode-local' : 'mode-server');
+  body.classList.remove('backend-supabase', 'backend-firebase', 'backend-aws');
+  body.classList.add('backend-' + t.backend);
+}
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  React.useEffect(() => { applyTweaks(t); }, [t]);
+
+  return (
+    <TweaksPanel title="Architecture Tweaks">
+      <TweakSection label="Notification architecture">
+        <TweakRadio
+          label="Mode"
+          value={t.mode}
+          options={[
+            { value: 'server', label: 'Server-driven' },
+            { value: 'local',  label: 'Local-first' },
+          ]}
+          onChange={(v) => setTweak('mode', v)}
+        />
+        <div style={{ fontSize: 11, color: '#6b7891', padding: '4px 12px 8px', lineHeight: 1.45 }}>
+          {t.mode === 'local'
+            ? 'Reminders + files sync from device to server in the background, WhatsApp-style. OS schedules alerts locally.'
+            : 'Daily server cron computes due reminders and fans out FCM pushes to every family member.'}
+        </div>
+      </TweakSection>
+
+      <TweakSection label="Backend">
+        <TweakRadio
+          label="Recommended"
+          value={t.backend}
+          options={[
+            { value: 'supabase', label: 'Supabase' },
+            { value: 'firebase', label: 'Firebase' },
+            { value: 'aws',      label: 'AWS' },
+          ]}
+          onChange={(v) => setTweak('backend', v)}
+        />
+      </TweakSection>
+    </TweaksPanel>
+  );
+}
+
+// Apply defaults immediately so initial paint matches stored state.
+applyTweaks(TWEAK_DEFAULTS);
+
+ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<App />);
+</script>
+
+</body>
+</html>
