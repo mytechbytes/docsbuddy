@@ -20,9 +20,20 @@ class SupabaseAuthRepository implements AuthRepository {
       return await run();
     } on AuthException catch (e) {
       throw AuthFailure(e.message);
-    } catch (_) {
+    } catch (e) {
+      if (_isNetworkError(e)) {
+        throw const AuthFailure('Can’t reach the server. Check your internet connection.');
+      }
       throw const AuthFailure('Something went wrong. Please try again.');
     }
+  }
+
+  static bool _isNetworkError(Object e) {
+    final s = e.toString();
+    return s.contains('SocketException') ||
+        s.contains('Failed host lookup') ||
+        s.contains('ClientException') ||
+        s.contains('Connection');
   }
 
   @override

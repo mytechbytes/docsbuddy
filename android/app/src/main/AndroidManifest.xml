@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for Supabase / any network access in release & profile builds.
+         Flutter only injects this into the debug manifest automatically. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="DocsBuddy"
         android:name="${applicationName}"
