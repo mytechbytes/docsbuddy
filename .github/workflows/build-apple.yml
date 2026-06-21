@@ -1,0 +1,90 @@
+name: Build Apple (manual)
+
+# Manual-only builds for the Apple platforms. There is intentionally NO push
+# trigger — run it on demand from the Actions tab ("Run workflow").
+#
+#   - macOS: release .app bundle, zipped.
+#   - iOS:   release build with --no-codesign (no signing certs in CI), so it
+#            verifies the build and produces an UNSIGNED Runner.app. That is not
+#            installable on a device — a signed .ipa needs Apple certs and a
+#            provisioning profile (separate setup).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    name: macOS app
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.2
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Build release macOS app
+        run: flutter build macos --release
+
+      - name: Zip .app bundle
+        run: |
+          cd build/macos/Build/Products/Release
+          APP="$(ls -d *.app | head -1)"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" docsbuddy-macos.zip
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docsbuddy-macos-app
+          path: build/macos/Build/Products/Release/docsbuddy-macos.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  ios:
+    name: iOS (unsigned)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.2
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS app (unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Zip Runner.app
+        run: |
+          cd build/ios/iphoneos
+          ditto -c -k --sequesterRsrc --keepParent Runner.app docsbuddy-ios-unsigned.zip
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docsbuddy-ios-unsigned
+          path: build/ios/iphoneos/docsbuddy-ios-unsigned.zip
+          if-no-files-found: error
+          retention-days: 14

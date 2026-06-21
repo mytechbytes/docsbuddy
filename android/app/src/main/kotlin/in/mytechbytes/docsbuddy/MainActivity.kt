@@ -1,4 +1,4 @@
-package com.example.docsbuddy
+package `in`.mytechbytes.docsbuddy
 
 import io.flutter.embedding.android.FlutterActivity
 
