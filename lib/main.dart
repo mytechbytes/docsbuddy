@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/config/env.dart';
+import 'core/storage/secure_supabase_storage.dart';
 import 'features/onboarding/application/onboarding_controller.dart';
 
 Future<void> main() async {
@@ -13,7 +14,16 @@ Future<void> main() async {
   // Only initialize Supabase when credentials are supplied via --dart-define;
   // otherwise the app uses the in-memory fake auth repository.
   if (Env.hasSupabase) {
-    await Supabase.initialize(url: Env.supabaseUrl, publishableKey: Env.supabaseAnonKey);
+    await Supabase.initialize(
+      url: Env.supabaseUrl,
+      publishableKey: Env.supabaseAnonKey,
+      // Review #9: persist the session + PKCE verifier in Keychain/Keystore
+      // rather than the SDK's default SharedPreferences.
+      authOptions: const FlutterAuthClientOptions(
+        localStorage: SecureLocalStorage(),
+        pkceAsyncStorage: SecurePkceStorage(),
+      ),
+    );
   }
 
   final prefs = await SharedPreferences.getInstance();

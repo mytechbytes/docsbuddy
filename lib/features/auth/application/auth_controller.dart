@@ -46,6 +46,8 @@ class AuthController extends AsyncNotifier<void> {
 
   Future<bool> updatePassword(String newPassword) =>
       _run(() => _repo.updatePassword(newPassword));
+
+  Future<bool> signOut() => _run(_repo.signOut);
 }
 
 final authControllerProvider =

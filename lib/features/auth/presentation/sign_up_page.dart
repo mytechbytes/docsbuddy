@@ -62,17 +62,17 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       return;
     }
     final ok = await ref.read(authControllerProvider.notifier).signUp(_name.text, _email.text, _password.text);
-    if (ok && mounted) context.go('/home');
+    if (ok && mounted) context.go('/dashboard');
   }
 
   Future<void> _google() async {
     final ok = await ref.read(authControllerProvider.notifier).google();
-    if (ok && mounted) context.go('/home');
+    if (ok && mounted) context.go('/dashboard');
   }
 
   Future<void> _apple() async {
     final ok = await ref.read(authControllerProvider.notifier).apple();
-    if (ok && mounted) context.go('/home');
+    if (ok && mounted) context.go('/dashboard');
   }
 
   @override

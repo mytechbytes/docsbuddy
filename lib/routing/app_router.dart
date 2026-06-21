@@ -1,28 +1,50 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/_placeholders/placeholder_page.dart';
+import '../features/auth/application/auth_providers.dart';
 import '../features/auth/presentation/forgot_password_page.dart';
 import '../features/auth/presentation/otp_verify_page.dart';
 import '../features/auth/presentation/reset_password_page.dart';
 import '../features/auth/presentation/sign_in_page.dart';
 import '../features/auth/presentation/sign_up_page.dart';
+import '../features/dashboard/presentation/dashboard_page.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
 
-/// App router. The first-launch guard sends users to `/onboarding` until the
-/// walkthrough has been completed on this device; afterwards the auth flow is
-/// the entry point until a session exists (dashboard guard arrives with the
-/// home feature).
+const _authRoutes = {
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+  '/verify-otp',
+  '/reset-password',
+};
+
+/// App router with two guards:
+///  1. first-launch onboarding (until completed on this device), then
+///  2. authentication — unauthenticated users are kept in the auth flow,
+///     authenticated users are sent to the dashboard.
 final routerProvider = Provider<GoRouter>((ref) {
+  final auth = ref.watch(authRepositoryProvider);
+  final refresh = _GoRouterRefreshStream(auth.authStateChanges());
+  ref.onDispose(refresh.dispose);
+
   return GoRouter(
-    initialLocation: '/sign-in',
+    initialLocation: '/dashboard',
+    refreshListenable: refresh,
     redirect: (context, state) {
-      final seen = ref.read(onboardingControllerProvider);
-      final atOnboarding = state.matchedLocation == '/onboarding';
-      if (!seen && !atOnboarding) return '/onboarding';
-      if (seen && atOnboarding) return '/sign-in';
+      final seenOnboarding = ref.read(onboardingControllerProvider);
+      final signedIn = auth.isSignedIn;
+      final loc = state.matchedLocation;
+      final atOnboarding = loc == '/onboarding';
+      final inAuth = _authRoutes.contains(loc);
+
+      if (!seenOnboarding) return atOnboarding ? null : '/onboarding';
+      if (!signedIn) return inAuth ? null : '/sign-in';
+      // Signed in: keep out of onboarding/auth.
+      if (atOnboarding || inAuth) return '/dashboard';
       return null;
     },
     routes: [
@@ -38,14 +60,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/reset-password', builder: (_, _) => const ResetPasswordPage()),
 
-      GoRoute(
-        path: '/home',
-        builder: (_, _) => const PlaceholderPage(
-          title: 'You’re all set',
-          subtitle: 'The dashboard lands here next. Auth is wired up — assets, reminders and family sharing follow the shipping order in the handoff.',
-          icon: Icons.dashboard_outlined,
-        ),
-      ),
+      // ── App ──
+      GoRoute(path: '/dashboard', builder: (_, _) => const DashboardPage()),
     ],
   );
 });
+
+/// Bridges a [Stream] to a [Listenable] so GoRouter re-evaluates `redirect`
+/// whenever auth state changes.
+class _GoRouterRefreshStream extends ChangeNotifier {
+  _GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _sub = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _sub;
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
