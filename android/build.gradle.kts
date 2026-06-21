@@ -21,31 +21,30 @@ subprojects {
 
 // Some plugins (e.g. flutter_timezone) compile their Kotlin at JVM 1.8 / their
 // Java at 11, which AGP rejects with "Inconsistent JVM-target compatibility".
-// Pin both to 17 for every subproject so they always match the app module.
+// Pin both to 17 for every plugin module so they match the app module.
 //
-// NB: for an Android module the Java target comes from android.compileOptions —
-// setting it on the JavaCompile task is silently overridden by AGP — so it must
-// be configured through the extension (done reflectively to avoid depending on
-// AGP's internal extension types). Kotlin's jvmTarget isn't AGP-managed, so the
-// task-level override sticks. Both run in afterEvaluate, once the plugin (and
-// its `android {}` extension) has been applied to the subproject.
+// For an Android module the Java target comes from android.compileOptions
+// (setting it on the JavaCompile task is silently overridden by AGP), but that
+// value gets finalized during evaluation — so configure it from a
+// `plugins.withId` hook that fires the moment the Android-library plugin is
+// applied, before finalization. Keying on "com.android.library" naturally
+// targets only the third-party plugin modules; the app applies
+// "com.android.application" and already pins 17/17 itself. Kotlin's jvmTarget
+// isn't AGP-managed, so a lazy configureEach override is enough.
 subprojects {
-    val applyJvm17: Project.() -> Unit = {
+    plugins.withId("com.android.library") {
         extensions.findByName("android")?.withGroovyBuilder {
             "compileOptions" {
                 setProperty("sourceCompatibility", JavaVersion.VERSION_17)
                 setProperty("targetCompatibility", JavaVersion.VERSION_17)
             }
         }
-        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-            compilerOptions {
-                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-            }
+    }
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
-    // evaluationDependsOn(":app") above forces :app to evaluate early, so it may
-    // already be evaluated here — afterEvaluate would then throw. Guard on state.
-    if (state.executed) applyJvm17() else afterEvaluate { applyJvm17() }
 }
 
 tasks.register<Delete>("clean") {
