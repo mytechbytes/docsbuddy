@@ -21,22 +21,39 @@ automatically.)
 ## 2. Deploy
 
 ```bash
+# Recommended: deploy via the Management API — no local Docker needed
+supabase functions deploy notify-family --use-api
+
+# (default Docker path; fails if it can't pull public.ecr.aws/supabase/edge-runtime)
 supabase functions deploy notify-family
-# URL: https://<project-ref>.functions.supabase.co/notify-family
 ```
+
+URL: `https://<project-ref>.functions.supabase.co/notify-family`
+
+> **"failed to pull docker image … public.ecr.aws/supabase/edge-runtime"** — the
+> default deploy bundles in Docker. Use **`--use-api`** (above) to skip Docker
+> entirely. If `--use-api` isn't recognised, `npm i -g supabase@latest` first;
+> or start Docker Desktop and `docker pull public.ecr.aws/supabase/edge-runtime:v1.74.1`
+> then retry.
 
 ## 3. Trigger it on data changes
 
-**Dashboard → Database → Webhooks → Create:**
+**Dashboard → Database → Webhooks** (newer UI: **Integrations → Database
+Webhooks**) → **Create a new hook**. Create one per table:
 
-- Table: `asset_dates` (repeat for `assets`, `documents`)
-- Events: **Insert, Update, Delete**
-- Type: **Supabase Edge Function** → `notify-family`
+1. **Name:** `notify_family_asset_dates`
+2. **Table:** `public.asset_dates`
+3. **Events:** ✅ Insert ✅ Update ✅ Delete
+4. **Webhook configuration → Type:** **Supabase Edge Functions** → select
+   **`notify-family`** (method POST). This auto-fills the URL and an
+   `Authorization: Bearer <anon key>` header (passes the function's JWT check).
+5. **Create**. Repeat for **`public.assets`** and **`public.documents`**.
 
-The webhook POSTs `{ type, table, record, old_record }`. The function resolves the
-`family_id` (directly, or via the row's `asset_id`), looks up that family's
-`user_devices.fcm_token`s, mints an FCM HTTP v1 access token from the service
-account, and sends a `data`-only message to each.
+Creating the first hook auto-enables the `pg_net` / `supabase_functions`
+extension. The webhook POSTs `{ type, table, record, old_record }`; the function
+resolves the `family_id` (directly or via `asset_id`), looks up that family's
+`user_devices.fcm_token`s, mints an FCM HTTP v1 access token, and sends a
+`data`-only message to each.
 
 ## Notes
 
