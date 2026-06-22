@@ -68,8 +68,20 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] On-device reminder notifications (local scheduler, 30/7/1-day @ 09:00)
 - [x] FCM wired (Android): google-services.json + firebase_messaging +
       device-token registration to user_devices
-- [x] FCM sender scaffolded — supabase/functions/notify-family (deploy + set
-      FIREBASE_SERVICE_ACCOUNT + add a Database Webhook)
+- [x] FCM sender — `supabase/functions/notify-family` (silent data push on a
+      family member's change). Signs the FCM HTTP-v1 token with Web Crypto (no
+      external module). **You:** `supabase functions deploy notify-family
+      --use-api`, set `FIREBASE_SERVICE_ACCOUNT`, add a Database Webhook on
+      `asset_dates`/`assets`/`documents`. **Not live-tested.**
+- [x] App icon applied via `flutter_launcher_icons` (`assets/icon/*`); regenerate
+      with `dart run flutter_launcher_icons`
+- [x] Release build green on CI — AGP 9 / Flutter plugin JVM-target (→17) and
+      `compileSdk` (→36) alignment handled in `android/build.gradle.kts` via the
+      AGP variant `finalizeDsl` hook; signed AAB artifact produced
+- [ ] Splash screen still the Flutter default (icon is set; branded splash TODO)
+- [ ] KGP deprecation: device_info_plus, flutter_timezone, package_info_plus,
+      passkeys_android, ua_client_hints still apply the legacy Kotlin Gradle
+      Plugin — only a warning today, will break a future Flutter; bump them when
+      Built-in-Kotlin versions ship
 - [ ] iOS push: GoogleService-Info.plist + APNs key (when shipping iOS)
-- [ ] App icon / splash branding still the Flutter default
 - [ ] iOS signing + provisioning (Team ID, certs) if you ship iOS

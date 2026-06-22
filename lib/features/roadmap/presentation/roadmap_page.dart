@@ -17,17 +17,22 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Documents — attach / upload / view (Supabase Storage)'),
       (true, 'On-device reminder notifications (local scheduler)'),
       (true, 'FCM push wired (Android) — device token registration'),
+      (true, 'FCM sender — notify-family Edge Function'),
       (true, 'App Links / deep-link auth redirect'),
-      (true, 'Play release setup — signed AAB, versionCode 30'),
+      (true, 'App icon (flutter_launcher_icons)'),
+      (true, 'Release build green on CI — signed AAB'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
+      (false, 'Deploy notify-family + service account + webhook'),
       (false, 'Upload-key reset (lost key) + GitHub signing secrets'),
       (false, 'Host /.well-known/assetlinks.json + apple-app-site-association'),
       (false, 'Play Console: internal track, privacy policy, data safety'),
     ]),
     ('Pending — next features', [
-      (false, 'App icon & splash branding'),
+      (false, 'Branded splash screen'),
+      (false, 'Bump KGP-legacy plugins (Built-in Kotlin)'),
+      (false, 'iOS: push (APNs), signing & provisioning'),
     ]),
   ];
 
