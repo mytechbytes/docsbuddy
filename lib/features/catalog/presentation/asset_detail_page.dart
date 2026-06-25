@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/catalog_widgets.dart';
+import '../../../core/widgets/db_logo.dart';
 import '../../documents/presentation/asset_documents_section.dart';
 import '../application/catalog_providers.dart';
 import '../data/catalog_models.dart';
@@ -17,14 +18,23 @@ class AssetDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asset = ref.watch(assetProvider(assetId));
     final reminders = ref.watch(assetRemindersProvider(assetId));
+    final list = reminders.valueOrNull ?? const <Reminder>[];
+    final next = _soonest(list);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
+        centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.ink),
-        title: Text(asset.valueOrNull?.name ?? 'Asset', style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: const DbLogo(size: 18),
+        actions: const [
+          Icon(Icons.notifications_none, color: AppColors.ink2, size: 22),
+          SizedBox(width: 14),
+          _Avatar(),
+          SizedBox(width: 16),
+        ],
       ),
       body: asset.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -32,25 +42,27 @@ class AssetDetailPage extends ConsumerWidget {
         data: (a) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           children: [
-            _InfoCard(asset: a),
-            const SizedBox(height: 22),
+            _InfoCard(asset: a, reminderCount: list.length),
+            const SizedBox(height: 16),
+            if (next != null) ...[
+              _NextDueBanner(reminder: next),
+              const SizedBox(height: 20),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('REMINDERS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
-                GestureDetector(
-                  onTap: () => _addReminder(context, ref, a),
-                  child: const Text('+ Add', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
-                ),
+                Text('All Reminders · ${list.length}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                _AddPill(onTap: () => _addReminder(context, ref, a)),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             reminders.when(
               loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
               error: (e, _) => Text('$e'),
-              data: (list) => list.isEmpty
+              data: (rs) => rs.isEmpty
                   ? const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No reminders for this asset yet.', style: TextStyle(color: AppColors.muted))))
-                  : Column(children: [for (final r in list) _ReminderRow(reminder: r)]),
+                  : Column(children: [for (final r in rs) _ReminderRow(reminder: r)]),
             ),
             const SizedBox(height: 22),
             AssetDocumentsSection(assetId: a.id),
@@ -58,6 +70,13 @@ class AssetDetailPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// The most urgent reminder (smallest days-left, overdue first).
+  static Reminder? _soonest(List<Reminder> list) {
+    if (list.isEmpty) return null;
+    final sorted = [...list]..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+    return sorted.first;
   }
 
   Future<void> _addReminder(BuildContext context, WidgetRef ref, Asset asset) async {
@@ -73,33 +92,129 @@ class AssetDetailPage extends ConsumerWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.asset});
-  final Asset asset;
+class _Avatar extends StatelessWidget {
+  const _Avatar();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+      width: 30,
+      height: 30,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(colors: [Color(0xFFF1C27D), Color(0xFFD68B5C)]),
+      ),
+      child: const Icon(Icons.person, color: Colors.white, size: 17),
+    );
+  }
+}
+
+class _AddPill extends StatelessWidget {
+  const _AddPill({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(999)),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, size: 16, color: Colors.white),
+            SizedBox(width: 4),
+            Text('Add', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.asset, required this.reminderCount});
+  final Asset asset;
+  final int reminderCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = [
+      '$reminderCount reminder${reminderCount == 1 ? '' : 's'} tracked',
+      if (asset.brand != null) asset.brand,
+      if (asset.model != null) asset.model,
+    ].whereType<String>().join(' · ');
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.line)),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(14)),
-            child: Icon(asset.category.icon, color: AppColors.ink2),
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(16)),
+            child: Icon(asset.category.icon, color: AppColors.ink2, size: 30),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(asset.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                const SizedBox(height: 2),
-                Text([asset.subtitle, if (asset.brand != null) asset.brand].join(' · '), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                Text(asset.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.2)),
+                const SizedBox(height: 6),
+                Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.category.label)),
+                const SizedBox(height: 8),
+                Text(meta, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Red "next due" banner highlighting the most urgent reminder.
+class _NextDueBanner extends StatelessWidget {
+  const _NextDueBanner({required this.reminder});
+  final Reminder reminder;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = reminder.daysLeft;
+    final phrase = d < 0
+        ? 'Overdue by ${-d} day${d == -1 ? '' : 's'}'
+        : d == 0
+            ? 'Due today'
+            : '$d day${d == 1 ? '' : 's'} left';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(18)),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('NEXT DUE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 1.2)),
+                const SizedBox(height: 4),
+                Text('${reminder.label} · $phrase',
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white, height: 1.15)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(DateFormat('d MMM yyyy').format(reminder.dueDate),
+                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white)),
+              const SizedBox(height: 4),
+              const Text('Reminds 30·7·1d', style: TextStyle(fontSize: 11, color: Colors.white70)),
+            ],
           ),
         ],
       ),
@@ -114,22 +229,32 @@ class _ReminderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
       child: Row(
         children: [
-          IconBubble(kind: reminder.kind, size: 40),
+          IconBubble(kind: reminder.kind, size: 44),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(reminder.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                Text('${DateFormat('d MMM yyyy').format(reminder.dueDate)} · ${reminder.recurrence.label}', style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                Text(reminder.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(DateFormat('d MMM yyyy').format(reminder.dueDate), style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.notifications_none, size: 13, color: AppColors.muted),
+                    const SizedBox(width: 3),
+                    const Text('30 · 7 · 1d', style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                  ],
+                ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           DayPill(daysLeft: reminder.daysLeft),
         ],
       ),
