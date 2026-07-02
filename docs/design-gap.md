@@ -165,7 +165,12 @@ is surfaced in Dart.
 - [ ] Asset detail: documents grouped per service (service row → its documents) in addition to the appliance-level Documents section
 - [ ] Attach-document in add/edit reminder writes `asset_date_id` (pairs with B-08)
 - [ ] Service completion: wire `complete_asset_date()` (mark done → roll due date forward per recurrence)
-- [ ] **[new]** Optional richer service fields (provider/vendor, policy or contract no., cost, notes) — small migration adding columns or a `metadata jsonb` to `asset_dates`, if wanted for v1
+- [ ] **[new]** Richer service fields — **decided: in scope for v1.** New migration
+      `0006_service_fields.sql` adding `provider text, policy_no text,
+      cost numeric(12,2), notes text` to `asset_dates`; map them on the Dart
+      `Service` model + both repos; inputs on add/edit service (provider,
+      policy/contract no., cost, notes); show provider + policy no. on the
+      service row and cost in the service detail
 
 ### B. Screens
 
@@ -216,6 +221,6 @@ is surfaced in Dart.
 7. [ ] **2FA / security** (B-17) — largest, do last
 
 **Net:** almost none of this needs new tables — the schema was built ahead of
-the UI. The work is Dart models → repository mapping → screens, one seed
-migration (categories), the `notification_prefs` wiring and fixing the
-`metadata` shortcut.
+the UI. The work is Dart models → repository mapping → screens, two small
+migrations (`0005_seed_categories.sql`, `0006_service_fields.sql`), the
+`notification_prefs` wiring and fixing the `metadata` shortcut.

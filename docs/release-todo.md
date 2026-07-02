@@ -118,8 +118,9 @@ Dart models → repository mapping → screens.
       surface `asset_dates` as the Service entity, map
       `documents.asset_date_id` so documents attach per service as well as
       per appliance, group documents by service on asset detail, wire
-      `complete_asset_date()` roll-forward; optional provider/policy-no./cost
-      fields need a small migration
+      `complete_asset_date()` roll-forward; richer service fields (provider,
+      policy/contract no., cost, notes) via **new** `0006_service_fields.sql`
+      + add/edit inputs (decided: in scope)
 
 ### Pending — screens
 - [ ] 02 Rooms (add-room composer, photo cards, asset counts, entry point)

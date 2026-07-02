@@ -34,6 +34,7 @@ class RoadmapPage extends StatelessWidget {
       (false, 'Asset fields: model/serial no., purchase date & price, store'),
       (false, 'Per-reminder notify offsets (editor + scheduler)'),
       (false, 'Service layer: per-service reminders & documents'),
+      (false, 'Service fields: provider, policy no., cost, notes'),
       (false, 'Appliance category catalog + picker + auto-seeded reminders'),
       (false, 'Rooms & Room detail (real locations, photos, counts)'),
       (false, 'Add appliance: AMC date + invoice capture (file/camera)'),
