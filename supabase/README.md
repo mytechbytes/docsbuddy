@@ -16,9 +16,13 @@ configuration (dart-defines, deep links) lives in `docs/supabase-setup.md`.
 
 Paste **`all_migrations.sql`** into the SQL Editor and Run. It **drops every
 existing DocsBuddy object first** (the `reset.sql` section — ⚠️ destructive:
-wipes DocsBuddy data and stored files) and then re-creates the full schema,
-so it works on an empty project, a partial install, or an old-numbering
-install alike.
+wipes DocsBuddy data) and then re-creates the full schema, so it works on an
+empty project, a partial install, or an old-numbering install alike.
+
+> Storage note: newer projects forbid direct DML on the storage tables, so
+> the file/bucket cleanup is best-effort (a NOTICE is raised when skipped —
+> the bucket is reused and old files become orphans). For a full wipe, empty
+> the `docsbuddy-files` bucket from Dashboard → Storage.
 
 Alternatives: run `reset.sql` alone to just tear down, or apply
 `migrations/0*.sql` in order on a clean database (see `migrations/README.md`

@@ -3,8 +3,8 @@
 --
 -- One-shot setup script for the Supabase SQL editor. It FIRST DROPS every
 -- existing DocsBuddy object (see the RESET section — ⚠️ destructive, wipes
--- DocsBuddy data and stored files), then re-creates the full schema. Safe to
--- paste on an empty project, a partial install, or an old-numbering install.
+-- DocsBuddy data), then re-creates the full schema. Safe to paste on an
+-- empty project, a partial install, or an old-numbering install.
 --
 -- GENERATED from supabase/reset.sql + supabase/migrations/*.sql — do not edit
 -- here; change those files and regenerate (cat them in order + this header).
@@ -18,8 +18,9 @@
 -- ============================================================================
 -- DocsBuddy — RESET (drop everything before re-creating)
 --
--- ⚠️ DESTRUCTIVE: removes every DocsBuddy table, type, function, policy and
--- stored file. Run it only when you want to rebuild the schema from scratch
+-- ⚠️ DESTRUCTIVE: removes every DocsBuddy table, type, function and policy
+-- (and, where the project allows it, stored files — see the storage note at
+-- the bottom). Run it only when you want to rebuild the schema from scratch
 -- (e.g. a project that already has a partial/older install). It is baked into
 -- the top of all_migrations.sql, so pasting that one file both wipes and
 -- re-creates. Every statement is IF-EXISTS-guarded, so it also runs cleanly
@@ -66,12 +67,24 @@ drop function if exists public.accept_invite(text)        cascade;
 drop function if exists public.create_family(text)        cascade;
 drop function if exists public.complete_asset_date(uuid)  cascade;
 
--- Storage: objects first, then policies, then the bucket row.
-delete from storage.objects where bucket_id = 'docsbuddy-files';
+-- Storage policies (DDL — allowed from the SQL editor).
 drop policy if exists "family members read files"   on storage.objects;
 drop policy if exists "family members upload files" on storage.objects;
 drop policy if exists "family members delete files" on storage.objects;
-delete from storage.buckets where id = 'docsbuddy-files';
+
+-- Storage rows: newer Supabase projects FORBID direct DML on storage tables
+-- ("direct deletion from storage table is not allowed"), so this is
+-- best-effort — when blocked we keep the bucket (0008 re-creates it with
+-- ON CONFLICT DO NOTHING) and any old files become harmless orphans. For a
+-- full wipe, empty/delete the `docsbuddy-files` bucket from
+-- Dashboard → Storage instead.
+do $$
+begin
+  delete from storage.objects where bucket_id = 'docsbuddy-files';
+  delete from storage.buckets where id = 'docsbuddy-files';
+exception when others then
+  raise notice 'Skipping storage row cleanup (%): empty the docsbuddy-files bucket from the dashboard if you want a full wipe.', sqlerrm;
+end $$;
 
 -- Extensions (pgcrypto, moddatetime) are left installed — the migrations use
 -- CREATE EXTENSION IF NOT EXISTS.
