@@ -23,9 +23,10 @@ seven follow-ons, see git history before 2026-07-02). The final schema is
 identical except that the two data backfills (`metadata.category/location`
 → FKs) were dropped — they only migrated data created by pre-FK app builds.
 
-**Do not run these files on a database created with the old series** — it
-already has the same objects and every `create` will collide. These are for
-fresh projects only.
+These files target a **clean database** — on a project that already has any
+DocsBuddy objects (old series or partial install), use `../all_migrations.sql`
+instead: it runs `../reset.sql` first (⚠️ drops all DocsBuddy data) and then
+re-creates everything.
 
 ## Conventions
 
@@ -34,4 +35,4 @@ fresh projects only.
 - Cross-feature policies live with the feature that introduces the concept
   (e.g. the family-wide profile-read policy on `users` ships with families).
 - `all_migrations.sql` (one directory up) is generated:
-  `cat` these files in order, prepend the header.
+  `cat ../reset.sql` + these files in order, prepend the header.

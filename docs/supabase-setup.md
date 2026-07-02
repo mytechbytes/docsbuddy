@@ -44,8 +44,10 @@ repository — so every screen works offline. This guide turns on real Supabase.
 
 ## Part B — Apply the database schema
 
-**Easiest:** paste **`supabase/all_migrations.sql`** (all migrations combined,
-generated) into the SQL Editor and Run once on a fresh project.
+**Easiest:** paste **`supabase/all_migrations.sql`** into the SQL Editor and
+Run. It **drops any existing DocsBuddy objects first** (⚠️ destructive — wipes
+DocsBuddy data/files) and re-creates the whole schema, so it works on empty,
+partial, or old-numbering installs alike.
 
 Or apply the individual **feature-based** migrations in order (SQL Editor or
 CLI; see `supabase/migrations/README.md`):
@@ -68,8 +70,8 @@ for f in supabase/migrations/0*.sql; do psql "$DATABASE_URL" -f "$f"; done
 - `0009_notification_prefs.sql` — channels, default offsets, quiet hours.
 - `0010_sync_support.sql` — local-first sync cursors.
 
-> Databases created with the pre-2026-07-02 patch-style series already have
-> this schema — don't re-run.
+> The individual files target a clean database; for anything already
+> provisioned, use `all_migrations.sql` (reset included) instead.
 
 ## Part C — Run the app with credentials
 

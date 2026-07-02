@@ -13,9 +13,9 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] Schema + RLS + RPCs (`supabase/migrations/` — 10 feature-based files)
 - [x] App wiring (activates when `SUPABASE_URL` + `SUPABASE_ANON_KEY` are set)
 - [ ] Create the project; copy URL + anon key
-- [ ] Run the migrations: paste **`supabase/all_migrations.sql`** (the 10
-      feature-based files combined, generated) into the SQL editor once on a
-      fresh project — or apply `supabase/migrations/0*.sql` in order
+- [ ] Run the migrations: paste **`supabase/all_migrations.sql`** into the
+      SQL editor — it resets any existing DocsBuddy objects first
+      (⚠️ destructive), then creates the 10 feature-based migrations
 - [ ] Auth → Providers: enable **Email** (+ **Email OTP** length 6 for reset)
 - [ ] Auth → URL Configuration: **Site URL** = `https://docsbuddy.mytechbytes.in`;
       **Redirect URLs** += `https://docsbuddy.mytechbytes.in/login-callback`
