@@ -32,6 +32,7 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Asset photos: upload, change, thumbnails everywhere'),
       (true, 'Appliance type catalog + picker + auto-seeded services'),
       (true, 'Add appliance: AMC date + invoice attach on create'),
+      (true, 'Rooms & Room detail (photos, counts, add-here flow)'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -44,7 +45,6 @@ class RoadmapPage extends StatelessWidget {
     ('Pending — design gap (see docs/design-gap.md)', [
       (false, 'Notify-offsets chips editor in the reminder UI'),
       (false, 'Per-service document grouping on asset detail'),
-      (false, 'Rooms & Room detail (real locations, photos, counts)'),
       (false, 'Camera capture for invoices/photos (image_picker)'),
       (false, 'Add reminder as full page (offsets chips, attach document)'),
       (false, 'Asset list: in-page search + photo thumbnails'),

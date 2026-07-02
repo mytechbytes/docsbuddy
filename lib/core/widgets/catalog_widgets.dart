@@ -31,12 +31,19 @@ class AssetThumb extends ConsumerWidget {
     required this.imageRef,
     required this.fallback,
     this.size = 44,
+    this.width,
+    this.height,
     this.radius,
   });
 
   final String? imageRef;
   final Widget fallback;
+
+  /// Square dimension; [width]/[height] override it for banners/heroes
+  /// (null width = fill the parent).
   final double size;
+  final double? width;
+  final double? height;
   final double? radius;
 
   @override
@@ -49,8 +56,8 @@ class AssetThumb extends ConsumerWidget {
       borderRadius: BorderRadius.circular(r),
       child: Image.network(
         url,
-        width: size,
-        height: size,
+        width: width ?? size,
+        height: height ?? size,
         fit: BoxFit.cover,
         errorBuilder: (_, _, _) => fallback,
       ),

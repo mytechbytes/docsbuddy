@@ -134,8 +134,10 @@ Dart models → repository mapping → screens.
       the reminder flow
 
 ### Pending — screens
-- [ ] 02 Rooms (add-room composer, photo cards, asset counts, entry point)
-- [ ] 03 Room detail (hero photo, edit, appliance grid, add-asset-here)
+- [x] 02 Rooms (add-room composer, photo cards + upload, asset counts,
+      Rooms tab)
+- [x] 03 Room detail (hero photo + change, rename, appliance grid with day
+      pills, "Add here" flow)
 - [ ] 04 Asset list polish (in-page search bar, photo thumbnails, header style)
 - [x] 05 Appliance picker (searchable catalog list → add-asset)
 - [x] 06 Add appliance: type dropdown, model/serial/purchase/store, photo,

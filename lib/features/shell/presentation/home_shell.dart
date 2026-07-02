@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/notifications/fcm_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../catalog/presentation/assets_page.dart';
+import '../../catalog/presentation/rooms_page.dart';
 import '../../dashboard/presentation/dashboard_tab.dart';
 import '../../family/presentation/family_page.dart';
 import '../../settings/presentation/settings_page.dart';
@@ -19,7 +20,7 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
 
-  static const _tabs = [DashboardTab(), AssetsPage(), FamilyPage(), SettingsPage()];
+  static const _tabs = [DashboardTab(), RoomsPage(), AssetsPage(), FamilyPage(), SettingsPage()];
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         indicatorColor: const Color(0xFFEEF3FB),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.meeting_room_outlined), selectedIcon: Icon(Icons.meeting_room), label: 'Rooms'),
           NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Assets'),
           NavigationDestination(icon: Icon(Icons.groups_outlined), selectedIcon: Icon(Icons.groups), label: 'Family'),
           NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),

@@ -13,10 +13,13 @@ import '../application/default_reminders.dart';
 import '../data/catalog_models.dart';
 
 class AddAssetPage extends ConsumerStatefulWidget {
-  const AddAssetPage({super.key, this.preset});
+  const AddAssetPage({super.key, this.preset, this.initialLocation});
 
   /// Pre-selected type from the appliance picker (screen 05).
   final AssetCategory? preset;
+
+  /// Pre-filled room name (the room-detail "Add here" flow).
+  final String? initialLocation;
 
   @override
   ConsumerState<AddAssetPage> createState() => _AddAssetPageState();
@@ -24,7 +27,7 @@ class AddAssetPage extends ConsumerStatefulWidget {
 
 class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   final _name = TextEditingController();
-  final _location = TextEditingController();
+  late final _location = TextEditingController(text: widget.initialLocation ?? '');
   final _brand = TextEditingController();
   final _model = TextEditingController();
   final _serialNo = TextEditingController();
