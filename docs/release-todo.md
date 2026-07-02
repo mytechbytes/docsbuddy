@@ -23,7 +23,8 @@ Status of what's needed to ship a Play **internal testing** build.
 - [ ] (Optional) Google/Apple OAuth providers + their redirect URLs
 - [ ] Deploy the 3 Edge Functions + secrets (`notify-family` webhooks;
       reminder-sender crons via `supabase/schedules.sql`) — commands in
-      `supabase/README.md`
+      `supabase/README.md`; how to obtain each credential (Firebase JSON,
+      Resend, Meta WhatsApp): `docs/service-credentials.md`
 
 ## B. Signing key (you lost the old one)
 - [ ] Generate a new upload keystore (`keytool -genkey … -alias upload`)

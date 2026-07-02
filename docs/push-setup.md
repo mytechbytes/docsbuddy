@@ -42,7 +42,8 @@ Nothing else to do for Android to *receive* pushes.
    **`GoogleService-Info.plist`** into `ios/Runner/` (via Xcode), enable the
    **Push Notifications** + **Background Modes → Remote notifications**
    capabilities, and upload an **APNs key** in Firebase → Cloud Messaging.
-2. **Sending the pushes** — scaffolded at **`supabase/functions/notify-family`**.
+2. **Sending the pushes** — scaffolded at **`supabase/functions/notify-family`**
+   (service-account walkthrough: `docs/service-credentials.md`).
    Set the `FIREBASE_SERVICE_ACCOUNT` secret, `supabase functions deploy
    notify-family`, then add a **Database Webhook** on `asset_dates`/`assets`/
    `documents` → the function. Full steps in that folder's README.
