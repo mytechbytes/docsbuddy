@@ -267,7 +267,11 @@ class _ReminderTile extends StatelessWidget {
         decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
         child: Row(
           children: [
-            IconBubble(kind: reminder.kind, size: 46),
+            AssetThumb(
+              imageRef: reminder.assetImageUrl,
+              size: 46,
+              fallback: IconBubble(kind: reminder.kind, size: 46),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

@@ -57,11 +57,16 @@ class _AssetTile extends StatelessWidget {
         decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(12)),
-              child: Icon(asset.category.icon, color: AppColors.ink2),
+            AssetThumb(
+              imageRef: asset.imageUrl,
+              size: 44,
+              radius: 12,
+              fallback: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(12)),
+                child: Icon(asset.category.icon, color: AppColors.ink2),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(

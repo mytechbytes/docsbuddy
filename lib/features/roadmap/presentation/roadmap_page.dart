@@ -29,6 +29,7 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Documents can attach to a specific service'),
       (true, 'Dashboard stats: service counts + total appliances'),
       (true, 'WhatsApp reminder sender (Edge Function + channel)'),
+      (true, 'Asset photos: upload, change, thumbnails everywhere'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -39,7 +40,6 @@ class RoadmapPage extends StatelessWidget {
       (false, 'WhatsApp: deploy sender + Meta API secrets + daily cron'),
     ]),
     ('Pending — design gap (see docs/design-gap.md)', [
-      (false, 'Asset photos — upload + thumbnails everywhere'),
       (false, 'Notify-offsets chips editor in the reminder UI'),
       (false, 'Per-service document grouping on asset detail'),
       (false, 'Appliance category catalog + picker + auto-seeded reminders'),

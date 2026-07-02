@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -25,6 +26,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   final _store = TextEditingController();
   AssetCategoryKind _category = AssetCategoryKind.vehicle;
   DateTime? _purchaseDate;
+  PlatformFile? _photo;
   bool _saving = false;
 
   @override
@@ -40,6 +42,20 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   }
 
   String? _text(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
+
+  Future<void> _pickPhoto() async {
+    final res = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+    final f = res?.files.firstOrNull;
+    if (f?.bytes != null) setState(() => _photo = f);
+  }
+
+  static String _imageMime(String? ext) => switch (ext?.toLowerCase()) {
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        'heic' => 'image/heic',
+        'gif' => 'image/gif',
+        _ => 'image/jpeg',
+      };
 
   Future<void> _pickPurchaseDate() async {
     final picked = await showDatePicker(
@@ -57,7 +73,8 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       return;
     }
     setState(() => _saving = true);
-    await ref.read(catalogRepositoryProvider).addAsset(
+    final repo = ref.read(catalogRepositoryProvider);
+    final asset = await repo.addAsset(
           name: _name.text,
           category: _category,
           locationName: _text(_location),
@@ -68,6 +85,16 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           purchasePrice: double.tryParse(_price.text.trim().replaceAll(',', '')),
           store: _text(_store),
         );
+    final photo = _photo;
+    if (photo?.bytes != null) {
+      try {
+        await repo.setAssetImage(asset.id,
+            bytes: photo!.bytes!, fileName: photo.name, mimeType: _imageMime(photo.extension));
+      } catch (_) {
+        // Asset is saved; a failed photo upload shouldn't block the flow —
+        // it can be retried from the asset-detail header.
+      }
+    }
     if (!mounted) return;
     refreshCatalog(ref);
     Navigator.of(context).pop();
@@ -86,6 +113,8 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
         children: [
+          Center(child: _PhotoPicker(photo: _photo, onTap: _pickPhoto)),
+          const SizedBox(height: 18),
           const Text('Category', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
           const SizedBox(height: 8),
           Wrap(
@@ -146,6 +175,42 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           const SizedBox(height: 24),
           PrimaryButton(label: 'Save asset', isLoading: _saving, onPressed: _save),
         ],
+      ),
+    );
+  }
+}
+
+/// Tappable photo box: preview of the picked image, or an add-photo prompt.
+class _PhotoPicker extends StatelessWidget {
+  const _PhotoPicker({required this.photo, required this.onTap});
+  final PlatformFile? photo;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = photo?.bytes;
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        width: 96,
+        height: 96,
+        decoration: BoxDecoration(
+          color: AppColors.paper,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: bytes != null
+            ? Image.memory(bytes, fit: BoxFit.cover)
+            : const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
+                  SizedBox(height: 6),
+                  Text('Add photo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                ],
+              ),
       ),
     );
   }

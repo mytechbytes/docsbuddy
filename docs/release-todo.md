@@ -107,8 +107,10 @@ Dart models → repository mapping → screens.
 - [x] A1 `Asset`: `serial_no, purchase_date, purchase_price, store,
       image_url, location_id` surfaced + model/serial/purchase/store inputs
       on Add asset
-- [ ] A2 Asset photos: upload to `docsbuddy-files` → `assets.image_url`;
-      picker in add/edit; render thumbnails (dashboard, list, detail, rooms)
+- [x] A2 Asset photos: upload to `docsbuddy-files` (path on
+      `assets.image_url`, signed at render); picker on Add asset +
+      change-photo on detail; thumbnails on dashboard, asset list, detail
+      (room cards land with Rooms)
 - [x] A3 Per-reminder `notify_offsets`: model + repos, real values rendered
       on rows/banner, scheduler uses per-service offsets (offsets-chips
       editor ships with the Add-reminder page rework)

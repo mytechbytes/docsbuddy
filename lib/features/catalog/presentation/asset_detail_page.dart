@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -43,7 +44,7 @@ class AssetDetailPage extends ConsumerWidget {
         data: (a) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           children: [
-            _InfoCard(asset: a, reminderCount: list.length),
+            _InfoCard(asset: a, reminderCount: list.length, onChangePhoto: () => _changePhoto(context, ref, a)),
             const SizedBox(height: 16),
             if (next != null) ...[
               _NextDueBanner(reminder: next),
@@ -81,6 +82,37 @@ class AssetDetailPage extends ConsumerWidget {
     final sorted = [...list]..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
     return sorted.first;
   }
+
+  /// Picks an image and uploads it as the asset's photo.
+  Future<void> _changePhoto(BuildContext context, WidgetRef ref, Asset asset) async {
+    final res = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+    final f = res?.files.firstOrNull;
+    final bytes = f?.bytes;
+    if (f == null || bytes == null) return;
+    try {
+      await ref.read(catalogRepositoryProvider).setAssetImage(
+            asset.id,
+            bytes: bytes,
+            fileName: f.name,
+            mimeType: _imageMime(f.extension),
+          );
+      ref.invalidate(assetProvider(assetId));
+      refreshCatalog(ref);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Photo upload failed: $e'), backgroundColor: AppColors.red));
+      }
+    }
+  }
+
+  static String _imageMime(String? ext) => switch (ext?.toLowerCase()) {
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        'heic' => 'image/heic',
+        'gif' => 'image/gif',
+        _ => 'image/jpeg',
+      };
 
   /// Marks a service done — recurring ones roll their due date forward.
   Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
@@ -153,9 +185,10 @@ class _AddPill extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.asset, required this.reminderCount});
+  const _InfoCard({required this.asset, required this.reminderCount, required this.onChangePhoto});
   final Asset asset;
   final int reminderCount;
+  final VoidCallback onChangePhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -171,11 +204,39 @@ class _InfoCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(16)),
-            child: Icon(asset.category.icon, color: AppColors.ink2, size: 30),
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onChangePhoto,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AssetThumb(
+                  imageRef: asset.imageUrl,
+                  size: 64,
+                  radius: 16,
+                  fallback: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(16)),
+                    child: Icon(asset.category.icon, color: AppColors.ink2, size: 30),
+                  ),
+                ),
+                Positioned(
+                  right: -4,
+                  bottom: -4,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: AppColors.ink,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.paper, width: 2),
+                    ),
+                    child: const Icon(Icons.photo_camera_outlined, size: 11, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(

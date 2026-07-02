@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 
@@ -225,6 +227,42 @@ class FakeCatalogRepository implements CatalogRepository {
         notes: r.notes,
       ));
     }
+  }
+
+  @override
+  Future<Asset> setAssetImage(
+    String assetId, {
+    required Uint8List bytes,
+    required String fileName,
+    required String mimeType,
+  }) async {
+    await _delay();
+    final i = _assets.indexWhere((a) => a.id == assetId);
+    if (i < 0) throw Exception('Asset not found.');
+    final a = _assets[i];
+    // No real storage locally — record a marker ref; the UI shows the fallback.
+    final updated = Asset(
+      id: a.id,
+      name: a.name,
+      category: a.category,
+      locationName: a.locationName,
+      locationId: a.locationId,
+      brand: a.brand,
+      model: a.model,
+      serialNo: a.serialNo,
+      purchaseDate: a.purchaseDate,
+      purchasePrice: a.purchasePrice,
+      store: a.store,
+      imageUrl: 'local/$assetId/$fileName',
+    );
+    _assets[i] = updated;
+    return updated;
+  }
+
+  @override
+  Future<String?> resolveImageUrl(String? imageRef) async {
+    if (imageRef == null) return null;
+    return imageRef.startsWith('http') ? imageRef : null;
   }
 
   @override

@@ -115,6 +115,7 @@ class Reminder {
     this.policyNo,
     this.cost,
     this.notes,
+    this.assetImageUrl,
   });
 
   final String id;
@@ -131,6 +132,9 @@ class Reminder {
   final String? policyNo;
   final double? cost;
   final String? notes;
+
+  /// The parent asset's photo reference (bucket path or URL), for list rows.
+  final String? assetImageUrl;
 
   /// e.g. "30 · 7 · 1d" for the reminder rows / NEXT DUE banner.
   String get offsetsLabel => '${notifyOffsets.join(' · ')}d';
