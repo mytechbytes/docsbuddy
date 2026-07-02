@@ -232,7 +232,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
               'label': label.trim().isEmpty ? kind.label : label.trim(),
               'due_date': _dbDate(dueDate),
               'recurrence': _recToDb(recurrence),
-              if (notifyOffsets != null) 'notify_offsets': notifyOffsets,
+              'notify_offsets': ?notifyOffsets,
               'provider': provider,
               'policy_no': policyNo,
               'cost': cost,
