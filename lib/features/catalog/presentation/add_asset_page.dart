@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/catalog_widgets.dart';
 import '../../documents/application/document_providers.dart';
 import '../../documents/data/document_models.dart';
 import '../application/catalog_providers.dart';
@@ -13,7 +14,7 @@ import '../application/default_reminders.dart';
 import '../data/catalog_models.dart';
 
 class AddAssetPage extends ConsumerStatefulWidget {
-  const AddAssetPage({super.key, this.preset, this.initialLocation});
+  const AddAssetPage({super.key, this.preset, this.initialLocation, this.editing});
 
   /// Pre-selected type from the appliance picker (screen 05).
   final AssetCategory? preset;
@@ -21,25 +22,35 @@ class AddAssetPage extends ConsumerStatefulWidget {
   /// Pre-filled room name (the room-detail "Add here" flow).
   final String? initialLocation;
 
+  /// When set, the page edits this asset instead of creating one — the
+  /// AMC/invoice/auto-seed affordances are hidden (services are managed on
+  /// the asset detail).
+  final Asset? editing;
+
   @override
   ConsumerState<AddAssetPage> createState() => _AddAssetPageState();
 }
 
 class _AddAssetPageState extends ConsumerState<AddAssetPage> {
-  final _name = TextEditingController();
-  late final _location = TextEditingController(text: widget.initialLocation ?? '');
-  final _brand = TextEditingController();
-  final _model = TextEditingController();
-  final _serialNo = TextEditingController();
-  final _price = TextEditingController();
-  final _store = TextEditingController();
+  late final _name = TextEditingController(text: widget.editing?.name ?? '');
+  late final _location = TextEditingController(text: widget.editing?.locationName ?? widget.initialLocation ?? '');
+  late final _brand = TextEditingController(text: widget.editing?.brand ?? '');
+  late final _model = TextEditingController(text: widget.editing?.model ?? '');
+  late final _serialNo = TextEditingController(text: widget.editing?.serialNo ?? '');
+  late final _price = TextEditingController(
+      text: widget.editing?.purchasePrice == null ? '' : widget.editing!.purchasePrice!.toStringAsFixed(0));
+  late final _store = TextEditingController(text: widget.editing?.store ?? '');
   late AssetCategory? _type = widget.preset;
-  late AssetCategoryKind _category = widget.preset?.kindGroup ?? AssetCategoryKind.vehicle;
-  DateTime? _purchaseDate;
+  bool _typeTouched = false;
+  late AssetCategoryKind _category =
+      widget.editing?.category ?? widget.preset?.kindGroup ?? AssetCategoryKind.vehicle;
+  late DateTime? _purchaseDate = widget.editing?.purchaseDate;
   DateTime? _amcDate;
   PlatformFile? _photo;
   PlatformFile? _invoice;
   bool _saving = false;
+
+  bool get _isEdit => widget.editing != null;
 
   @override
   void dispose() {
@@ -95,30 +106,46 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     if (picked != null) setState(() => amc ? _amcDate = picked : _purchaseDate = picked);
   }
 
-  Future<void> _save() async {
+  Future<void> _save(AssetCategory? type) async {
     if (_name.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a name.'), backgroundColor: AppColors.red));
       return;
     }
     setState(() => _saving = true);
     final repo = ref.read(catalogRepositoryProvider);
-    final asset = await repo.addAsset(
-      name: _name.text,
-      category: _category,
-      categoryId: _type?.id,
-      locationName: _text(_location),
-      brand: _text(_brand),
-      model: _text(_model),
-      serialNo: _text(_serialNo),
-      purchaseDate: _purchaseDate,
-      purchasePrice: double.tryParse(_price.text.trim().replaceAll(',', '')),
-      store: _text(_store),
-    );
+    final Asset asset;
+    if (_isEdit) {
+      asset = await repo.updateAsset(
+        widget.editing!.id,
+        name: _name.text,
+        categoryId: type?.id,
+        locationName: _text(_location),
+        brand: _text(_brand),
+        model: _text(_model),
+        serialNo: _text(_serialNo),
+        purchaseDate: _purchaseDate,
+        purchasePrice: double.tryParse(_price.text.trim().replaceAll(',', '')),
+        store: _text(_store),
+      );
+    } else {
+      asset = await repo.addAsset(
+        name: _name.text,
+        category: _category,
+        categoryId: type?.id,
+        locationName: _text(_location),
+        brand: _text(_brand),
+        model: _text(_model),
+        serialNo: _text(_serialNo),
+        purchaseDate: _purchaseDate,
+        purchasePrice: double.tryParse(_price.text.trim().replaceAll(',', '')),
+        store: _text(_store),
+      );
 
-    // Auto-seed the type's default services (AMC date overrides/creates AMC).
-    try {
-      await seedDefaultReminders(repo, asset, _type, amcDate: _amcDate);
-    } catch (_) {/* asset saved; reminders can be added manually */}
+      // Auto-seed the type's default services (AMC date overrides/creates AMC).
+      try {
+        await seedDefaultReminders(repo, asset, type, amcDate: _amcDate);
+      } catch (_) {/* asset saved; reminders can be added manually */}
+    }
 
     final photo = _photo;
     if (photo?.bytes != null) {
@@ -149,28 +176,34 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).valueOrNull ?? const <AssetCategory>[];
+    // Editing: resolve the asset's current type until the user changes it.
+    final type = _typeTouched
+        ? _type
+        : _type ?? categories.where((c) => c.id == widget.editing?.categoryId).firstOrNull;
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.ink),
-        title: Text(_type == null ? 'Add asset' : 'Add ${_type!.name}',
+        title: Text(
+            _isEdit ? 'Edit asset' : (type == null ? 'Add asset' : 'Add ${type.name}'),
             style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
         children: [
-          Center(child: _PhotoPicker(photo: _photo, onTap: _pickPhoto)),
+          Center(child: _PhotoPicker(photo: _photo, existingRef: widget.editing?.imageUrl, onTap: _pickPhoto)),
           const SizedBox(height: 18),
           if (categories.isNotEmpty) ...[
             const Text('Appliance type', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
             const SizedBox(height: 6),
             _TypeDropdown(
               categories: categories,
-              value: _type,
+              value: type,
               onChanged: (c) => setState(() {
                 _type = c;
+                _typeTouched = true;
                 if (c != null) _category = c.kindGroup;
               }),
             ),
@@ -187,6 +220,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
                   selected: _category == c,
                   onSelected: (_) => setState(() {
                     _category = c;
+                    _typeTouched = true;
                     if (_type != null && _type!.kindGroup != c) _type = null;
                   }),
                   avatar: Icon(c.icon, size: 18, color: _category == c ? Colors.white : AppColors.ink2),
@@ -230,28 +264,33 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           ),
           const SizedBox(height: 14),
           AppTextField(label: 'Store', controller: _store, icon: Icons.storefront_outlined, hint: 'e.g. Croma'),
-          const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _DateField(label: 'AMC date', value: _amcDate, onTap: () => _pickDate(amc: true))),
-              const SizedBox(width: 12),
-              Expanded(child: _InvoicePicker(invoice: _invoice, onTap: _pickInvoice)),
-            ],
-          ),
-          if (_type != null && _type!.defaults.isNotEmpty) ...[
+          if (!_isEdit) ...[
             const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(12)),
-              child: Text(
-                'Will auto-add: ${_type!.defaults.map((d) => d.label).join(' · ')}',
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _DateField(label: 'AMC date', value: _amcDate, onTap: () => _pickDate(amc: true))),
+                const SizedBox(width: 12),
+                Expanded(child: _InvoicePicker(invoice: _invoice, onTap: _pickInvoice)),
+              ],
             ),
+            if (type != null && type.defaults.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(12)),
+                child: Text(
+                  'Will auto-add: ${type.defaults.map((d) => d.label).join(' · ')}',
+                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
+                ),
+              ),
+            ],
           ],
           const SizedBox(height: 24),
-          PrimaryButton(label: 'Save asset', isLoading: _saving, onPressed: _save),
+          PrimaryButton(
+              label: _isEdit ? 'Save changes' : 'Save asset',
+              isLoading: _saving,
+              onPressed: () => _save(type)),
         ],
       ),
     );
@@ -302,15 +341,25 @@ class _TypeDropdown extends StatelessWidget {
   }
 }
 
-/// Tappable photo box: preview of the picked image, or an add-photo prompt.
+/// Tappable photo box: the freshly picked image, the asset's existing photo
+/// (edit mode), or an add-photo prompt.
 class _PhotoPicker extends StatelessWidget {
-  const _PhotoPicker({required this.photo, required this.onTap});
+  const _PhotoPicker({required this.photo, required this.onTap, this.existingRef});
   final PlatformFile? photo;
+  final String? existingRef;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final bytes = photo?.bytes;
+    final placeholder = const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
+        SizedBox(height: 6),
+        Text('Add photo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
+      ],
+    );
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: onTap,
@@ -325,14 +374,7 @@ class _PhotoPicker extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: bytes != null
             ? Image.memory(bytes, fit: BoxFit.cover)
-            : const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
-                  SizedBox(height: 6),
-                  Text('Add photo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
-                ],
-              ),
+            : AssetThumb(imageRef: existingRef, size: 96, radius: 18, fallback: placeholder),
       ),
     );
   }

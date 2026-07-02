@@ -28,6 +28,24 @@ abstract interface class CatalogRepository {
     String? store,
   });
 
+  /// Updates an asset's editable fields (null = leave unchanged; the location
+  /// is find-or-created by name like on create).
+  Future<Asset> updateAsset(
+    String id, {
+    String? name,
+    String? categoryId,
+    String? locationName,
+    String? brand,
+    String? model,
+    String? serialNo,
+    DateTime? purchaseDate,
+    double? purchasePrice,
+    String? store,
+  });
+
+  /// Deletes the asset — its services and document metadata cascade.
+  Future<void> deleteAsset(String id);
+
   Future<Reminder> addReminder({
     required String assetId,
     required ReminderKind kind,
@@ -40,6 +58,23 @@ abstract interface class CatalogRepository {
     double? cost,
     String? notes,
   });
+
+  /// Rewrites a service's editable fields.
+  Future<Reminder> updateReminder(
+    String id, {
+    required ReminderKind kind,
+    required String label,
+    required DateTime dueDate,
+    required Recurrence recurrence,
+    required List<int> notifyOffsets,
+    String? provider,
+    String? policyNo,
+    double? cost,
+    String? notes,
+  });
+
+  /// Removes a service (tombstoned on the real backend for sync).
+  Future<void> deleteReminder(String id);
 
   /// Marks the service done — rolls `due_date` forward per its recurrence
   /// (one-offs are completed and disappear from upcoming lists).

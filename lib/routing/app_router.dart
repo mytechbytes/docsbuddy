@@ -90,8 +90,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/asset/:id', builder: (_, state) => AssetDetailPage(assetId: state.pathParameters['id']!)),
       GoRoute(
+        path: '/asset-edit',
+        builder: (_, state) => AddAssetPage(editing: state.extra as Asset?),
+      ),
+      GoRoute(
         path: '/asset/:id/add-reminder',
-        builder: (_, state) => AddReminderPage(assetId: state.pathParameters['id']!),
+        builder: (_, state) => AddReminderPage(
+          assetId: state.pathParameters['id']!,
+          editing: state.extra as Reminder?,
+        ),
       ),
       GoRoute(path: '/room/:id', builder: (_, state) => RoomDetailPage(locationId: state.pathParameters['id']!)),
       GoRoute(path: '/search', builder: (_, _) => const SearchPage()),

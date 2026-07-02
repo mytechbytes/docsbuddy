@@ -11,6 +11,7 @@ import '../../documents/presentation/asset_documents_section.dart';
 import '../../profile/application/profile_providers.dart';
 import '../application/catalog_providers.dart';
 import '../data/catalog_models.dart';
+import 'service_detail_sheet.dart';
 
 class AssetDetailPage extends ConsumerWidget {
   const AssetDetailPage({super.key, required this.assetId});
@@ -37,7 +38,19 @@ class AssetDetailPage extends ConsumerWidget {
             icon: const Icon(Icons.notifications_none, color: AppColors.ink2, size: 22),
           ),
           const _Avatar(),
-          const SizedBox(width: 16),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: AppColors.ink2, size: 22),
+            onSelected: (v) {
+              final a = asset.valueOrNull;
+              if (a == null) return;
+              v == 'edit' ? _editAsset(context, ref, a) : _deleteAsset(context, ref, a);
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'edit', child: Text('Edit asset')),
+              PopupMenuItem(value: 'delete', child: Text('Delete asset', style: TextStyle(color: AppColors.red))),
+            ],
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: asset.when(
@@ -67,7 +80,12 @@ class AssetDetailPage extends ConsumerWidget {
               data: (rs) => rs.isEmpty
                   ? const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No reminders for this asset yet.', style: TextStyle(color: AppColors.muted))))
                   : Column(children: [
-                      for (final r in rs) _ReminderRow(reminder: r, onComplete: () => _complete(context, ref, r)),
+                      for (final r in rs)
+                        _ReminderRow(
+                          reminder: r,
+                          onTap: () => _openService(context, ref, r),
+                          onAction: (action) => _handleServiceAction(context, ref, r, action),
+                        ),
                     ]),
             ),
             const SizedBox(height: 22),
@@ -135,6 +153,71 @@ class AssetDetailPage extends ConsumerWidget {
     await context.push('/asset/${asset.id}/add-reminder');
     ref.invalidate(assetRemindersProvider(assetId));
     refreshCatalog(ref);
+  }
+
+  Future<void> _openService(BuildContext context, WidgetRef ref, Reminder r) async {
+    final action = await ServiceDetailSheet.show(context, r);
+    if (action != null && context.mounted) {
+      await _handleServiceAction(context, ref, r, action);
+    }
+  }
+
+  Future<void> _handleServiceAction(
+      BuildContext context, WidgetRef ref, Reminder r, ServiceAction action) async {
+    switch (action) {
+      case ServiceAction.edit:
+        await context.push('/asset/$assetId/add-reminder', extra: r);
+        ref.invalidate(assetRemindersProvider(assetId));
+        refreshCatalog(ref);
+      case ServiceAction.complete:
+        await _complete(context, ref, r);
+      case ServiceAction.delete:
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.paper,
+            title: const Text('Delete reminder?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+            content: Text('“${r.label}” and its scheduled notifications will be removed.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Delete', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
+            ],
+          ),
+        );
+        if (confirmed != true) return;
+        await ref.read(catalogRepositoryProvider).deleteReminder(r.id);
+        ref.invalidate(assetRemindersProvider(assetId));
+        refreshCatalog(ref);
+    }
+  }
+
+  Future<void> _editAsset(BuildContext context, WidgetRef ref, Asset asset) async {
+    await context.push('/asset-edit', extra: asset);
+    ref.invalidate(assetProvider(assetId));
+    refreshCatalog(ref);
+  }
+
+  Future<void> _deleteAsset(BuildContext context, WidgetRef ref, Asset asset) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.paper,
+        title: const Text('Delete asset?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: Text('“${asset.name}” and all its reminders and documents will be removed. This can\'t be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(catalogRepositoryProvider).deleteAsset(asset.id);
+    refreshCatalog(ref);
+    if (context.mounted) Navigator.of(context).pop();
   }
 }
 
@@ -314,9 +397,10 @@ class _NextDueBanner extends StatelessWidget {
 }
 
 class _ReminderRow extends StatelessWidget {
-  const _ReminderRow({required this.reminder, required this.onComplete});
+  const _ReminderRow({required this.reminder, required this.onTap, required this.onAction});
   final Reminder reminder;
-  final VoidCallback onComplete;
+  final VoidCallback onTap;
+  final ValueChanged<ServiceAction> onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +408,10 @@ class _ReminderRow extends StatelessWidget {
       if (reminder.provider != null) reminder.provider,
       if (reminder.policyNo != null) reminder.policyNo,
     ].whereType<String>().join(' · ');
-    return Container(
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
@@ -356,15 +443,20 @@ class _ReminderRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           DayPill(daysLeft: reminder.daysLeft),
-          PopupMenuButton<String>(
+          PopupMenuButton<ServiceAction>(
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.more_vert, size: 18, color: AppColors.muted),
-            onSelected: (_) => onComplete(),
+            onSelected: onAction,
             itemBuilder: (_) => const [
-              PopupMenuItem(value: 'done', child: Text('Mark as done')),
+              PopupMenuItem(value: ServiceAction.complete, child: Text('Mark as done')),
+              PopupMenuItem(value: ServiceAction.edit, child: Text('Edit')),
+              PopupMenuItem(
+                  value: ServiceAction.delete,
+                  child: Text('Delete', style: TextStyle(color: AppColors.red))),
             ],
           ),
         ],
+      ),
       ),
     );
   }

@@ -41,6 +41,8 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Asset list: in-page search + photo thumbnails'),
       (true, 'Security: 2FA (TOTP), biometric unlock, app lock, sessions'),
       (true, 'Family members show photo, name & contact number'),
+      (true, 'Edit & delete assets and services'),
+      (true, 'Service detail: cost, record & per-service documents'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -51,7 +53,6 @@ class RoadmapPage extends StatelessWidget {
       (false, 'WhatsApp: deploy sender + Meta API secrets + daily cron'),
     ]),
     ('Pending — design gap (see docs/design-gap.md)', [
-      (false, 'Per-service document grouping on asset detail'),
       (false, 'Camera capture for invoices/photos (image_picker)'),
       (false, 'Sign-in with recovery code (server check)'),
     ]),
