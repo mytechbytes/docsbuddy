@@ -3,7 +3,7 @@
 --
 -- ⚠️ Prefer the Cron UI instead of this file: Dashboard → Integrations →
 -- Cron → Jobs → Create job → Type "Supabase Edge Function" → pick the
--- sender, schedule '0 9 * * *' (GMT). No SQL or placeholders needed.
+-- sender, schedule '30 3 * * *' (= 09:00 IST; pg_cron runs in GMT). No SQL or placeholders needed.
 --
 -- If you do use this file: run it ONCE in the SQL EDITOR — never paste it
 -- into a cron job's "SQL Snippet" (it contains the cron.schedule wrappers;
@@ -23,7 +23,7 @@
 -- ============================================================================
 
 select cron.schedule(
-  'email-reminders', '0 9 * * *',   -- daily 09:00 UTC
+  'email-reminders', '30 3 * * *',   -- 03:30 GMT = 09:00 IST (pg_cron runs in GMT)
   $$
   select net.http_post(
     url     := 'https://<project-ref>.supabase.co/functions/v1/send-reminders-email',
@@ -33,7 +33,7 @@ select cron.schedule(
 );
 
 select cron.schedule(
-  'whatsapp-reminders', '0 9 * * *',   -- daily 09:00 UTC
+  'whatsapp-reminders', '30 3 * * *',   -- 03:30 GMT = 09:00 IST (pg_cron runs in GMT)
   $$
   select net.http_post(
     url     := 'https://<project-ref>.supabase.co/functions/v1/send-reminders-whatsapp',

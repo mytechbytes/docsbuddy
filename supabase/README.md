@@ -84,7 +84,8 @@ supabase secrets set WHATSAPP_TEMPLATE=docsbuddy_reminder WHATSAPP_TEMPLATE_LANG
   (no SQL needed):
   1. Dashboard → **Integrations → Cron** → **Enable** (once), then
      **Jobs → Create job**.
-  2. **Name** `email-reminders` · **Schedule** `0 9 * * *` (times are GMT) ·
+  2. **Name** `email-reminders` · **Schedule** `30 3 * * *` — 03:30 GMT
+     = **09:00 IST** (pg_cron runs in GMT; shift by your UTC offset) ·
      **Type → Supabase Edge Function** → pick `send-reminders-email`,
      method POST, raise the timeout to the max — the auth header is added
      automatically → **Create**.
