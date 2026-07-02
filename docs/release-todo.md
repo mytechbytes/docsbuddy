@@ -3,11 +3,11 @@
 Status of what's needed to ship a Play **internal testing** build.
 `[x]` = done in the repo · `[ ]` = your action (account/keys/hosting).
 
-> ⚠️ **Scope reality check.** The app today is **onboarding → auth → families →
-> a placeholder dashboard**. The core product — locations/assets, reminders/due
-> dates, documents, and push notifications — is **not built yet**. An internal
-> testing release now exercises sign-up/login and family sharing, not the full
-> app. Decide if that's what you want testers to see.
+> ⚠️ **Scope reality check.** The core product is built: onboarding → auth →
+> families → dashboard, assets & reminders, documents, and notifications (see
+> §G). What's still missing vs the design handoff — rooms, appliance picker,
+> profile, security/2FA, asset photos — is tracked in **§H** and
+> `docs/design-gap.md`. Decide if that's acceptable for testers to see.
 
 ## A. Backend (Supabase)
 - [x] Schema + RLS + RPCs (`supabase/migrations/0001_init.sql`, `0002_family_rpcs.sql`)
@@ -85,3 +85,62 @@ Status of what's needed to ship a Play **internal testing** build.
       Built-in-Kotlin versions ship
 - [ ] iOS push: GoogleService-Info.plist + APNs key (when shipping iOS)
 - [ ] iOS signing + provisioning (Team ID, certs) if you ship iOS
+
+## H. Design ↔ code gap — feature action items
+
+Full detail + per-screen comparison in `docs/design-gap.md`. Screens: **11 of
+21 done, 4 partial, 6 missing.** Almost nothing needs new tables — the work is
+Dart models → repository mapping → screens.
+
+### Done (shipped screens)
+- [x] 00a–d Onboarding carousel
+- [x] 01 Dashboard — redesigned to match handoff
+- [x] 07 Asset detail — redesigned to match handoff
+- [x] 09–13 Auth — sign-in/up (incl. Google/Apple), forgot, OTP, reset
+- [x] `updatePassword` repo method (backend for Change password screen)
+- [x] Document upload path to Supabase Storage (pattern reused for photos)
+
+### Pending — data layer (schema already has the columns)
+- [ ] A1 `Asset`: surface `serial_no, purchase_date, purchase_price, store,
+      image_url, location_id` + collect model no. in the add form
+- [ ] A2 Asset photos: upload to `docsbuddy-files` → `assets.image_url`;
+      picker in add/edit; render thumbnails (dashboard, list, detail, rooms)
+- [ ] A3 Per-reminder `notify_offsets`: model + repos + offsets chips in the
+      reminder UI + feed `NotificationService` (replace global 30/7/1)
+- [ ] A4 Category catalog: read `asset_categories`, auto-seed default
+      reminders on create, **new** `0005_seed_categories.sql`
+- [ ] A5 Profile data: `ProfileRepository` + avatar upload + real `avatar_url`
+- [ ] A6 Real locations: back rooms with `public.locations` (photo, hierarchy,
+      counts) instead of metadata grouping
+- [ ] A7 Wire `notification_prefs` (channels, default offsets, quiet hours) to
+      Settings toggles + Add-reminder defaults
+- [ ] A8 Service layer (appliance → service → reminders + documents):
+      surface `asset_dates` as the Service entity, map
+      `documents.asset_date_id` so documents attach per service as well as
+      per appliance, group documents by service on asset detail, wire
+      `complete_asset_date()` roll-forward; richer service fields (provider,
+      policy/contract no., cost, notes) via **new** `0006_service_fields.sql`
+      + add/edit inputs (decided: in scope)
+
+### Pending — screens
+- [ ] 02 Rooms (add-room composer, photo cards, asset counts, entry point)
+- [ ] 03 Room detail (hero photo, edit, appliance grid, add-asset-here)
+- [ ] 04 Asset list polish (in-page search bar, photo thumbnails, header style)
+- [ ] 05 Appliance picker (searchable category grid → add-asset)
+- [ ] 06 Add appliance: model no., serial, purchase date/price, store, AMC
+      date → seeds reminder, invoice capture (file/camera), validation
+- [ ] 08 Add reminder → full page: type tile grid, "in N days" helper,
+      offsets chips, attach document, family-push note
+- [ ] 14 Profile (avatar edit, stats row, family card + invite, menu rows)
+- [ ] 15 Settings restyle: Account / Notifications / Family sections
+- [ ] 16 Change password screen (strength meter; repo method exists)
+- [ ] 17 Security: 2FA TOTP, biometric login + quick-unlock on sign-in,
+      app lock/auto-lock, recovery codes, active sessions — **largest item**
+
+### Pending — wiring & debt
+- [ ] Wire decorative UI: search icon, notification bell/dot (inbox from
+      `notification_log`), stat-card "View ›" links, filter tile, avatar tap
+- [ ] Migrate `assets.metadata` category/location hack to real
+      `category_id`/`location_id` FKs + backfill
+- [ ] Decisions: WhatsApp reminders channel (not in schema — add or cut);
+      "Active Invoices" stat-card semantics (assets vs documents count)
