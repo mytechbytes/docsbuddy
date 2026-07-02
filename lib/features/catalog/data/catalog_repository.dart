@@ -48,6 +48,15 @@ abstract interface class CatalogRepository {
   Future<Location> createLocation(String name);
   Future<void> updateLocation(String id, {String? name});
 
+  /// Uploads/replaces the room's photo and stores its reference on
+  /// `locations.image_url`.
+  Future<void> setLocationImage(
+    String locationId, {
+    required Uint8List bytes,
+    required String fileName,
+    required String mimeType,
+  });
+
   /// Uploads/replaces the asset's photo and stores its reference on
   /// `assets.image_url`; returns the updated asset.
   Future<Asset> setAssetImage(

@@ -14,6 +14,7 @@ import '../features/catalog/data/catalog_models.dart';
 import '../features/catalog/presentation/add_asset_page.dart';
 import '../features/catalog/presentation/appliance_picker_page.dart';
 import '../features/catalog/presentation/asset_detail_page.dart';
+import '../features/catalog/presentation/room_detail_page.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
 import '../features/roadmap/presentation/roadmap_page.dart';
@@ -67,9 +68,19 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ── App ──
       GoRoute(path: '/dashboard', builder: (_, _) => const HomeShell()),
-      GoRoute(path: '/appliance-picker', builder: (_, _) => const AppliancePickerPage()),
-      GoRoute(path: '/asset-new', builder: (_, state) => AddAssetPage(preset: state.extra as AssetCategory?)),
+      GoRoute(
+        path: '/appliance-picker',
+        builder: (_, state) => AppliancePickerPage(locationName: state.uri.queryParameters['location']),
+      ),
+      GoRoute(
+        path: '/asset-new',
+        builder: (_, state) => AddAssetPage(
+          preset: state.extra as AssetCategory?,
+          initialLocation: state.uri.queryParameters['location'],
+        ),
+      ),
       GoRoute(path: '/asset/:id', builder: (_, state) => AssetDetailPage(assetId: state.pathParameters['id']!)),
+      GoRoute(path: '/room/:id', builder: (_, state) => RoomDetailPage(locationId: state.pathParameters['id']!)),
       GoRoute(path: '/roadmap', builder: (_, _) => const RoadmapPage()),
     ],
   );

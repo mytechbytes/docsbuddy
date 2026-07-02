@@ -359,4 +359,39 @@ class SupabaseCatalogRepository implements CatalogRepository {
         if (name == null || name.trim().isEmpty) return;
         await _client.from('locations').update({'name': name.trim()}).eq('id', id);
       });
+
+  @override
+  Future<void> setLocationImage(
+    String locationId, {
+    required Uint8List bytes,
+    required String fileName,
+    required String mimeType,
+  }) =>
+      _guard(() async {
+        final row =
+            await _client.from('locations').select('family_id, image_url').eq('id', locationId).single();
+        final fam = row['family_id'] as String;
+        final old = row['image_url'] as String?;
+
+        final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+        final path = '$fam/locations/$locationId/photo/${DateTime.now().millisecondsSinceEpoch}_$safe';
+        try {
+          await _client.storage.from(_bucket).uploadBinary(
+                path,
+                bytes,
+                fileOptions: FileOptions(contentType: mimeType, upsert: false),
+              );
+        } on StorageException catch (e) {
+          throw Exception(e.message);
+        }
+        await _client.from('locations').update({'image_url': path}).eq('id', locationId);
+
+        if (old != null && !old.startsWith('http')) {
+          try {
+            await _client.storage.from(_bucket).remove([old]);
+          } on StorageException {
+            /* leave the orphan */
+          }
+        }
+      });
 }

@@ -10,7 +10,10 @@ import '../data/catalog_models.dart';
 /// category catalog; picking one opens Add-asset pre-filled with that type
 /// (and its default services are seeded on save).
 class AppliancePickerPage extends ConsumerStatefulWidget {
-  const AppliancePickerPage({super.key});
+  const AppliancePickerPage({super.key, this.locationName});
+
+  /// Pre-fills the add-asset Location field (the room-detail "Add here" flow).
+  final String? locationName;
 
   @override
   ConsumerState<AppliancePickerPage> createState() => _AppliancePickerPageState();
@@ -89,8 +92,8 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
                   itemCount: filtered.length + 1,
                   itemBuilder: (context, i) => i < filtered.length
-                      ? _CategoryTile(category: filtered[i])
-                      : const _SomethingElseTile(),
+                      ? _CategoryTile(category: filtered[i], locationName: widget.locationName)
+                      : _SomethingElseTile(locationName: widget.locationName),
                 );
               },
             ),
@@ -101,15 +104,21 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
   }
 }
 
+String _assetNewPath(String? locationName) =>
+    locationName == null || locationName.isEmpty
+        ? '/asset-new'
+        : '/asset-new?location=${Uri.encodeComponent(locationName)}';
+
 class _CategoryTile extends StatelessWidget {
-  const _CategoryTile({required this.category});
+  const _CategoryTile({required this.category, this.locationName});
   final AssetCategory category;
+  final String? locationName;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.pushReplacement('/asset-new', extra: category),
+      onTap: () => context.pushReplacement(_assetNewPath(locationName), extra: category),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
@@ -138,13 +147,14 @@ class _CategoryTile extends StatelessWidget {
 
 /// Escape hatch for anything not in the catalog — plain add-asset flow.
 class _SomethingElseTile extends StatelessWidget {
-  const _SomethingElseTile();
+  const _SomethingElseTile({this.locationName});
+  final String? locationName;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.pushReplacement('/asset-new'),
+      onTap: () => context.pushReplacement(_assetNewPath(locationName)),
       child: Container(
         margin: const EdgeInsets.only(top: 4),
         padding: const EdgeInsets.all(12),

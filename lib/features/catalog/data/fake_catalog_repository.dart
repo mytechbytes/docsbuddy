@@ -331,7 +331,50 @@ class FakeCatalogRepository implements CatalogRepository {
     final i = _locations.indexWhere((l) => l.id == id);
     if (i < 0 || name == null || name.trim().isEmpty) return;
     final old = _locations[i];
-    _locations[i] = Location(
+    final renamed = Location(
         id: old.id, name: name.trim(), assetCount: old.assetCount, kind: old.kind, imageUrl: old.imageUrl, parentId: old.parentId);
+    _locations[i] = renamed;
+    // Keep assets pointing at the room by name in this in-memory impl.
+    for (var j = 0; j < _assets.length; j++) {
+      final a = _assets[j];
+      if ((a.locationName ?? '').toLowerCase() == old.name.toLowerCase()) {
+        _assets[j] = Asset(
+          id: a.id,
+          name: a.name,
+          category: a.category,
+          categoryId: a.categoryId,
+          categoryName: a.categoryName,
+          locationName: renamed.name,
+          locationId: a.locationId,
+          brand: a.brand,
+          model: a.model,
+          serialNo: a.serialNo,
+          purchaseDate: a.purchaseDate,
+          purchasePrice: a.purchasePrice,
+          store: a.store,
+          imageUrl: a.imageUrl,
+        );
+      }
+    }
+  }
+
+  @override
+  Future<void> setLocationImage(
+    String locationId, {
+    required Uint8List bytes,
+    required String fileName,
+    required String mimeType,
+  }) async {
+    await _delay();
+    final i = _locations.indexWhere((l) => l.id == locationId);
+    if (i < 0) throw Exception('Room not found.');
+    final old = _locations[i];
+    _locations[i] = Location(
+        id: old.id,
+        name: old.name,
+        assetCount: old.assetCount,
+        kind: old.kind,
+        imageUrl: 'local/$locationId/$fileName',
+        parentId: old.parentId);
   }
 }

@@ -32,6 +32,11 @@ final assetRemindersProvider = FutureProvider.family<List<Reminder>, String>((re
   return ref.watch(catalogRepositoryProvider).remindersFor(assetId);
 });
 
+/// Rooms/places backed by `public.locations`, with asset counts.
+final locationsProvider = FutureProvider<List<Location>>((ref) {
+  return ref.watch(catalogRepositoryProvider).locations();
+});
+
 /// The appliance/vehicle type catalog (only specific types — generic group
 /// rows are filtered out; they exist for the enum backfill).
 final categoriesProvider = FutureProvider<List<AssetCategory>>((ref) async {
@@ -49,4 +54,5 @@ final assetImageUrlProvider = FutureProvider.family<String?, String>((ref, image
 void refreshCatalog(WidgetRef ref) {
   ref.invalidate(upcomingRemindersProvider);
   ref.invalidate(assetsProvider);
+  ref.invalidate(locationsProvider);
 }

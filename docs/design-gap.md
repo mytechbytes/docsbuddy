@@ -89,8 +89,8 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 |---|--------|--------|---------------|
 | 00a–d | Onboarding carousel | ✅ Done | — |
 | 01 | Dashboard | ✅ Done | "Active Invoices" card counts assets not invoices; rows lack photo + category subtitle; search/bell/filter/View› decorative |
-| 02 | Rooms | ❌ Missing | Whole screen: add-room composer, photo cards, "N Registered", entry point |
-| 03 | Room detail | ❌ Missing | Whole screen: hero photo, edit room, summary line, appliance grid |
+| 02 | Rooms | ✅ Done | — |
+| 03 | Room detail | ✅ Done | — |
 | 04 | Asset list | 🟡 Partial | No in-page search; icon tiles instead of photos; header + chip styling |
 | 05 | Appliance picker | ✅ Done | — |
 | 06 | Add appliance | ✅ Done | Camera capture for invoices/photos pending (`image_picker`) |
@@ -174,8 +174,8 @@ is surfaced in Dart.
 
 ### B. Screens
 
-- [ ] **02 Rooms** — `RoomsPage` over real `locations`: "Add a new room" composer, photo cards, "N Registered" counts; add tab/entry point (A2/A6)
-- [ ] **03 Room detail** — `RoomDetailPage(locationId)`: hero photo, edit-room, "managing N appliances" line, appliance grid with day pills, add-asset-here
+- [x] **02 Rooms** — `RoomsPage` over real `locations`: "Add a new room" composer, photo cards (upload via `setLocationImage`), "N Registered" counts, Rooms tab in the bottom nav (A2/A6)
+- [x] **03 Room detail** — `RoomDetailPage(locationId)`: hero photo (tap to change), rename dialog, "managing N appliances" line, 3-column appliance grid with day pills, "Add here" → picker with the room pre-filled
 - [x] **05 Appliance picker** — searchable catalog list feeding add-asset, with a "Something else" escape hatch (A4)
 - [x] **06 Add appliance** — type dropdown (catalog), model/serial/purchase/store (A1), photo (A2), AMC date (seeds/overrides the AMC service), invoice attach (file → invoice document), auto-seed note; *camera capture still pending (needs `image_picker`)*
 - [ ] **08 Add reminder** *(partial)* — promote sheet to full page: type tile grid, "in N days" helper, offsets chips, attach-document row (service-scoped via `asset_date_id`, A8), family-push note (A3/A7)
@@ -223,7 +223,7 @@ is surfaced in Dart.
 1. [x] **Model + repo widening** (A1, A3, A6, A7, A8 service layer) + metadata→FK debt (D, location half — category half moves with step 3) — **done**
 2. [x] **Asset photos** (A2) — biggest visual gap, self-contained — **done**
 3. [x] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — **done** (camera capture deferred)
-4. [ ] **Rooms + Room detail** (A6, B-02/03)
+4. [x] **Rooms + Room detail** (A6, B-02/03) — **done**
 5. [ ] **Profile + Change password + Settings restyle** (A5, B-14/15/16)
 6. [ ] **Add-reminder full page + wire decorative UI** (B-08, C)
 7. [ ] **2FA / security** (B-17) — largest, do last
