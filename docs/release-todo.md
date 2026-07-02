@@ -114,6 +114,12 @@ Dart models → repository mapping → screens.
       counts) instead of metadata grouping
 - [ ] A7 Wire `notification_prefs` (channels, default offsets, quiet hours) to
       Settings toggles + Add-reminder defaults
+- [ ] A8 Service layer (appliance → service → reminders + documents):
+      surface `asset_dates` as the Service entity, map
+      `documents.asset_date_id` so documents attach per service as well as
+      per appliance, group documents by service on asset detail, wire
+      `complete_asset_date()` roll-forward; optional provider/policy-no./cost
+      fields need a small migration
 
 ### Pending — screens
 - [ ] 02 Rooms (add-room composer, photo cards, asset counts, entry point)

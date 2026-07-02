@@ -68,6 +68,18 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
    with day pills.
 10. **14 Profile** — stats row (assets / reminders / documents counts),
     "Verified" badge, family card with member avatars and an Invite button.
+11. **Missing middle layer — Services.** The product model is
+    **appliance → service → reminders + documents**: an appliance carries
+    services (AMC, insurance, pollution, road tax, fitness…), each service has
+    its own reminder schedule, and documents attach to the appliance **and**
+    to individual services (design 08 attaches "Insurance policy, receipt,
+    photo…" to a reminder). The schema already models this — `asset_dates`
+    **is** the service row (own label, recurrence, per-service
+    `notify_offsets`, `complete_asset_date()` roll-forward) and
+    `documents.asset_date_id` links a document to a service — but the Dart
+    layer collapses it: `Reminder` is treated as a bare date and
+    `DocumentMeta` has no `assetDateId`, so documents can only attach at the
+    appliance level and services have no detail view.
 
 ---
 
@@ -143,13 +155,25 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 - [ ] Back the Settings toggles (Push / Email) + "Default offsets" row with it
 - [ ] Use `default_offsets` as the pre-selected chips on Add reminder
 
+**A8. Service layer — appliance → service → reminders + documents [schema ✓] *(new)***
+`asset_dates` already is the service entity (label, recurrence, per-service
+`notify_offsets`, `complete_asset_date()` roll-forward) and
+`documents.asset_date_id` already scopes a document to a service; none of it
+is surfaced in Dart.
+- [ ] Reframe/extend the Dart `Reminder` as the **Service** entity mapping `asset_dates` 1:1 (service kind, label, schedule) — reminders are its `notify_offsets` (A3)
+- [ ] Add `assetDateId` to `DocumentMeta`; map `asset_date_id` in `supabase_document_repository.dart`; accept it in `uploadDocument(...)` / list-by-service
+- [ ] Asset detail: documents grouped per service (service row → its documents) in addition to the appliance-level Documents section
+- [ ] Attach-document in add/edit reminder writes `asset_date_id` (pairs with B-08)
+- [ ] Service completion: wire `complete_asset_date()` (mark done → roll due date forward per recurrence)
+- [ ] **[new]** Optional richer service fields (provider/vendor, policy or contract no., cost, notes) — small migration adding columns or a `metadata jsonb` to `asset_dates`, if wanted for v1
+
 ### B. Screens
 
 - [ ] **02 Rooms** — `RoomsPage` over real `locations`: "Add a new room" composer, photo cards, "N Registered" counts; add tab/entry point (A2/A6)
 - [ ] **03 Room detail** — `RoomDetailPage(locationId)`: hero photo, edit-room, "managing N appliances" line, appliance grid with day pills, add-asset-here
 - [ ] **05 Appliance picker** — searchable category grid feeding add-asset (A4)
 - [ ] **06 Add appliance** *(partial)* — model no., serial, purchase date/price, store, AMC date (seeds an AMC reminder), invoice capture (file/camera → document), photo, required-field validation (A1/A2)
-- [ ] **08 Add reminder** *(partial)* — promote sheet to full page: type tile grid, "in N days" helper, offsets chips, attach-document row, family-push note (A3/A7)
+- [ ] **08 Add reminder** *(partial)* — promote sheet to full page: type tile grid, "in N days" helper, offsets chips, attach-document row (service-scoped via `asset_date_id`, A8), family-push note (A3/A7)
 - [ ] **14 Profile** — avatar + camera edit, name/email + Verified badge, stats row (assets/reminders/documents), family card + Invite, menu rows (A5)
 - [ ] **16 Change password** — current/new/confirm + strength meter + "signs out other devices" note; `SupabaseAuthRepository.updatePassword` already exists — wire from Settings
 - [ ] **17 Security / 2FA** — GoTrue MFA/TOTP (`auth.mfa.enroll/challenge/verify`) with QR + copy key; biometric login toggles (needs `local_auth`); app lock + auto-lock; recovery codes; active sessions; biometric quick-unlock on sign-in. **Largest single item**
@@ -183,7 +207,7 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 
 ## Suggested sequencing (dependency + value)
 
-1. [ ] **Model + repo widening** (A1, A3, A6, A7) + metadata→FK debt (D) — unblocks everything, low UI
+1. [ ] **Model + repo widening** (A1, A3, A6, A7, A8 service layer) + metadata→FK debt (D) — unblocks everything, low UI
 2. [ ] **Asset photos** (A2) — biggest visual gap, self-contained
 3. [ ] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — high product value
 4. [ ] **Rooms + Room detail** (A6, B-02/03)
