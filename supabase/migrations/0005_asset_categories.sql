@@ -1,27 +1,25 @@
 -- ============================================================================
--- 0005 — Category catalog seed + explicit reminder kind + category backfill
--- (design-gap A4 + the category half of the metadata debt)
+-- 0005 — Asset-category catalog (+ seed)
 --
--- 1. `asset_dates.kind` — an explicit service kind written at create time so
---    the app stops inferring it from the label (fragile `_kindFromLabel`).
---    Values mirror the app's ReminderKind names; label inference remains the
---    read-time fallback for old rows.
--- 2. Seeds `asset_categories`: five generic groups (slug = the app's old
---    category enum names, used for backfill) plus specific appliance/vehicle
---    types powering the appliance-picker screen. `default_dates` holds the
---    services auto-seeded when an asset of that type is created:
---    [{kind, label, start_months, recurrence}] relative to the purchase date
---    (or creation date).
--- 3. Backfills `assets.metadata->>'category'` into the `category_id` FK and
---    drops the JSONB key — retiring the metadata shortcut entirely
---    (locations were migrated in 0006).
+-- The appliance-picker catalog: specific vehicle/appliance/electronics types
+-- plus five generic group rows (slugs match the app's category enum).
+-- `default_dates` holds the services auto-seeded when an asset of that type
+-- is created: [{kind, label, start_months, recurrence}] relative to the
+-- purchase date (or creation date). Global read-only reference data — no
+-- family scoping, no RLS (reads go through the anon/authenticated roles).
 -- ============================================================================
 
-alter table public.asset_dates
-  add column if not exists kind text;
+create table public.asset_categories (
+  id             uuid primary key default gen_random_uuid(),
+  slug           text unique,
+  name           text,
+  icon           text,
+  default_dates  jsonb,
+  schema         jsonb
+);
 
 insert into public.asset_categories (slug, name, icon, default_dates) values
-  -- Generic groups (slugs match the app's category enum for backfill).
+  -- Generic groups (slugs match the app's category enum).
   ('vehicle',     'Vehicle',     'car',     '[]'::jsonb),
   ('appliance',   'Appliance',   'plug',    '[]'::jsonb),
   ('electronics', 'Electronics', 'devices', '[]'::jsonb),
@@ -82,13 +80,3 @@ insert into public.asset_categories (slug, name, icon, default_dates) values
     {"kind":"warranty","label":"Warranty","start_months":12,"recurrence":"none"}
   ]'::jsonb)
 on conflict (slug) do nothing;
-
--- Backfill: point assets at the generic category row matching the old
--- metadata value, then drop the JSONB key.
-update public.assets a
-set category_id = c.id,
-    metadata    = a.metadata - 'category'
-from public.asset_categories c
-where a.category_id is null
-  and coalesce(a.metadata->>'category', '') <> ''
-  and c.slug = a.metadata->>'category';

@@ -44,27 +44,32 @@ repository — so every screen works offline. This guide turns on real Supabase.
 
 ## Part B — Apply the database schema
 
-**Easiest:** paste **`supabase/all_migrations.sql`** (all migrations 0001–0008
-combined, generated) into the SQL Editor and Run once on a fresh project.
+**Easiest:** paste **`supabase/all_migrations.sql`** (all migrations combined,
+generated) into the SQL Editor and Run once on a fresh project.
 
-Or apply the individual migrations in order (SQL Editor or CLI):
+Or apply the individual **feature-based** migrations in order (SQL Editor or
+CLI; see `supabase/migrations/README.md`):
 
 ```bash
-for f in supabase/migrations/*.sql; do psql "$DATABASE_URL" -f "$f"; done
+for f in supabase/migrations/0*.sql; do psql "$DATABASE_URL" -f "$f"; done
 ```
 
-- `0001_init.sql` — tables, RLS, `updated_at` triggers, `handle_new_user`,
-  `is_family_member`, `accept_invite`, `complete_asset_date`.
-- `0002_family_rpcs.sql` — `create_family` + `create_invite` (SECURITY DEFINER).
-- `0003_short_invite_code.sql` — 8-char invite codes.
-- `0004_storage.sql` — `docsbuddy-files` bucket + family-scoped storage RLS.
-- `0005_seed_categories.sql` — category catalog seed, `asset_dates.kind`,
-  category→FK backfill.
-- `0006_service_fields.sql` — service provider/policy/cost/notes,
-  location→FK backfill.
-- `0007_whatsapp_channel.sql` — whatsapp notification channel.
-- `0008_family_profile_visibility.sql` — family members can read each
-  other's basic profile.
+- `0001_extensions.sql` — pgcrypto + moddatetime.
+- `0002_users_profiles.sql` — users mirror, `handle_new_user`, devices.
+- `0003_families_sharing.sql` — families, roles, invites, `is_family_member`,
+  `create_family`/`create_invite`/`accept_invite`, member profile visibility.
+- `0004_locations_rooms.sql` — rooms (hierarchy, photo, sort order).
+- `0005_asset_categories.sql` — appliance-type catalog + seed.
+- `0006_assets.sql` — assets + permission-matrix RLS.
+- `0007_services_reminders.sql` — services (`asset_dates`), notification
+  log, `complete_asset_date` recurrence RPC.
+- `0008_documents_storage.sql` — documents + `docsbuddy-files` bucket and
+  storage RLS.
+- `0009_notification_prefs.sql` — channels, default offsets, quiet hours.
+- `0010_sync_support.sql` — local-first sync cursors.
+
+> Databases created with the pre-2026-07-02 patch-style series already have
+> this schema — don't re-run.
 
 ## Part C — Run the app with credentials
 
@@ -119,7 +124,7 @@ You normally **don't edit Dart files** to switch backends — passing the two
 | Auth backend calls | `lib/features/auth/data/supabase_auth_repository.dart` | Edit only to change a flow (e.g. recovery-by-link vs OTP). |
 | Family: fake ↔ Supabase | `lib/features/family/application/family_controller.dart` | `familyRepositoryProvider` picks the Supabase impl when configured. |
 | Family backend calls | `lib/features/family/data/supabase_family_repository.dart` | Calls `create_family` / `create_invite` / `accept_invite` RPCs. |
-| DB schema | `supabase/migrations/0001_init.sql`, `0002_family_rpcs.sql` | Run in the dashboard (Part B). |
+| DB schema | `supabase/migrations/` (feature-based, see its README) | Run in the dashboard (Part B). |
 | Deep links | `android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`, `macos/Runner/Info.plist` | Only for OAuth / magic links (Part E). |
 
 **To change the recovery flow** to a reset link instead of a 6-digit code:
