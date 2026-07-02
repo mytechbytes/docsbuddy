@@ -25,6 +25,8 @@ Status of what's needed to ship a Play **internal testing** build.
 - [ ] WhatsApp reminders: deploy `send-reminders-whatsapp`, set
       `WHATSAPP_ACCESS_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID` (+ optional
       template) secrets, schedule the daily cron — see the function README
+- [ ] Email reminders: deploy `send-reminders-email`, set `RESEND_API_KEY`
+      + `EMAIL_FROM` secrets, schedule the daily cron — see the README
 
 ## B. Signing key (you lost the old one)
 - [ ] Generate a new upload keystore (`keytool -genkey … -alias upload`)

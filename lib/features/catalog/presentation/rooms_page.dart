@@ -21,6 +21,9 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
   final _newRoom = TextEditingController();
   bool _adding = false;
 
+  /// Optimistic ordering shown while a reorder persists.
+  List<Location>? _pendingOrder;
+
   @override
   void dispose() {
     _newRoom.dispose();
@@ -45,6 +48,25 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
     }
   }
 
+  Future<void> _reorder(List<Location> current, int oldIndex, int newIndex) async {
+    // onReorderItem already adjusts newIndex for the removed item.
+    final next = [...current];
+    final moved = next.removeAt(oldIndex);
+    next.insert(newIndex, moved);
+    setState(() => _pendingOrder = next);
+    try {
+      await ref.read(catalogRepositoryProvider).reorderLocations([for (final l in next) l.id]);
+      ref.invalidate(locationsProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Could not reorder: $e'), backgroundColor: AppColors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _pendingOrder = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final locations = ref.watch(locationsProvider);
@@ -56,28 +78,37 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
         titleSpacing: 20,
         title: const Align(alignment: Alignment.centerLeft, child: DbLogo(size: 20)),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(locationsProvider),
-        child: locations.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('$e')),
-          data: (list) => ListView(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
+      body: locations.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('$e')),
+        data: (loaded) {
+          final list = _pendingOrder ?? loaded;
+          return Column(
             children: [
-              _AddRoomComposer(controller: _newRoom, busy: _adding, onSubmit: _addRoom),
-              const SizedBox(height: 16),
-              if (list.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                      child: Text('No rooms yet. Add your first room above.',
-                          style: TextStyle(color: AppColors.muted))),
-                )
-              else
-                for (final l in list) _RoomCard(location: l),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: _AddRoomComposer(controller: _newRoom, busy: _adding, onSubmit: _addRoom),
+              ),
+              Expanded(
+                child: list.isEmpty
+                    ? const Center(
+                        child: Text('No rooms yet. Add your first room above.',
+                            style: TextStyle(color: AppColors.muted)))
+                    : RefreshIndicator(
+                        onRefresh: () async => ref.invalidate(locationsProvider),
+                        // Long-press-drag a card to reorder rooms.
+                        child: ReorderableListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+                          itemCount: list.length,
+                          onReorderItem: (oldIndex, newIndex) => _reorder(list, oldIndex, newIndex),
+                          itemBuilder: (context, i) =>
+                              _RoomCard(key: ValueKey(list[i].id), location: list[i]),
+                        ),
+                      ),
+              ),
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -126,7 +157,7 @@ class _AddRoomComposer extends StatelessWidget {
 }
 
 class _RoomCard extends StatelessWidget {
-  const _RoomCard({required this.location});
+  const _RoomCard({super.key, required this.location});
   final Location location;
 
   @override

@@ -18,6 +18,11 @@ final securityStatusProvider = FutureProvider<SecurityStatus>((ref) {
   return ref.watch(securityRepositoryProvider).status();
 });
 
+/// True when the session must step up to AAL2 before using the app.
+final mfaChallengeRequiredProvider = FutureProvider<bool>((ref) {
+  return ref.watch(securityRepositoryProvider).needsMfaChallenge();
+});
+
 /// Thin `local_auth` wrapper that degrades to "unavailable" on platforms
 /// without biometrics (desktop, tests) instead of throwing.
 class BiometricService {

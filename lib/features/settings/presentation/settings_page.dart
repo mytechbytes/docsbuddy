@@ -103,6 +103,15 @@ class SettingsPage extends ConsumerWidget {
                 style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
+            _Row(
+              icon: Icons.bedtime_outlined,
+              title: 'Quiet hours',
+              onTap: () => _editQuietHours(context, ref, prefs ?? const NotificationPrefs()),
+              trailing: Text(
+                '${prefs?.quietStart ?? '22:00'} – ${prefs?.quietEnd ?? '07:00'}',
+                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+              ),
+            ),
           ]),
           const _SectionLabel('Family'),
           _Card(children: [
@@ -238,6 +247,37 @@ class SettingsPage extends ConsumerWidget {
       ref.invalidate(notificationPrefsProvider);
     }
   }
+}
+
+/// Start/end time pickers for the do-not-disturb window; alerts landing
+/// inside it are shifted to the window's end.
+Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPrefs prefs) async {
+  TimeOfDay parse(String hhmm, TimeOfDay fallback) {
+    final parts = hhmm.split(':');
+    final h = int.tryParse(parts[0]);
+    final m = parts.length > 1 ? int.tryParse(parts[1]) : null;
+    return h == null || m == null ? fallback : TimeOfDay(hour: h, minute: m);
+  }
+
+  String fmt(TimeOfDay t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  final start = await showTimePicker(
+    context: context,
+    helpText: 'Quiet hours start',
+    initialTime: parse(prefs.quietStart, const TimeOfDay(hour: 22, minute: 0)),
+  );
+  if (start == null || !context.mounted) return;
+  final end = await showTimePicker(
+    context: context,
+    helpText: 'Quiet hours end',
+    initialTime: parse(prefs.quietEnd, const TimeOfDay(hour: 7, minute: 0)),
+  );
+  if (end == null) return;
+
+  await ref
+      .read(notificationPrefsRepositoryProvider)
+      .update(prefs.copyWith(quietStart: fmt(start), quietEnd: fmt(end)));
+  ref.invalidate(notificationPrefsProvider);
 }
 
 class _SectionLabel extends StatelessWidget {

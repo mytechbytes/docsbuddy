@@ -10,6 +10,7 @@ import '../../../core/widgets/catalog_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../family/application/family_controller.dart';
 import '../../family/data/family_models.dart';
+import '../application/phone_validation.dart';
 import '../application/profile_providers.dart';
 import '../data/profile_repository.dart';
 
@@ -131,41 +132,58 @@ class ProfilePage extends ConsumerWidget {
   Future<void> _editInfo(BuildContext context, WidgetRef ref, Profile p) async {
     final name = TextEditingController(text: p.displayName);
     final phone = TextEditingController(text: p.phone ?? '');
+    String? phoneError;
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.paper,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Edit personal info',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                const SizedBox(height: 16),
-                AppTextField(label: 'Display name', controller: name, icon: Icons.person_outline),
-                const SizedBox(height: 12),
-                AppTextField(
-                    label: 'Phone (for WhatsApp reminders)',
-                    controller: phone,
-                    icon: Icons.phone_outlined,
-                    hint: '+91 98…',
-                    keyboardType: TextInputType.phone),
-                const SizedBox(height: 18),
-                PrimaryButton(label: 'Save', onPressed: () => Navigator.of(context).pop(true)),
-              ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Edit personal info',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  const SizedBox(height: 16),
+                  AppTextField(label: 'Display name', controller: name, icon: Icons.person_outline),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                      label: 'Phone (for WhatsApp reminders)',
+                      controller: phone,
+                      icon: Icons.phone_outlined,
+                      hint: '+91 9812345678',
+                      keyboardType: TextInputType.phone,
+                      errorText: phoneError),
+                  const SizedBox(height: 18),
+                  PrimaryButton(
+                    label: 'Save',
+                    onPressed: () {
+                      // Empty clears the number; otherwise it must be E.164.
+                      if (phone.text.trim().isNotEmpty && normalizePhone(phone.text) == null) {
+                        setSheetState(() =>
+                            phoneError = 'Use the international format, e.g. +91 9812345678.');
+                        return;
+                      }
+                      Navigator.of(context).pop(true);
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
     if (saved == true) {
-      await ref.read(profileRepositoryProvider).update(displayName: name.text, phone: phone.text);
+      await ref
+          .read(profileRepositoryProvider)
+          .update(displayName: name.text, phone: normalizePhone(phone.text) ?? '');
       ref.invalidate(profileProvider);
     }
     name.dispose();

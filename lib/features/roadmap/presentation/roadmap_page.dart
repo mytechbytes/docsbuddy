@@ -44,6 +44,11 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Edit & delete assets and services'),
       (true, 'Service detail: cost, record & per-service documents'),
       (true, 'Family roles: change/remove members; call & WhatsApp'),
+      (true, 'Quiet hours editor + scheduler respects them'),
+      (true, 'Email reminder sender (Edge Function)'),
+      (true, '2FA step-up challenge on sign-in (AAL2)'),
+      (true, 'Rooms: drag to reorder'),
+      (true, 'Phone numbers validated to E.164'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -52,6 +57,7 @@ class RoadmapPage extends StatelessWidget {
       (false, 'Host /.well-known/assetlinks.json + apple-app-site-association'),
       (false, 'Play Console: internal track, privacy policy, data safety'),
       (false, 'WhatsApp: deploy sender + Meta API secrets + daily cron'),
+      (false, 'Email: deploy sender + Resend secrets + daily cron'),
     ]),
     ('Pending — design gap (see docs/design-gap.md)', [
       (false, 'Camera capture for invoices/photos (image_picker)'),

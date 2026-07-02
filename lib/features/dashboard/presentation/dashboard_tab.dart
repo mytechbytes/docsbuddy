@@ -11,6 +11,7 @@ import '../../catalog/application/catalog_providers.dart';
 import '../../catalog/application/reminder_filters.dart';
 import '../../catalog/data/catalog_models.dart';
 import '../../profile/application/profile_providers.dart';
+import '../../settings/application/settings_providers.dart';
 
 class DashboardTab extends ConsumerStatefulWidget {
   const DashboardTab({super.key});
@@ -92,9 +93,17 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
 
   @override
   Widget build(BuildContext context) {
-    // Re-arm local notifications whenever the reminder set changes.
+    // Re-arm local notifications whenever the reminder set changes,
+    // honouring the user's quiet hours.
     ref.listen(upcomingRemindersProvider, (_, next) {
-      next.whenData((list) => ref.read(notificationServiceProvider).rescheduleFor(list));
+      next.whenData((list) {
+        final prefs = ref.read(notificationPrefsProvider).valueOrNull;
+        ref.read(notificationServiceProvider).rescheduleFor(
+              list,
+              quietStart: prefs?.quietStart,
+              quietEnd: prefs?.quietEnd,
+            );
+      });
     });
     final reminders = ref.watch(upcomingRemindersProvider);
     final assetCount = ref.watch(assetsProvider).valueOrNull?.length ?? 0;

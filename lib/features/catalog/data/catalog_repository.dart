@@ -83,6 +83,9 @@ abstract interface class CatalogRepository {
   Future<Location> createLocation(String name);
   Future<void> updateLocation(String id, {String? name});
 
+  /// Persists a new room ordering (`locations.sort_order` by list index).
+  Future<void> reorderLocations(List<String> orderedIds);
+
   /// Uploads/replaces the room's photo and stores its reference on
   /// `locations.image_url`.
   Future<void> setLocationImage(

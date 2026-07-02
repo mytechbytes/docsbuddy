@@ -253,9 +253,19 @@ A verification pass over data ↔ screen connections after the plan closed:
 - [x] Family role management — admins change roles / remove members
       (owner protected; RLS already permitted it); member tiles get
       tap-to-call and WhatsApp actions on their contact number
+- [x] Quiet hours — editor in Settings; the local scheduler shifts alerts
+      landing inside the window to its end (`applyQuietHours`, tested)
+- [x] Email reminders sender — `send-reminders-email` Edge Function
+      (Resend API, log-deduped) backs the Settings toggle
+- [x] AAL2 step-up — sessions with an enrolled authenticator must pass the
+      TOTP challenge screen before the app opens
+- [x] Room reordering — long-press-drag on the Rooms tab persists
+      `locations.sort_order` (nesting via `parent_id` still deferred)
+- [x] Phone validation — profile phone is validated/normalized to E.164
+      before saving (WhatsApp delivery requires it)
 - [ ] Camera capture for invoices/photos (`image_picker` + iOS plist)
 - [ ] Sign-in with a recovery code (server function to check the stored
       hashes; codes generate and persist today)
 - [ ] Dashboard reminder rows: category subtitle per design (photo already
       shown)
-- [ ] Sequenced-2FA sign-in challenge screen (GoTrue AAL2 step-up on login)
+- [ ] Room nesting UI (`locations.parent_id` is modeled; reordering shipped)

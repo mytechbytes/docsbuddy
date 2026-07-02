@@ -449,6 +449,13 @@ class SupabaseCatalogRepository implements CatalogRepository {
       });
 
   @override
+  Future<void> reorderLocations(List<String> orderedIds) => _guard(() async {
+        for (var i = 0; i < orderedIds.length; i++) {
+          await _client.from('locations').update({'sort_order': i}).eq('id', orderedIds[i]);
+        }
+      });
+
+  @override
   Future<void> setLocationImage(
     String locationId, {
     required Uint8List bytes,

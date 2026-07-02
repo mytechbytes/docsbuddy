@@ -34,6 +34,14 @@ abstract interface class SecurityRepository {
   /// (shown exactly once).
   Future<List<String>> generateRecoveryCodes();
 
+  /// True when a verified TOTP factor exists but the current session is
+  /// still AAL1 — the sign-in must step up before using the app.
+  Future<bool> needsMfaChallenge();
+
+  /// Verifies a TOTP code against the enrolled factor, elevating the
+  /// session to AAL2.
+  Future<void> verifyMfaChallenge(String code);
+
   Future<({String device, DateTime? lastSignIn})> currentSession();
   Future<void> signOutOtherDevices();
 }
@@ -83,6 +91,14 @@ class FakeSecurityRepository implements SecurityRepository {
     final codes = rc.generateRecoveryCodes();
     _hashes = codes.map(rc.hashRecoveryCode).toList();
     return codes;
+  }
+
+  @override
+  Future<bool> needsMfaChallenge() async => false;
+
+  @override
+  Future<void> verifyMfaChallenge(String code) async {
+    if (code.trim().length != 6) throw Exception('Enter the 6-digit code.');
   }
 
   @override
@@ -145,6 +161,25 @@ class SupabaseSecurityRepository implements SecurityRepository {
           'recovery_code_hashes': codes.map(rc.hashRecoveryCode).toList(),
         }));
         return codes;
+      });
+
+  @override
+  Future<bool> needsMfaChallenge() async {
+    try {
+      final aal = _client.auth.mfa.getAuthenticatorAssuranceLevel();
+      return aal.nextLevel == AuthenticatorAssuranceLevels.aal2 && aal.currentLevel != aal.nextLevel;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> verifyMfaChallenge(String code) => _guard(() async {
+        final factors = await _client.auth.mfa.listFactors();
+        final factor = factors.totp.where((f) => f.status == FactorStatus.verified).firstOrNull;
+        if (factor == null) throw Exception('No authenticator enrolled.');
+        final challenge = await _client.auth.mfa.challenge(factorId: factor.id);
+        await _client.auth.mfa.verify(factorId: factor.id, challengeId: challenge.id, code: code.trim());
       });
 
   @override
