@@ -9,6 +9,7 @@ import '../../auth/application/auth_controller.dart';
 import '../../family/application/family_controller.dart';
 import '../../onboarding/application/onboarding_controller.dart';
 import '../../profile/application/profile_providers.dart';
+import '../../security/application/security_providers.dart';
 import '../application/settings_providers.dart';
 import '../data/notification_prefs_repository.dart';
 
@@ -66,10 +67,11 @@ class SettingsPage extends ConsumerWidget {
             _Row(
               icon: Icons.shield_outlined,
               title: 'Security & 2FA',
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Security & 2FA is coming in the next update.'))),
-              trailing:
-                  const Text('Soon', style: TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+              onTap: () => context.push('/security'),
+              trailing: Text(
+                ref.watch(securityStatusProvider).valueOrNull?.totpEnabled == true ? 'On' : 'Off',
+                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+              ),
             ),
           ]),
           const _SectionLabel('Notifications'),

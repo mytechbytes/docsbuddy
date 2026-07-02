@@ -39,6 +39,7 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Add reminder as a full page (offsets, attach document)'),
       (true, 'Search, notification inbox, stat links, filter, avatar'),
       (true, 'Asset list: in-page search + photo thumbnails'),
+      (true, 'Security: 2FA (TOTP), biometric unlock, app lock, sessions'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -51,7 +52,7 @@ class RoadmapPage extends StatelessWidget {
     ('Pending — design gap (see docs/design-gap.md)', [
       (false, 'Per-service document grouping on asset detail'),
       (false, 'Camera capture for invoices/photos (image_picker)'),
-      (false, 'Security: 2FA (TOTP), biometric login, app lock, sessions'),
+      (false, 'Sign-in with recovery code (server check)'),
     ]),
     ('Pending — next features', [
       (false, 'Branded splash screen'),

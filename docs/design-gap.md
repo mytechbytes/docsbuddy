@@ -11,14 +11,10 @@ Screenshot-by-screenshot review of the design handoff (`design/screenshots/*`,
 
 ## Summary
 
-**Scorecard: 11 of 21 screens done, 4 partial, 6 missing.**
-
-- **Done** — 00a–d Onboarding, 01 Dashboard, 07 Asset detail, 09–13 Auth
-  (sign-in/up incl. Google/Apple, forgot, OTP, reset). Minor deltas remain
-  (photos, real notify-offsets, serial in header — tracked below).
-- **Partial** — 04 Asset list, 06 Add appliance, 08 Add reminder, 15 Settings.
-- **Missing** — 02 Rooms, 03 Room detail, 05 Appliance picker, 14 Profile,
-  16 Change password, 17 Security/2FA.
+**Scorecard: 21 of 21 screens done — the gap plan is complete.** All seven
+sequencing phases shipped (data layer & services, photos, category catalog,
+rooms, profile/settings/password, reminder page + wiring, security). The few
+deliberate deferrals are listed under "Remaining polish" at the bottom.
 
 **Root cause:** the Postgres schema already models ~90% of what the designs
 need — the gap is almost entirely in the **Dart layer** (domain models →
@@ -100,7 +96,7 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 | 14 | Profile | ✅ Done | — |
 | 15 | Settings | ✅ Done | Security & 2FA row is a placeholder until screen 17 |
 | 16 | Change password | ✅ Done | — |
-| 17 | Security / 2FA | ❌ Missing | TOTP enrollment + biometrics, app lock, recovery codes, sessions |
+| 17 | Security / 2FA | ✅ Done | Recovery-code *login path* needs a server function (codes generate/store today) |
 
 ---
 
@@ -181,9 +177,9 @@ is surfaced in Dart.
 - [x] **08 Add reminder** — full page: 4-across type tile grid, due date with "in N days" helper, repeat chips, multi-select offsets chips pre-filled from prefs, service details, service-scoped attach-document (uploads with `asset_date_id`), family-push note (A3/A7/A8)
 - [x] **14 Profile** — avatar + camera edit (upload), name/email + Verified badge, stats row (assets/reminders/documents), family card with member avatars + Invite, edit-info sheet (name + WhatsApp phone), menu rows (A5)
 - [x] **16 Change password** — current password verified by re-auth, strength meter (Weak→Excellent), confirm match, other-devices note; wired from Settings and Profile
-- [ ] **17 Security / 2FA** — GoTrue MFA/TOTP (`auth.mfa.enroll/challenge/verify`) with QR + copy key; biometric login toggles (needs `local_auth`); app lock + auto-lock; recovery codes; active sessions; biometric quick-unlock on sign-in. **Largest single item**
+- [x] **17 Security / 2FA** — GoTrue MFA/TOTP enroll → QR (`qr_flutter`) + copy key → challenge/verify, disable with confirm; biometric unlock toggle (`local_auth`, device-credential fallback; FragmentActivity + USE_BIOMETRIC + NSFaceIDUsageDescription wired); app lock + auto-lock (1/5/15 min) enforced by a lock screen on launch/resume — this is the biometric quick-unlock surface; recovery codes (generated client-side, hashes stored in user metadata — *sign-in-with-recovery-code needs a server function later*); active-sessions sheet with "Sign out other devices" (GoTrue scope)
 - [x] **04 Asset list** — in-page "Search Your Appliance" bar, photo thumbnails (A2), specific-type chips
-- [x] **15 Settings** — Account (Personal info → Profile, Email, Change password, Security & 2FA placeholder until B-17), Notifications (Push/Email/WhatsApp toggles + Default-offsets editor via A7), Family (manage + member count), App utilities, Sign out
+- [x] **15 Settings** — Account (Personal info → Profile, Email, Change password, Security & 2FA with live On/Off state), Notifications (Push/Email/WhatsApp toggles + Default-offsets editor via A7), Family (manage + member count), App utilities, Sign out
 - [x] **00a–d Onboarding** — carousel implemented
 - [x] **01 Dashboard** — redesigned to match handoff
 - [x] **07 Asset detail** — redesigned to match handoff
@@ -226,9 +222,22 @@ is surfaced in Dart.
 4. [x] **Rooms + Room detail** (A6, B-02/03) — **done**
 5. [x] **Profile + Change password + Settings restyle** (A5, A7b, B-14/15/16) — **done**
 6. [x] **Add-reminder full page + wire decorative UI** (B-08, B-04, C) — **done**
-7. [ ] **2FA / security** (B-17) — largest, do last
+7. [x] **2FA / security** (B-17) — **done**
 
-**Net:** almost none of this needs new tables — the schema was built ahead of
-the UI. The work is Dart models → repository mapping → screens, two small
-migrations (`0005_seed_categories.sql`, `0006_service_fields.sql`), the
-`notification_prefs` wiring and fixing the `metadata` shortcut.
+**Net:** the schema was built ahead of the UI, and the plan closed with only
+three small migrations (`0005` seed+kind+backfill, `0006` service fields +
+location backfill, `0007` whatsapp channel) — everything else was Dart
+models → repository mapping → screens.
+
+---
+
+## Remaining polish (deliberate deferrals)
+
+- [ ] Per-service document grouping on asset detail (documents already carry
+      `asset_date_id`; grouping UI pending)
+- [ ] Camera capture for invoices/photos (`image_picker` + iOS plist)
+- [ ] Sign-in with a recovery code (server function to check the stored
+      hashes; codes generate and persist today)
+- [ ] Dashboard reminder rows: category subtitle per design (photo already
+      shown)
+- [ ] Sequenced-2FA sign-in challenge screen (GoTrue AAL2 step-up on login)

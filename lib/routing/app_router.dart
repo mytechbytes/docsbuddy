@@ -25,6 +25,7 @@ import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/roadmap/presentation/roadmap_page.dart';
+import '../features/security/presentation/security_page.dart';
 import '../features/settings/presentation/change_password_page.dart';
 import '../features/shell/presentation/home_shell.dart';
 
@@ -101,6 +102,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
       GoRoute(path: '/change-password', builder: (_, _) => const ChangePasswordPage()),
+      GoRoute(path: '/security', builder: (_, _) => const SecurityPage()),
       GoRoute(path: '/family-manage', builder: (_, _) => const FamilyPage()),
       GoRoute(path: '/roadmap', builder: (_, _) => const RoadmapPage()),
     ],
