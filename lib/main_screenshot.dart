@@ -18,6 +18,8 @@ class _SignedInFakeAuth extends FakeAuthRepository {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Test-only API, used deliberately: this harness is never shipped.
+  // ignore: invalid_use_of_visible_for_testing_member
   SharedPreferences.setMockInitialValues({'onboarding_complete': true});
   final prefs = await SharedPreferences.getInstance();
   runApp(

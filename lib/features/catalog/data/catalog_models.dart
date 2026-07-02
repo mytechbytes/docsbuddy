@@ -46,11 +46,24 @@ enum Recurrence {
   final String label;
 }
 
+/// A room/place in the home — maps `public.locations` (real table, not the
+/// old metadata grouping).
 class Location {
-  const Location({required this.id, required this.name, this.assetCount = 0});
+  const Location({
+    required this.id,
+    required this.name,
+    this.assetCount = 0,
+    this.kind,
+    this.imageUrl,
+    this.parentId,
+  });
+
   final String id;
   final String name;
   final int assetCount;
+  final String? kind;
+  final String? imageUrl;
+  final String? parentId;
 }
 
 class Asset {
@@ -59,20 +72,35 @@ class Asset {
     required this.name,
     required this.category,
     this.locationName,
+    this.locationId,
     this.brand,
     this.model,
+    this.serialNo,
+    this.purchaseDate,
+    this.purchasePrice,
+    this.store,
+    this.imageUrl,
   });
 
   final String id;
   final String name;
   final AssetCategoryKind category;
   final String? locationName;
+  final String? locationId;
   final String? brand;
   final String? model;
+  final String? serialNo;
+  final DateTime? purchaseDate;
+  final double? purchasePrice;
+  final String? store;
+  final String? imageUrl;
 
   String get subtitle => [category.label, if (locationName != null) locationName].join(' · ');
 }
 
+/// A **service** on an asset (insurance, AMC, pollution, road tax, …) — maps
+/// an `asset_dates` row 1:1. Its notify offsets are the reminders; documents
+/// can attach to it via `documents.asset_date_id`.
 class Reminder {
   const Reminder({
     required this.id,
@@ -82,6 +110,11 @@ class Reminder {
     required this.label,
     required this.dueDate,
     this.recurrence = Recurrence.none,
+    this.notifyOffsets = const [30, 7, 1],
+    this.provider,
+    this.policyNo,
+    this.cost,
+    this.notes,
   });
 
   final String id;
@@ -91,6 +124,16 @@ class Reminder {
   final String label;
   final DateTime dueDate;
   final Recurrence recurrence;
+
+  /// Days-before-due to notify at (per service, `asset_dates.notify_offsets`).
+  final List<int> notifyOffsets;
+  final String? provider;
+  final String? policyNo;
+  final double? cost;
+  final String? notes;
+
+  /// e.g. "30 · 7 · 1d" for the reminder rows / NEXT DUE banner.
+  String get offsetsLabel => '${notifyOffsets.join(' · ')}d';
 
   /// Whole days from today (negative = overdue).
   int get daysLeft {

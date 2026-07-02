@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/catalog_widgets.dart';
 import '../../../core/widgets/db_logo.dart';
@@ -62,7 +63,9 @@ class AssetDetailPage extends ConsumerWidget {
               error: (e, _) => Text('$e'),
               data: (rs) => rs.isEmpty
                   ? const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No reminders for this asset yet.', style: TextStyle(color: AppColors.muted))))
-                  : Column(children: [for (final r in rs) _ReminderRow(reminder: r)]),
+                  : Column(children: [
+                      for (final r in rs) _ReminderRow(reminder: r, onComplete: () => _complete(context, ref, r)),
+                    ]),
             ),
             const SizedBox(height: 22),
             AssetDocumentsSection(assetId: a.id),
@@ -77,6 +80,21 @@ class AssetDetailPage extends ConsumerWidget {
     if (list.isEmpty) return null;
     final sorted = [...list]..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
     return sorted.first;
+  }
+
+  /// Marks a service done — recurring ones roll their due date forward.
+  Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
+    await ref.read(catalogRepositoryProvider).completeReminder(r.id);
+    ref.invalidate(assetRemindersProvider(assetId));
+    refreshCatalog(ref);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(r.recurrence == Recurrence.none
+            ? '${r.label} marked as done.'
+            : '${r.label} done — next due date scheduled.'),
+        backgroundColor: AppColors.green,
+      ));
+    }
   }
 
   Future<void> _addReminder(BuildContext context, WidgetRef ref, Asset asset) async {
@@ -145,6 +163,7 @@ class _InfoCard extends StatelessWidget {
       '$reminderCount reminder${reminderCount == 1 ? '' : 's'} tracked',
       if (asset.brand != null) asset.brand,
       if (asset.model != null) asset.model,
+      if (asset.serialNo != null) asset.serialNo,
     ].whereType<String>().join(' · ');
     return Container(
       padding: const EdgeInsets.all(16),
@@ -213,7 +232,7 @@ class _NextDueBanner extends StatelessWidget {
               Text(DateFormat('d MMM yyyy').format(reminder.dueDate),
                   style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white)),
               const SizedBox(height: 4),
-              const Text('Reminds 30·7·1d', style: TextStyle(fontSize: 11, color: Colors.white70)),
+              Text('Reminds ${reminder.offsetsLabel}', style: const TextStyle(fontSize: 11, color: Colors.white70)),
             ],
           ),
         ],
@@ -223,11 +242,16 @@ class _NextDueBanner extends StatelessWidget {
 }
 
 class _ReminderRow extends StatelessWidget {
-  const _ReminderRow({required this.reminder});
+  const _ReminderRow({required this.reminder, required this.onComplete});
   final Reminder reminder;
+  final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) {
+    final service = [
+      if (reminder.provider != null) reminder.provider,
+      if (reminder.policyNo != null) reminder.policyNo,
+    ].whereType<String>().join(' · ');
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -248,14 +272,26 @@ class _ReminderRow extends StatelessWidget {
                     const SizedBox(width: 8),
                     const Icon(Icons.notifications_none, size: 13, color: AppColors.muted),
                     const SizedBox(width: 3),
-                    const Text('30 · 7 · 1d', style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    Text(reminder.offsetsLabel, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                   ],
                 ),
+                if (service.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(service, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                ],
               ],
             ),
           ),
           const SizedBox(width: 8),
           DayPill(daysLeft: reminder.daysLeft),
+          PopupMenuButton<String>(
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.more_vert, size: 18, color: AppColors.muted),
+            onSelected: (_) => onComplete(),
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'done', child: Text('Mark as done')),
+            ],
+          ),
         ],
       ),
     );
@@ -272,6 +308,10 @@ class _AddReminderSheet extends ConsumerStatefulWidget {
 
 class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
   final _label = TextEditingController();
+  final _provider = TextEditingController();
+  final _policyNo = TextEditingController();
+  final _cost = TextEditingController();
+  final _notes = TextEditingController();
   ReminderKind _kind = ReminderKind.insurance;
   Recurrence _recurrence = Recurrence.yearly;
   DateTime _due = DateTime.now().add(const Duration(days: 30));
@@ -286,8 +326,14 @@ class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
   @override
   void dispose() {
     _label.dispose();
+    _provider.dispose();
+    _policyNo.dispose();
+    _cost.dispose();
+    _notes.dispose();
     super.dispose();
   }
+
+  String? _text(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -307,6 +353,10 @@ class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
           label: _label.text.trim().isEmpty ? _kind.label : _label.text.trim(),
           dueDate: _due,
           recurrence: _recurrence,
+          provider: _text(_provider),
+          policyNo: _text(_policyNo),
+          cost: double.tryParse(_cost.text.trim().replaceAll(',', '')),
+          notes: _text(_notes),
         );
     if (mounted) Navigator.of(context).pop();
   }
@@ -316,7 +366,7 @@ class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -372,6 +422,31 @@ class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
                       ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Service details (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: AppTextField(label: 'Provider', controller: _provider, hint: 'e.g. Acko')),
+                  const SizedBox(width: 12),
+                  Expanded(child: AppTextField(label: 'Policy / contract no.', controller: _policyNo, hint: 'optional')),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Cost',
+                      controller: _cost,
+                      hint: 'e.g. 4200',
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(flex: 2, child: AppTextField(label: 'Notes', controller: _notes, hint: 'optional')),
                 ],
               ),
               const SizedBox(height: 20),

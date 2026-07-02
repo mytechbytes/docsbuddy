@@ -17,7 +17,7 @@ void main() {
     await tester.pumpWidget(_wrap(const DashboardTab()));
     await _settle(tester);
 
-    expect(find.text('UPCOMING'), findsOneWidget);
+    expect(find.text('Upcoming Expirations'), findsOneWidget);
     expect(find.textContaining('Royal Enfield Classic'), findsWidgets);
     expect(find.text('Overdue'), findsWidgets); // the seeded AppleCare reminder
   });

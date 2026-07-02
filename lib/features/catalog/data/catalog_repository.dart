@@ -1,7 +1,7 @@
 import 'catalog_models.dart';
 
-/// Assets, locations and reminders. Backend-agnostic, mirroring the Postgres
-/// schema so a Supabase implementation can slot in later.
+/// Assets, locations and services/reminders. Backend-agnostic, mirroring the
+/// Postgres schema so a Supabase implementation can slot in later.
 abstract interface class CatalogRepository {
   Future<List<Reminder>> upcomingReminders({int withinDays = 365});
   Future<List<Asset>> assets();
@@ -15,6 +15,10 @@ abstract interface class CatalogRepository {
     String? locationName,
     String? brand,
     String? model,
+    String? serialNo,
+    DateTime? purchaseDate,
+    double? purchasePrice,
+    String? store,
   });
 
   Future<Reminder> addReminder({
@@ -23,7 +27,17 @@ abstract interface class CatalogRepository {
     required String label,
     required DateTime dueDate,
     Recurrence recurrence,
+    List<int>? notifyOffsets,
+    String? provider,
+    String? policyNo,
+    double? cost,
+    String? notes,
   });
 
+  /// Marks the service done — rolls `due_date` forward per its recurrence
+  /// (one-offs are completed and disappear from upcoming lists).
   Future<void> completeReminder(String reminderId);
+
+  Future<Location> createLocation(String name);
+  Future<void> updateLocation(String id, {String? name});
 }

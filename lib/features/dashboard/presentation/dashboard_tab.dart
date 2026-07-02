@@ -143,7 +143,8 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-/// 2×2 grid of coloured summary cards (the design's stat tiles).
+/// 2×2 grid of coloured summary cards — every tile counts **services**
+/// (asset_dates rows) — plus a full-width total-appliances card.
 class _StatGrid extends StatelessWidget {
   const _StatGrid({required this.reminders, required this.assetCount});
   final List<Reminder> reminders;
@@ -151,6 +152,7 @@ class _StatGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final active = reminders.length;
     final secured = reminders.where((r) => r.daysLeft > 30).length;
     final soon = reminders.where((r) => r.daysLeft >= 0 && r.daysLeft <= 30).length;
     final expired = reminders.where((r) => r.daysLeft < 0).length;
@@ -158,7 +160,7 @@ class _StatGrid extends StatelessWidget {
       children: [
         Row(
           children: [
-            _StatCard(value: '$assetCount', label: 'Active', icon: Icons.description_outlined, bg: AppColors.navy, fg: Colors.white),
+            _StatCard(value: '$active', label: 'Active Services', icon: Icons.description_outlined, bg: AppColors.navy, fg: Colors.white),
             const SizedBox(width: 12),
             _StatCard(value: '$secured', label: 'Secured', icon: Icons.shield_outlined, bg: AppColors.teal, fg: Colors.white),
           ],
@@ -171,7 +173,39 @@ class _StatGrid extends StatelessWidget {
             _StatCard(value: '$expired', label: 'Expired', icon: Icons.error_outline, bg: const Color(0xFFE89098), fg: AppColors.ink),
           ],
         ),
+        const SizedBox(height: 12),
+        _AppliancesCard(count: assetCount),
       ],
+    );
+  }
+}
+
+/// Full-width "total active appliances" strip under the service stats.
+class _AppliancesCard extends StatelessWidget {
+  const _AppliancesCard({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.line)),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.kitchen_outlined, color: AppColors.chipBlue, size: 20),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text('Total Active Appliances',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          ),
+          Text('$count', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.ink)),
+        ],
+      ),
     );
   }
 }

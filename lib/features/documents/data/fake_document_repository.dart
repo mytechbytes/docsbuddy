@@ -23,11 +23,13 @@ class FakeDocumentRepository implements DocumentRepository {
     required Uint8List bytes,
     required String mimeType,
     required DocKind kind,
+    String? assetDateId,
   }) async {
     await _delay();
     final doc = DocumentMeta(
       id: 'doc_${_seq++}',
       assetId: assetId,
+      assetDateId: assetDateId,
       title: fileName,
       kind: kind,
       mimeType: mimeType,
