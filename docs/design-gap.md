@@ -96,7 +96,7 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 | 14 | Profile | ✅ Done | — |
 | 15 | Settings | ✅ Done | Security & 2FA row is a placeholder until screen 17 |
 | 16 | Change password | ✅ Done | — |
-| 17 | Security / 2FA | ✅ Done | Recovery-code *login path* needs a server function (codes generate/store today) |
+| 17 | Security / 2FA | ✅ Done | Recovery codes cut from scope (account recovery = password reset) |
 
 ---
 
@@ -177,7 +177,7 @@ is surfaced in Dart.
 - [x] **08 Add reminder** — full page: 4-across type tile grid, due date with "in N days" helper, repeat chips, multi-select offsets chips pre-filled from prefs, service details, service-scoped attach-document (uploads with `asset_date_id`), family-push note (A3/A7/A8)
 - [x] **14 Profile** — avatar + camera edit (upload), name/email + Verified badge, stats row (assets/reminders/documents), family card with member avatars + Invite, edit-info sheet (name + WhatsApp phone), menu rows (A5)
 - [x] **16 Change password** — current password verified by re-auth, strength meter (Weak→Excellent), confirm match, other-devices note; wired from Settings and Profile
-- [x] **17 Security / 2FA** — GoTrue MFA/TOTP enroll → QR (`qr_flutter`) + copy key → challenge/verify, disable with confirm; biometric unlock toggle (`local_auth`, device-credential fallback; FragmentActivity + USE_BIOMETRIC + NSFaceIDUsageDescription wired); app lock + auto-lock (1/5/15 min) enforced by a lock screen on launch/resume — this is the biometric quick-unlock surface; recovery codes (generated client-side, hashes stored in user metadata — *sign-in-with-recovery-code needs a server function later*); active-sessions sheet with "Sign out other devices" (GoTrue scope)
+- [x] **17 Security / 2FA** — GoTrue MFA/TOTP enroll → QR (`qr_flutter`) + copy key → challenge/verify, disable with confirm; biometric unlock toggle (`local_auth`, device-credential fallback; FragmentActivity + USE_BIOMETRIC + NSFaceIDUsageDescription wired); app lock + auto-lock (1/5/15 min) enforced by a lock screen on launch/resume — this is the biometric quick-unlock surface; active-sessions sheet with "Sign out other devices" (GoTrue scope). *Recovery codes were cut from scope (no login path planned) — losing the authenticator is recovered via the password-reset flow*
 - [x] **04 Asset list** — in-page "Search Your Appliance" bar, photo thumbnails (A2), specific-type chips
 - [x] **15 Settings** — Account (Personal info → Profile, Email, Change password, Security & 2FA with live On/Off state), Notifications (Push/Email/WhatsApp toggles + Default-offsets editor via A7), Family (manage + member count), App utilities, Sign out
 - [x] **00a–d Onboarding** — carousel implemented
@@ -253,9 +253,21 @@ A verification pass over data ↔ screen connections after the plan closed:
 - [x] Family role management — admins change roles / remove members
       (owner protected; RLS already permitted it); member tiles get
       tap-to-call and WhatsApp actions on their contact number
+- [x] Quiet hours — editor in Settings; the local scheduler shifts alerts
+      landing inside the window to its end (`applyQuietHours`, tested)
+- [x] Email reminders sender — `send-reminders-email` Edge Function
+      (Resend API, log-deduped) backs the Settings toggle
+- [x] AAL2 step-up — sessions with an enrolled authenticator must pass the
+      TOTP challenge screen before the app opens
+- [x] Room reordering — long-press-drag on the Rooms tab persists
+      `locations.sort_order` (nesting cut from scope; `parent_id` stays
+      schema-only)
+- [x] Phone validation — profile phone is validated/normalized to E.164
+      before saving (WhatsApp delivery requires it)
 - [ ] Camera capture for invoices/photos (`image_picker` + iOS plist)
-- [ ] Sign-in with a recovery code (server function to check the stored
-      hashes; codes generate and persist today)
 - [ ] Dashboard reminder rows: category subtitle per design (photo already
       shown)
-- [ ] Sequenced-2FA sign-in challenge screen (GoTrue AAL2 step-up on login)
+
+**Cut from scope (2026-07-02):** recovery-code login (account recovery is
+the password-reset flow; the code-generation UI was removed with it) and
+room nesting (`parent_id` remains schema-only).

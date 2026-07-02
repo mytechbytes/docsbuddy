@@ -13,10 +13,9 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] Schema + RLS + RPCs (`supabase/migrations/0001_init.sql`, `0002_family_rpcs.sql`)
 - [x] App wiring (activates when `SUPABASE_URL` + `SUPABASE_ANON_KEY` are set)
 - [ ] Create the project; copy URL + anon key
-- [ ] Run all migrations 0001–0008 in order (SQL editor / psql) — 0005
-      catalog seed + kind + category backfill, 0006 service fields +
-      location backfill, 0007 whatsapp channel, 0008 family profile
-      visibility
+- [ ] Run the migrations: paste **`supabase/all_migrations.sql`** (0001–0008
+      combined, generated) into the SQL editor once on a fresh project — or
+      apply `supabase/migrations/*.sql` individually in order
 - [ ] Auth → Providers: enable **Email** (+ **Email OTP** length 6 for reset)
 - [ ] Auth → URL Configuration: **Site URL** = `https://docsbuddy.mytechbytes.in`;
       **Redirect URLs** += `https://docsbuddy.mytechbytes.in/login-callback`
@@ -25,6 +24,8 @@ Status of what's needed to ship a Play **internal testing** build.
 - [ ] WhatsApp reminders: deploy `send-reminders-whatsapp`, set
       `WHATSAPP_ACCESS_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID` (+ optional
       template) secrets, schedule the daily cron — see the function README
+- [ ] Email reminders: deploy `send-reminders-email`, set `RESEND_API_KEY`
+      + `EMAIL_FROM` secrets, schedule the daily cron — see the README
 
 ## B. Signing key (you lost the old one)
 - [ ] Generate a new upload keystore (`keytool -genkey … -alias upload`)
@@ -154,9 +155,9 @@ Dart models → repository mapping → screens.
 - [x] 15 Settings restyle: Account / Notifications / Family / App sections
       (Security & 2FA row placeholder until screen 17)
 - [x] 16 Change password screen (re-auth verify, strength meter)
-- [x] 17 Security: 2FA TOTP (QR + verify), biometric unlock, app
-      lock/auto-lock with lock screen, recovery codes (hashes in user
-      metadata; login path = future server function), sign-out other devices
+- [x] 17 Security: 2FA TOTP (QR + verify) with AAL2 step-up on sign-in,
+      biometric unlock, app lock/auto-lock with lock screen, sign-out other
+      devices (recovery codes cut — account recovery is password reset)
 
 ### Pending — wiring & debt
 - [x] Wire decorative UI: search page, notification inbox (offset-window

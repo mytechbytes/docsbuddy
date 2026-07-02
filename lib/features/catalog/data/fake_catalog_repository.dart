@@ -471,6 +471,16 @@ class FakeCatalogRepository implements CatalogRepository {
   }
 
   @override
+  Future<void> reorderLocations(List<String> orderedIds) async {
+    await _delay();
+    _locations.sort((a, b) {
+      final ia = orderedIds.indexOf(a.id);
+      final ib = orderedIds.indexOf(b.id);
+      return (ia < 0 ? orderedIds.length : ia).compareTo(ib < 0 ? orderedIds.length : ib);
+    });
+  }
+
+  @override
   Future<void> setLocationImage(
     String locationId, {
     required Uint8List bytes,

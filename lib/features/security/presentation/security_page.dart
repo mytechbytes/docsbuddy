@@ -73,15 +73,6 @@ class SecurityPage extends ConsumerWidget {
                 value: s.totpEnabled,
                 onChanged: (v) => v ? _enroll(context, ref) : _disable(context, ref, s.totpFactorId!),
               ),
-              _Row(
-                icon: Icons.key_outlined,
-                title: 'Recovery codes',
-                onTap: () => _recoveryCodes(context, ref),
-                trailing: Text(
-                  s.unusedRecoveryCodes == 0 ? 'Generate' : '${s.unusedRecoveryCodes} unused',
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
-                ),
-              ),
             ]),
           ),
           const _SectionLabel('More'),
@@ -159,66 +150,6 @@ class SecurityPage extends ConsumerWidget {
             .showSnackBar(SnackBar(content: Text('Could not disable: $e'), backgroundColor: AppColors.red));
       }
     }
-    ref.invalidate(securityStatusProvider);
-  }
-
-  Future<void> _recoveryCodes(BuildContext context, WidgetRef ref) async {
-    final List<String> codes;
-    try {
-      codes = await ref.read(securityRepositoryProvider).generateRecoveryCodes();
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not generate codes: $e'), backgroundColor: AppColors.red));
-      }
-      return;
-    }
-    if (!context.mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.paper,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Recovery codes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
-              const SizedBox(height: 4),
-              const Text('Save these somewhere safe — they are shown only once and replace any previous codes.',
-                  style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 10,
-                runSpacing: 8,
-                children: [
-                  for (final c in codes)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                          color: AppColors.bg,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.line)),
-                      child: Text(c,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink, fontFeatures: [])),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              PrimaryButton(
-                label: 'Copy all',
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: codes.join('\n')));
-                  if (context.mounted) Navigator.of(context).pop();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
     ref.invalidate(securityStatusProvider);
   }
 

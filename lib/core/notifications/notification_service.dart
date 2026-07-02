@@ -63,13 +63,14 @@ class NotificationService {
     }
   }
 
-  /// Cancels everything and re-arms the soonest reminders.
-  Future<void> rescheduleFor(List<Reminder> reminders) async {
+  /// Cancels everything and re-arms the soonest reminders, honouring the
+  /// user's quiet hours when provided.
+  Future<void> rescheduleFor(List<Reminder> reminders, {String? quietStart, String? quietEnd}) async {
     try {
       await init();
       if (!_ready) return;
       await _plugin.cancelAll();
-      for (final a in buildAlerts(reminders)) {
+      for (final a in buildAlerts(reminders, quietStart: quietStart, quietEnd: quietEnd)) {
         await _plugin.zonedSchedule(
           a.id,
           a.title,

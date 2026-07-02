@@ -9,6 +9,7 @@ import '../../dashboard/presentation/dashboard_tab.dart';
 import '../../family/presentation/family_page.dart';
 import '../../security/application/security_providers.dart';
 import '../../security/presentation/lock_screen.dart';
+import '../../security/presentation/mfa_challenge_screen.dart';
 import '../../settings/presentation/settings_page.dart';
 
 /// Signed-in app shell with bottom navigation and the optional app lock:
@@ -60,6 +61,12 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
+    // AAL2 step-up comes before everything: a session with an enrolled
+    // authenticator must pass the TOTP check first.
+    final mfaRequired = ref.watch(mfaChallengeRequiredProvider).valueOrNull ?? false;
+    if (mfaRequired) {
+      return MfaChallengeScreen(onVerified: () => ref.invalidate(mfaChallengeRequiredProvider));
+    }
     if (_locked) {
       return LockScreen(onUnlocked: () => setState(() => _locked = false));
     }

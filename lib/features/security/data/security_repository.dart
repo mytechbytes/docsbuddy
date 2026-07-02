@@ -1,7 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../application/recovery_codes.dart' as rc;
-
 /// A pending TOTP enrollment — show the QR/secret, then verify a code.
 class TotpEnrollment {
   const TotpEnrollment({required this.factorId, required this.secret, required this.uri});
@@ -13,10 +11,9 @@ class TotpEnrollment {
 }
 
 class SecurityStatus {
-  const SecurityStatus({this.totpFactorId, this.enrolledAt, this.unusedRecoveryCodes = 0});
+  const SecurityStatus({this.totpFactorId, this.enrolledAt});
   final String? totpFactorId;
   final DateTime? enrolledAt;
-  final int unusedRecoveryCodes;
 
   bool get totpEnabled => totpFactorId != null;
 }
@@ -30,9 +27,13 @@ abstract interface class SecurityRepository {
   Future<void> verifyTotp({required String factorId, required String code});
   Future<void> disableTotp(String factorId);
 
-  /// Generates fresh codes, persists their hashes, returns the plain codes
-  /// (shown exactly once).
-  Future<List<String>> generateRecoveryCodes();
+  /// True when a verified TOTP factor exists but the current session is
+  /// still AAL1 — the sign-in must step up before using the app.
+  Future<bool> needsMfaChallenge();
+
+  /// Verifies a TOTP code against the enrolled factor, elevating the
+  /// session to AAL2.
+  Future<void> verifyMfaChallenge(String code);
 
   Future<({String device, DateTime? lastSignIn})> currentSession();
   Future<void> signOutOtherDevices();
@@ -43,13 +44,11 @@ class FakeSecurityRepository implements SecurityRepository {
   String? _factorId;
   DateTime? _enrolledAt;
   bool _pendingVerified = false;
-  List<String> _hashes = const [];
 
   @override
   Future<SecurityStatus> status() async => SecurityStatus(
         totpFactorId: _pendingVerified ? _factorId : null,
         enrolledAt: _pendingVerified ? _enrolledAt : null,
-        unusedRecoveryCodes: _hashes.length,
       );
 
   @override
@@ -79,10 +78,11 @@ class FakeSecurityRepository implements SecurityRepository {
   }
 
   @override
-  Future<List<String>> generateRecoveryCodes() async {
-    final codes = rc.generateRecoveryCodes();
-    _hashes = codes.map(rc.hashRecoveryCode).toList();
-    return codes;
+  Future<bool> needsMfaChallenge() async => false;
+
+  @override
+  Future<void> verifyMfaChallenge(String code) async {
+    if (code.trim().length != 6) throw Exception('Enter the 6-digit code.');
   }
 
   @override
@@ -111,12 +111,9 @@ class SupabaseSecurityRepository implements SecurityRepository {
   Future<SecurityStatus> status() => _guard(() async {
         final factors = await _client.auth.mfa.listFactors();
         final verified = factors.totp.where((f) => f.status == FactorStatus.verified).toList();
-        final hashes =
-            (_client.auth.currentUser?.userMetadata?['recovery_code_hashes'] as List?)?.length ?? 0;
         return SecurityStatus(
           totpFactorId: verified.isEmpty ? null : verified.first.id,
           enrolledAt: verified.isEmpty ? null : verified.first.createdAt,
-          unusedRecoveryCodes: hashes,
         );
       });
 
@@ -139,12 +136,22 @@ class SupabaseSecurityRepository implements SecurityRepository {
       _guard(() => _client.auth.mfa.unenroll(factorId));
 
   @override
-  Future<List<String>> generateRecoveryCodes() => _guard(() async {
-        final codes = rc.generateRecoveryCodes();
-        await _client.auth.updateUser(UserAttributes(data: {
-          'recovery_code_hashes': codes.map(rc.hashRecoveryCode).toList(),
-        }));
-        return codes;
+  Future<bool> needsMfaChallenge() async {
+    try {
+      final aal = _client.auth.mfa.getAuthenticatorAssuranceLevel();
+      return aal.nextLevel == AuthenticatorAssuranceLevels.aal2 && aal.currentLevel != aal.nextLevel;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> verifyMfaChallenge(String code) => _guard(() async {
+        final factors = await _client.auth.mfa.listFactors();
+        final factor = factors.totp.where((f) => f.status == FactorStatus.verified).firstOrNull;
+        if (factor == null) throw Exception('No authenticator enrolled.');
+        final challenge = await _client.auth.mfa.challenge(factorId: factor.id);
+        await _client.auth.mfa.verify(factorId: factor.id, challengeId: challenge.id, code: code.trim());
       });
 
   @override
