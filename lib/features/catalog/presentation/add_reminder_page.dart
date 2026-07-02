@@ -17,32 +17,38 @@ import '../data/catalog_models.dart';
 /// (pre-filled from prefs), service details, and a service-scoped
 /// attach-document row.
 class AddReminderPage extends ConsumerStatefulWidget {
-  const AddReminderPage({super.key, required this.assetId});
+  const AddReminderPage({super.key, required this.assetId, this.editing});
   final String assetId;
+
+  /// When set, the page edits this service instead of creating one.
+  final Reminder? editing;
 
   @override
   ConsumerState<AddReminderPage> createState() => _AddReminderPageState();
 }
 
 class _AddReminderPageState extends ConsumerState<AddReminderPage> {
-  final _label = TextEditingController();
-  final _provider = TextEditingController();
-  final _policyNo = TextEditingController();
-  final _cost = TextEditingController();
-  final _notes = TextEditingController();
-  ReminderKind _kind = ReminderKind.insurance;
-  Recurrence _recurrence = Recurrence.yearly;
-  DateTime _due = DateTime.now().add(const Duration(days: 30));
-  Set<int>? _offsets; // null until prefs load; user edits pin it
+  late final _label = TextEditingController(text: widget.editing?.label ?? '');
+  late final _provider = TextEditingController(text: widget.editing?.provider ?? '');
+  late final _policyNo = TextEditingController(text: widget.editing?.policyNo ?? '');
+  late final _cost = TextEditingController(
+      text: widget.editing?.cost == null ? '' : widget.editing!.cost!.toStringAsFixed(0));
+  late final _notes = TextEditingController(text: widget.editing?.notes ?? '');
+  late ReminderKind _kind = widget.editing?.kind ?? ReminderKind.insurance;
+  late Recurrence _recurrence = widget.editing?.recurrence ?? Recurrence.yearly;
+  late DateTime _due = widget.editing?.dueDate ?? DateTime.now().add(const Duration(days: 30));
+  late Set<int>? _offsets = widget.editing == null ? null : {...widget.editing!.notifyOffsets};
   PlatformFile? _attachment;
   bool _saving = false;
+
+  bool get _isEdit => widget.editing != null;
 
   static const _offsetOptions = [60, 30, 14, 7, 3, 1];
 
   @override
   void initState() {
     super.initState();
-    _label.text = _kind.label;
+    if (!_isEdit) _label.text = _kind.label;
   }
 
   @override
@@ -83,18 +89,36 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
     setState(() => _saving = true);
     final repo = ref.read(catalogRepositoryProvider);
     try {
-      final reminder = await repo.addReminder(
-        assetId: widget.assetId,
-        kind: _kind,
-        label: _label.text.trim().isEmpty ? _kind.label : _label.text.trim(),
-        dueDate: _due,
-        recurrence: _recurrence,
-        notifyOffsets: (offsets.toList()..sort((a, b) => b.compareTo(a))),
-        provider: _text(_provider),
-        policyNo: _text(_policyNo),
-        cost: double.tryParse(_cost.text.trim().replaceAll(',', '')),
-        notes: _text(_notes),
-      );
+      final sorted = offsets.toList()..sort((a, b) => b.compareTo(a));
+      final label = _label.text.trim().isEmpty ? _kind.label : _label.text.trim();
+      final Reminder reminder;
+      if (_isEdit) {
+        reminder = await repo.updateReminder(
+          widget.editing!.id,
+          kind: _kind,
+          label: label,
+          dueDate: _due,
+          recurrence: _recurrence,
+          notifyOffsets: sorted,
+          provider: _text(_provider),
+          policyNo: _text(_policyNo),
+          cost: double.tryParse(_cost.text.trim().replaceAll(',', '')),
+          notes: _text(_notes),
+        );
+      } else {
+        reminder = await repo.addReminder(
+          assetId: widget.assetId,
+          kind: _kind,
+          label: label,
+          dueDate: _due,
+          recurrence: _recurrence,
+          notifyOffsets: sorted,
+          provider: _text(_provider),
+          policyNo: _text(_policyNo),
+          cost: double.tryParse(_cost.text.trim().replaceAll(',', '')),
+          notes: _text(_notes),
+        );
+      }
 
       // Service-scoped document (documents.asset_date_id).
       final attachment = _attachment;
@@ -150,7 +174,8 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
         children: [
-          const Text('Add Reminder', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+          Text(_isEdit ? 'Edit Reminder' : 'Add Reminder',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
           if (asset != null) ...[
             const SizedBox(height: 2),
             Text.rich(
@@ -326,7 +351,10 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
             ),
           ),
           const SizedBox(height: 22),
-          PrimaryButton(label: 'Save Reminder', isLoading: _saving, onPressed: () => _save(offsets)),
+          PrimaryButton(
+              label: _isEdit ? 'Save Changes' : 'Save Reminder',
+              isLoading: _saving,
+              onPressed: () => _save(offsets)),
         ],
       ),
     );

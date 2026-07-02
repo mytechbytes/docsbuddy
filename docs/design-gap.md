@@ -244,8 +244,12 @@ A verification pass over data ↔ screen connections after the plan closed:
 
 ## Remaining polish (deliberate deferrals)
 
-- [ ] Per-service document grouping on asset detail (documents already carry
-      `asset_date_id`; grouping UI pending)
+- [x] Per-service document grouping — the service-detail sheet lists the
+      documents attached to that service (`asset_date_id`), alongside its
+      cost and full record
+- [x] Asset & service editing — edit/delete for assets (services and
+      document rows cascade) and services (tombstoned for sync); the
+      add pages double as edit forms
 - [ ] Camera capture for invoices/photos (`image_picker` + iOS plist)
 - [ ] Sign-in with a recovery code (server function to check the stored
       hashes; codes generate and persist today)

@@ -177,6 +177,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
             .from('asset_dates')
             .select('$_dateCols, assets(name, image_url)')
             .isFilter('completed_at', null)
+            .isFilter('deleted_at', null)
             .order('due_date');
         return rows.map((r) => _reminder(r)).where((r) => r.daysLeft <= withinDays).toList();
       });
@@ -188,6 +189,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
             .select(_dateCols)
             .eq('asset_id', assetId)
             .isFilter('completed_at', null)
+            .isFilter('deleted_at', null)
             .order('due_date');
         return rows.map((r) => _reminder(r, assetName: '')).toList();
       });
@@ -256,6 +258,51 @@ class SupabaseCatalogRepository implements CatalogRepository {
       });
 
   @override
+  Future<Asset> updateAsset(
+    String id, {
+    String? name,
+    String? categoryId,
+    String? locationName,
+    String? brand,
+    String? model,
+    String? serialNo,
+    DateTime? purchaseDate,
+    double? purchasePrice,
+    String? store,
+  }) =>
+      _guard(() async {
+        String? locationId;
+        final loc = locationName?.trim();
+        if (loc != null && loc.isNotEmpty) {
+          locationId = await _locationIdFor(await _family(), loc);
+        }
+        final row = await _client
+            .from('assets')
+            .update({
+              if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+              'category_id': ?categoryId,
+              'location_id': ?locationId,
+              'brand': brand,
+              'model': model,
+              'serial_no': serialNo,
+              'purchase_date': purchaseDate == null ? null : _dbDate(purchaseDate),
+              'purchase_price': purchasePrice,
+              'store': store,
+            })
+            .eq('id', id)
+            .select(_assetCols)
+            .single();
+        return _asset(row);
+      });
+
+  @override
+  Future<void> deleteAsset(String id) => _guard(() async {
+        // asset_dates and document rows cascade via FKs; storage files are
+        // left as orphans (cleaned up by a future maintenance job).
+        await _client.from('assets').delete().eq('id', id);
+      });
+
+  @override
   Future<Reminder> addReminder({
     required String assetId,
     required ReminderKind kind,
@@ -286,6 +333,47 @@ class SupabaseCatalogRepository implements CatalogRepository {
             .select(_dateCols)
             .single();
         return _reminder(row, assetName: '');
+      });
+
+  @override
+  Future<Reminder> updateReminder(
+    String id, {
+    required ReminderKind kind,
+    required String label,
+    required DateTime dueDate,
+    required Recurrence recurrence,
+    required List<int> notifyOffsets,
+    String? provider,
+    String? policyNo,
+    double? cost,
+    String? notes,
+  }) =>
+      _guard(() async {
+        final row = await _client
+            .from('asset_dates')
+            .update({
+              'label': label.trim().isEmpty ? kind.label : label.trim(),
+              'kind': kind.name,
+              'due_date': _dbDate(dueDate),
+              'recurrence': _recToDb(recurrence),
+              'notify_offsets': notifyOffsets,
+              'provider': provider,
+              'policy_no': policyNo,
+              'cost': cost,
+              'notes': notes,
+            })
+            .eq('id', id)
+            .select(_dateCols)
+            .single();
+        return _reminder(row, assetName: '');
+      });
+
+  @override
+  Future<void> deleteReminder(String id) => _guard(() async {
+        // Tombstone (deleted_at) so local-first sync can propagate the delete.
+        await _client
+            .from('asset_dates')
+            .update({'deleted_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id);
       });
 
   @override

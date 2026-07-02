@@ -214,6 +214,76 @@ class FakeCatalogRepository implements CatalogRepository {
   }
 
   @override
+  Future<Asset> updateAsset(
+    String id, {
+    String? name,
+    String? categoryId,
+    String? locationName,
+    String? brand,
+    String? model,
+    String? serialNo,
+    DateTime? purchaseDate,
+    double? purchasePrice,
+    String? store,
+  }) async {
+    await _delay();
+    final i = _assets.indexWhere((a) => a.id == id);
+    if (i < 0) throw Exception('Asset not found.');
+    final a = _assets[i];
+    final loc = locationName?.trim();
+    if (loc != null && loc.isNotEmpty && !_locations.any((l) => l.name.toLowerCase() == loc.toLowerCase())) {
+      _locations.add(Location(id: _id('l'), name: loc, kind: 'room'));
+    }
+    final cat = _categories.where((c) => c.id == categoryId).firstOrNull;
+    final updated = Asset(
+      id: a.id,
+      name: name?.trim().isNotEmpty == true ? name!.trim() : a.name,
+      category: cat?.kindGroup ?? a.category,
+      categoryId: categoryId ?? a.categoryId,
+      categoryName: cat?.name ?? a.categoryName,
+      locationName: loc?.isNotEmpty == true ? loc : a.locationName,
+      locationId: a.locationId,
+      brand: brand,
+      model: model,
+      serialNo: serialNo,
+      purchaseDate: purchaseDate,
+      purchasePrice: purchasePrice,
+      store: store,
+      imageUrl: a.imageUrl,
+    );
+    _assets[i] = updated;
+    // Keep reminder rows' asset name in sync.
+    for (var j = 0; j < _reminders.length; j++) {
+      final r = _reminders[j];
+      if (r.assetId == id && r.assetName != updated.name) {
+        _reminders[j] = Reminder(
+          id: r.id,
+          assetId: r.assetId,
+          assetName: updated.name,
+          kind: r.kind,
+          label: r.label,
+          dueDate: r.dueDate,
+          recurrence: r.recurrence,
+          notifyOffsets: r.notifyOffsets,
+          provider: r.provider,
+          policyNo: r.policyNo,
+          cost: r.cost,
+          notes: r.notes,
+          assetImageUrl: r.assetImageUrl,
+        );
+      }
+    }
+    return updated;
+  }
+
+  @override
+  Future<void> deleteAsset(String id) async {
+    await _delay();
+    _assets.removeWhere((a) => a.id == id);
+    _reminders.removeWhere((r) => r.assetId == id);
+  }
+
+  @override
   Future<Reminder> addReminder({
     required String assetId,
     required ReminderKind kind,
@@ -244,6 +314,48 @@ class FakeCatalogRepository implements CatalogRepository {
     );
     _reminders.add(r);
     return r;
+  }
+
+  @override
+  Future<Reminder> updateReminder(
+    String id, {
+    required ReminderKind kind,
+    required String label,
+    required DateTime dueDate,
+    required Recurrence recurrence,
+    required List<int> notifyOffsets,
+    String? provider,
+    String? policyNo,
+    double? cost,
+    String? notes,
+  }) async {
+    await _delay();
+    final i = _reminders.indexWhere((r) => r.id == id);
+    if (i < 0) throw Exception('Reminder not found.');
+    final old = _reminders[i];
+    final updated = Reminder(
+      id: old.id,
+      assetId: old.assetId,
+      assetName: old.assetName,
+      kind: kind,
+      label: label.trim().isEmpty ? kind.label : label.trim(),
+      dueDate: dueDate,
+      recurrence: recurrence,
+      notifyOffsets: notifyOffsets,
+      provider: provider,
+      policyNo: policyNo,
+      cost: cost,
+      notes: notes,
+      assetImageUrl: old.assetImageUrl,
+    );
+    _reminders[i] = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> deleteReminder(String id) async {
+    await _delay();
+    _reminders.removeWhere((r) => r.id == id);
   }
 
   @override
