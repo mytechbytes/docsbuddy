@@ -16,21 +16,17 @@ supabase secrets set \
   EMAIL_FROM="DocsBuddy <reminders@yourdomain.tld>"   # verified sender/domain
 ```
 
-## Schedule (daily at 09:00 UTC)
+## Schedule (daily at 09:00 GMT)
 
-Dashboard → Integrations → Cron, or SQL (pg_cron + pg_net enabled):
+**Cron UI (easiest):** Dashboard → **Integrations → Cron** (Enable once) →
+**Jobs → Create job** → Name `email-reminders` · Schedule `0 9 * * *` ·
+Type **Supabase Edge Function** → `send-reminders-email`, method POST, max timeout →
+Create. The auth header is added automatically.
 
-```sql
-select cron.schedule(
-  'email-reminders', '0 9 * * *',
-  $$
-  select net.http_post(
-    url     := 'https://<project-ref>.supabase.co/functions/v1/send-reminders-email',
-    headers := jsonb_build_object('Authorization', 'Bearer <anon-or-service-key>')
-  );
-  $$
-);
-```
+**Or via SQL** — run `supabase/schedules.sql` once in the **SQL Editor**
+(fill in the placeholders). Never paste it into a cron job's SQL Snippet —
+a snippet body must be only the inner `net.http_post(...)` call.
+
 
 ## Response
 

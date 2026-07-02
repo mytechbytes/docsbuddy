@@ -80,10 +80,22 @@ supabase secrets set WHATSAPP_TEMPLATE=docsbuddy_reminder WHATSAPP_TEMPLATE_LANG
 - `notify-family` fires from **Database Webhooks** on
   `asset_dates` / `assets` / `documents` (Insert+Update+Delete) — step-by-step
   in its README. Creating the first webhook auto-enables `pg_net`.
-- The two reminder senders fire from **daily crons** — fill in the
-  placeholders in **`schedules.sql`** and run it (needs `pg_cron` + `pg_net`,
-  Dashboard → Database → Extensions). Both senders are idempotent via
-  `notification_log`, so overlapping/extra runs never double-send.
+- The two reminder senders fire from **daily crons**. Easiest is the Cron UI
+  (no SQL needed):
+  1. Dashboard → **Integrations → Cron** → **Enable** (once), then
+     **Jobs → Create job**.
+  2. **Name** `email-reminders` · **Schedule** `0 9 * * *` (times are GMT) ·
+     **Type → Supabase Edge Function** → pick `send-reminders-email`,
+     method POST, raise the timeout to the max — the auth header is added
+     automatically → **Create**.
+  3. Repeat with `whatsapp-reminders` → `send-reminders-whatsapp`.
+
+  Alternative: run **`schedules.sql`** once in the **SQL Editor** (fill in
+  the placeholders first). ⚠️ Don't paste `schedules.sql` into a cron job's
+  *SQL Snippet* — it contains the `cron.schedule(...)` wrappers; a snippet
+  body must be only the inner `net.http_post(...)` call. Both senders are
+  idempotent via `notification_log`, so overlapping/extra runs never
+  double-send.
 
 ## Verify
 
