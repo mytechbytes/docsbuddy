@@ -36,6 +36,9 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Profile (avatar, stats, family card) + edit info'),
       (true, 'Settings: account / notification prefs / family sections'),
       (true, 'Change password with strength meter'),
+      (true, 'Add reminder as a full page (offsets, attach document)'),
+      (true, 'Search, notification inbox, stat links, filter, avatar'),
+      (true, 'Asset list: in-page search + photo thumbnails'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -46,13 +49,9 @@ class RoadmapPage extends StatelessWidget {
       (false, 'WhatsApp: deploy sender + Meta API secrets + daily cron'),
     ]),
     ('Pending — design gap (see docs/design-gap.md)', [
-      (false, 'Notify-offsets chips editor in the reminder UI'),
       (false, 'Per-service document grouping on asset detail'),
       (false, 'Camera capture for invoices/photos (image_picker)'),
-      (false, 'Add reminder as full page (offsets chips, attach document)'),
-      (false, 'Asset list: in-page search + photo thumbnails'),
       (false, 'Security: 2FA (TOTP), biometric login, app lock, sessions'),
-      (false, 'Wire search, notification inbox, stat-card links, filter'),
     ]),
     ('Pending — next features', [
       (false, 'Branded splash screen'),

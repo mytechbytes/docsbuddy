@@ -91,11 +91,11 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 | 01 | Dashboard | ✅ Done | "Active Invoices" card counts assets not invoices; rows lack photo + category subtitle; search/bell/filter/View› decorative |
 | 02 | Rooms | ✅ Done | — |
 | 03 | Room detail | ✅ Done | — |
-| 04 | Asset list | 🟡 Partial | No in-page search; icon tiles instead of photos; header + chip styling |
+| 04 | Asset list | ✅ Done | — |
 | 05 | Appliance picker | ✅ Done | — |
 | 06 | Add appliance | ✅ Done | Camera capture for invoices/photos pending (`image_picker`) |
 | 07 | Asset detail | ✅ Done | Photo, serial in header, real offsets on banner/rows, Documents "View all" |
-| 08 | Add reminder | 🟡 Partial | Bottom sheet vs full page; no offsets chips, attach-document, "in N days", family note |
+| 08 | Add reminder | ✅ Done | — |
 | 09–13 | Auth flows | ✅ Done | Biometric quick-unlock button on sign-in (needs 17) |
 | 14 | Profile | ✅ Done | — |
 | 15 | Settings | ✅ Done | Security & 2FA row is a placeholder until screen 17 |
@@ -131,7 +131,7 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 "30 · 7 · 1d" and the scheduler uses a global `[30,7,1,0]`.
 - [x] Add `List<int> notifyOffsets` to `Reminder` + map in both repos
 - [x] Render real values on asset-detail rows + NEXT DUE banner ("Reminded 30/7/1")
-- [ ] Multi-select offsets chips (60/30/14/7/3/1d) in the add/edit-reminder UI
+- [x] Multi-select offsets chips (60/30/14/7/3/1d) on the Add-reminder page, pre-filled from prefs
 - [x] Feed them into `NotificationService.buildAlerts` instead of the constant
 
 **A4. Asset-category catalog (`asset_categories`) [schema ✓ table / new seed]**
@@ -178,24 +178,24 @@ is surfaced in Dart.
 - [x] **03 Room detail** — `RoomDetailPage(locationId)`: hero photo (tap to change), rename dialog, "managing N appliances" line, 3-column appliance grid with day pills, "Add here" → picker with the room pre-filled
 - [x] **05 Appliance picker** — searchable catalog list feeding add-asset, with a "Something else" escape hatch (A4)
 - [x] **06 Add appliance** — type dropdown (catalog), model/serial/purchase/store (A1), photo (A2), AMC date (seeds/overrides the AMC service), invoice attach (file → invoice document), auto-seed note; *camera capture still pending (needs `image_picker`)*
-- [ ] **08 Add reminder** *(partial)* — promote sheet to full page: type tile grid, "in N days" helper, offsets chips, attach-document row (service-scoped via `asset_date_id`, A8), family-push note (A3/A7)
+- [x] **08 Add reminder** — full page: 4-across type tile grid, due date with "in N days" helper, repeat chips, multi-select offsets chips pre-filled from prefs, service details, service-scoped attach-document (uploads with `asset_date_id`), family-push note (A3/A7/A8)
 - [x] **14 Profile** — avatar + camera edit (upload), name/email + Verified badge, stats row (assets/reminders/documents), family card with member avatars + Invite, edit-info sheet (name + WhatsApp phone), menu rows (A5)
 - [x] **16 Change password** — current password verified by re-auth, strength meter (Weak→Excellent), confirm match, other-devices note; wired from Settings and Profile
 - [ ] **17 Security / 2FA** — GoTrue MFA/TOTP (`auth.mfa.enroll/challenge/verify`) with QR + copy key; biometric login toggles (needs `local_auth`); app lock + auto-lock; recovery codes; active sessions; biometric quick-unlock on sign-in. **Largest single item**
-- [ ] **04 Asset list** *(partial)* — in-page search bar, photo thumbnails (A2), header + chip styling per design
+- [x] **04 Asset list** — in-page "Search Your Appliance" bar, photo thumbnails (A2), specific-type chips
 - [x] **15 Settings** — Account (Personal info → Profile, Email, Change password, Security & 2FA placeholder until B-17), Notifications (Push/Email/WhatsApp toggles + Default-offsets editor via A7), Family (manage + member count), App utilities, Sign out
 - [x] **00a–d Onboarding** — carousel implemented
 - [x] **01 Dashboard** — redesigned to match handoff
 - [x] **07 Asset detail** — redesigned to match handoff
 - [x] **09–13 Auth** — sign-in/up (incl. Google/Apple), forgot, OTP, reset
 
-### C. Decorative UI to wire (renders, no-op today)
+### C. Decorative UI to wire — **all wired**
 
-- [ ] **Search icon** (dashboard) → asset/reminder search + `SearchPage`
-- [ ] **Notification bell / red dot** → notifications inbox (drive from `notification_log`) or drop the dot until built
-- [ ] **Stat-card "View ›"** → deep-link to a filtered list (e.g. Expired → overdue)
-- [ ] **Filter tile** on Upcoming → filter sheet
-- [ ] **Avatar** → bind to `users.avatar_url` (A5); tap → Profile
+- [x] **Search icon** → `SearchPage` (assets by name/brand/model/serial/type/room; services by label/provider/policy no.)
+- [x] **Notification bell / red dot** → notifications inbox (overdue + inside-offset-window alerts derived from each reminder's own offsets); the dot now shows only when something is overdue
+- [x] **Stat-card "View ›"** → `/reminders/:filter` deep links (Active / Secured / Expiring Soon / Expired)
+- [x] **Filter tile** on Upcoming → reminder-type filter sheet (chip multi-select; tile highlights when active)
+- [x] **Avatar** → bound to `users.avatar_url` on dashboard + asset detail; tap → Profile
 
 ### D. Backend debt
 
@@ -225,7 +225,7 @@ is surfaced in Dart.
 3. [x] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — **done** (camera capture deferred)
 4. [x] **Rooms + Room detail** (A6, B-02/03) — **done**
 5. [x] **Profile + Change password + Settings restyle** (A5, A7b, B-14/15/16) — **done**
-6. [ ] **Add-reminder full page + wire decorative UI** (B-08, C)
+6. [x] **Add-reminder full page + wire decorative UI** (B-08, B-04, C) — **done**
 7. [ ] **2FA / security** (B-17) — largest, do last
 
 **Net:** almost none of this needs new tables — the schema was built ahead of

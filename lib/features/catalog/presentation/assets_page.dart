@@ -7,11 +7,31 @@ import '../../../core/widgets/catalog_widgets.dart';
 import '../application/catalog_providers.dart';
 import '../data/catalog_models.dart';
 
-class AssetsPage extends ConsumerWidget {
+class AssetsPage extends ConsumerStatefulWidget {
   const AssetsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AssetsPage> createState() => _AssetsPageState();
+}
+
+class _AssetsPageState extends ConsumerState<AssetsPage> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(Asset a) {
+    final q = _query.toLowerCase();
+    return [a.name, a.brand ?? '', a.model ?? '', a.serialNo ?? '', a.typeLabel, a.locationName ?? '']
+        .any((s) => s.toLowerCase().contains(q));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final assets = ref.watch(assetsProvider);
 
     return Scaffold(
@@ -27,16 +47,53 @@ class AssetsPage extends ConsumerWidget {
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Add asset', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
-      body: assets.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (list) => list.isEmpty
-            ? const Center(child: Text('No assets yet. Tap “Add asset”.', style: TextStyle(color: AppColors.muted)))
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
-                itemCount: list.length,
-                itemBuilder: (context, i) => _AssetTile(asset: list[i]),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+            child: TextField(
+              controller: _search,
+              onChanged: (v) => setState(() => _query = v.trim()),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
+              decoration: InputDecoration(
+                isDense: true,
+                filled: true,
+                fillColor: AppColors.paper,
+                hintText: 'Search Your Appliance',
+                hintStyle: const TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
+                prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.muted),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.fieldBorder, width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.chipBlue, width: 1.5),
+                ),
               ),
+            ),
+          ),
+          Expanded(
+            child: assets.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('$e')),
+              data: (list) {
+                final visible = _query.isEmpty ? list : list.where(_matches).toList();
+                if (visible.isEmpty) {
+                  return Center(
+                      child: Text(_query.isEmpty ? 'No assets yet. Tap “Add asset”.' : 'No matches.',
+                          style: const TextStyle(color: AppColors.muted)));
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+                  itemCount: visible.length,
+                  itemBuilder: (context, i) => _AssetTile(asset: visible[i]),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -139,12 +139,13 @@ Dart models → repository mapping → screens.
       Rooms tab)
 - [x] 03 Room detail (hero photo + change, rename, appliance grid with day
       pills, "Add here" flow)
-- [ ] 04 Asset list polish (in-page search bar, photo thumbnails, header style)
+- [x] 04 Asset list polish (in-page search bar, photo thumbnails, type chips)
 - [x] 05 Appliance picker (searchable catalog list → add-asset)
 - [x] 06 Add appliance: type dropdown, model/serial/purchase/store, photo,
       AMC date → seeds service, invoice attach (file); camera capture pending
-- [ ] 08 Add reminder → full page: type tile grid, "in N days" helper,
-      offsets chips, attach document, family-push note
+- [x] 08 Add reminder → full page: type tile grid, "in N days" helper,
+      offsets chips (pref-defaults), service-scoped attach document,
+      family-push note
 - [x] 14 Profile (avatar edit + upload, Verified badge, stats row, family
       card + invite, edit-info sheet)
 - [x] 15 Settings restyle: Account / Notifications / Family / App sections
@@ -154,8 +155,10 @@ Dart models → repository mapping → screens.
       app lock/auto-lock, recovery codes, active sessions — **largest item**
 
 ### Pending — wiring & debt
-- [ ] Wire decorative UI: search icon, notification bell/dot (inbox from
-      `notification_log`), stat-card "View ›" links, filter tile, avatar tap
+- [x] Wire decorative UI: search page, notification inbox (offset-window
+      derived; dot only when overdue), stat-card "View ›" deep links,
+      reminder-type filter sheet, avatar bound to `avatar_url` + tap →
+      Profile
 - [x] Migrate `assets.metadata` **location** to real `locations` rows +
       `location_id` FK with backfill (`0006_service_fields.sql`)
 - [ ] Migrate `assets.metadata` **category** to the `category_id` FK when the
