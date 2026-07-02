@@ -44,19 +44,27 @@ repository — so every screen works offline. This guide turns on real Supabase.
 
 ## Part B — Apply the database schema
 
-Run both migrations once, in order, against your project (SQL Editor or CLI):
+**Easiest:** paste **`supabase/all_migrations.sql`** (all migrations 0001–0008
+combined, generated) into the SQL Editor and Run once on a fresh project.
+
+Or apply the individual migrations in order (SQL Editor or CLI):
 
 ```bash
-# Option 1 — Supabase SQL Editor: paste each file's contents and Run.
-# Option 2 — psql:
-psql "$DATABASE_URL" -f supabase/migrations/0001_init.sql
-psql "$DATABASE_URL" -f supabase/migrations/0002_family_rpcs.sql
+for f in supabase/migrations/*.sql; do psql "$DATABASE_URL" -f "$f"; done
 ```
 
 - `0001_init.sql` — tables, RLS, `updated_at` triggers, `handle_new_user`,
   `is_family_member`, `accept_invite`, `complete_asset_date`.
-- `0002_family_rpcs.sql` — `create_family` + `create_invite` (SECURITY DEFINER;
-  required because the first-owner insert can't satisfy the membership RLS).
+- `0002_family_rpcs.sql` — `create_family` + `create_invite` (SECURITY DEFINER).
+- `0003_short_invite_code.sql` — 8-char invite codes.
+- `0004_storage.sql` — `docsbuddy-files` bucket + family-scoped storage RLS.
+- `0005_seed_categories.sql` — category catalog seed, `asset_dates.kind`,
+  category→FK backfill.
+- `0006_service_fields.sql` — service provider/policy/cost/notes,
+  location→FK backfill.
+- `0007_whatsapp_channel.sql` — whatsapp notification channel.
+- `0008_family_profile_visibility.sql` — family members can read each
+  other's basic profile.
 
 ## Part C — Run the app with credentials
 
