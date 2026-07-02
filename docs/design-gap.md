@@ -250,6 +250,9 @@ A verification pass over data ↔ screen connections after the plan closed:
 - [x] Asset & service editing — edit/delete for assets (services and
       document rows cascade) and services (tombstoned for sync); the
       add pages double as edit forms
+- [x] Family role management — admins change roles / remove members
+      (owner protected; RLS already permitted it); member tiles get
+      tap-to-call and WhatsApp actions on their contact number
 - [ ] Camera capture for invoices/photos (`image_picker` + iOS plist)
 - [ ] Sign-in with a recovery code (server function to check the stored
       hashes; codes generate and persist today)

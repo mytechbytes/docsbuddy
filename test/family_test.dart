@@ -1,3 +1,6 @@
+import 'package:docsbuddy/features/family/data/fake_family_repository.dart';
+import 'package:docsbuddy/features/family/data/family_models.dart';
+import 'package:docsbuddy/features/family/data/family_repository.dart';
 import 'package:docsbuddy/features/family/presentation/family_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,5 +50,26 @@ void main() {
     await _settle(tester);
     expect(find.text('Invite a member'), findsOneWidget);
     expect(find.text('Copy code'), findsOneWidget);
+  });
+
+  test('fake repo: change role and remove member, owner protected', () async {
+    final repo = FakeFamilyRepository();
+    // Join an existing family: owner 'Anand Kumar' + me as member.
+    final family = await repo.acceptInvite('ABCD1234');
+    var members = await repo.members(family.id);
+    expect(members, hasLength(2));
+
+    final me = members.firstWhere((m) => m.userId == 'me');
+    await repo.updateMemberRole(familyId: family.id, userId: me.userId, role: FamilyRole.admin);
+    members = await repo.members(family.id);
+    expect(members.firstWhere((m) => m.userId == 'me').role, FamilyRole.admin);
+
+    final owner = members.firstWhere((m) => m.role == FamilyRole.owner);
+    expect(() => repo.updateMemberRole(familyId: family.id, userId: owner.userId, role: FamilyRole.member),
+        throwsA(isA<FamilyFailure>()));
+    expect(() => repo.removeMember(familyId: family.id, userId: owner.userId), throwsA(isA<FamilyFailure>()));
+
+    await repo.removeMember(familyId: family.id, userId: 'me');
+    expect(await repo.members(family.id), hasLength(1));
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Family;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
@@ -42,8 +43,11 @@ class FamilyPage extends ConsumerWidget {
             : _FamilyView(
                 family: view.family!,
                 members: view.members,
+                myUserId: ref.read(familyRepositoryProvider).currentUserId,
                 onInvite: () => _inviteSheet(context, ref),
                 onLeave: () => _leave(context, ref),
+                onChangeRole: (m) => _changeRole(context, ref, m),
+                onRemove: (m) => _removeMember(context, ref, m),
               ),
       ),
     );
@@ -116,6 +120,71 @@ class FamilyPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _changeRole(BuildContext context, WidgetRef ref, FamilyMember member) async {
+    final role = await showModalBottomSheet<FamilyRole>(
+      context: context,
+      backgroundColor: AppColors.paper,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Text('Change role — ${member.displayName}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            ),
+            for (final r in const [FamilyRole.admin, FamilyRole.member, FamilyRole.viewer])
+              ListTile(
+                title: Text(r.label, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
+                subtitle: Text(
+                  switch (r) {
+                    FamilyRole.admin => 'Manage members, assets and invites',
+                    FamilyRole.viewer => 'Read-only access',
+                    _ => 'Add and manage own assets',
+                  },
+                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                ),
+                trailing: r == member.role ? const Icon(Icons.check, color: AppColors.green) : null,
+                onTap: () => Navigator.pop(ctx, r),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (role == null || role == member.role) return;
+    try {
+      await ref.read(familyControllerProvider.notifier).changeRole(member, role);
+    } catch (e) {
+      if (context.mounted) _error(context, e);
+    }
+  }
+
+  Future<void> _removeMember(BuildContext context, WidgetRef ref, FamilyMember member) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove member?'),
+        content: Text('${member.displayName} will lose access to this family’s assets and reminders.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await ref.read(familyControllerProvider.notifier).removeMember(member);
+    } catch (e) {
+      if (context.mounted) _error(context, e);
+    }
+  }
+
   Future<void> _leave(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -180,11 +249,29 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _FamilyView extends StatelessWidget {
-  const _FamilyView({required this.family, required this.members, required this.onInvite, required this.onLeave});
+  const _FamilyView({
+    required this.family,
+    required this.members,
+    required this.myUserId,
+    required this.onInvite,
+    required this.onLeave,
+    required this.onChangeRole,
+    required this.onRemove,
+  });
   final Family family;
   final List<FamilyMember> members;
+  final String? myUserId;
   final VoidCallback onInvite;
   final VoidCallback onLeave;
+  final ValueChanged<FamilyMember> onChangeRole;
+  final ValueChanged<FamilyMember> onRemove;
+
+  /// Admin+ can manage other, non-owner members.
+  bool _canManage(FamilyMember target) {
+    final me = members.where((m) => m.userId == myUserId).firstOrNull;
+    final iAmAdmin = me != null && (me.role == FamilyRole.owner || me.role == FamilyRole.admin);
+    return iAmAdmin && target.userId != myUserId && target.role != FamilyRole.owner;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +311,13 @@ class _FamilyView extends StatelessWidget {
           padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text('MEMBERS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
         ),
-        for (final m in members) _MemberTile(member: m),
+        for (final m in members)
+          _MemberTile(
+            member: m,
+            canManage: _canManage(m),
+            onChangeRole: () => onChangeRole(m),
+            onRemove: () => onRemove(m),
+          ),
         const SizedBox(height: 22),
         PrimaryButton(label: 'Invite member', onPressed: onInvite),
         const SizedBox(height: 8),
@@ -238,11 +331,30 @@ class _FamilyView extends StatelessWidget {
 }
 
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member});
+  const _MemberTile({
+    required this.member,
+    required this.canManage,
+    required this.onChangeRole,
+    required this.onRemove,
+  });
   final FamilyMember member;
+  final bool canManage;
+  final VoidCallback onChangeRole;
+  final VoidCallback onRemove;
+
+  Future<void> _launch(BuildContext context, Uri uri) async {
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Could not open that app.'), backgroundColor: AppColors.red));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final phone = member.phone;
+    // wa.me wants digits only (E.164 without the +).
+    final waDigits = phone?.replaceAll(RegExp(r'[^0-9]'), '');
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -274,24 +386,48 @@ class _MemberTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
-                if (member.phone != null) ...[
+                if (phone != null) ...[
                   const SizedBox(height: 2),
                   Row(
                     children: [
                       const Icon(Icons.phone_outlined, size: 12, color: AppColors.muted),
                       const SizedBox(width: 4),
-                      Text(member.phone!, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                      Text(phone, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                     ],
                   ),
                 ],
               ],
             ),
           ),
+          if (phone != null) ...[
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _launch(context, Uri.parse('tel:$phone')),
+              icon: const Icon(Icons.call_outlined, size: 18, color: AppColors.chipBlue),
+              tooltip: 'Call',
+            ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _launch(context, Uri.parse('https://wa.me/$waDigits')),
+              icon: const Icon(Icons.chat_outlined, size: 18, color: AppColors.greenLeaf),
+              tooltip: 'WhatsApp',
+            ),
+          ],
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(999)),
             child: Text(member.role.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink2)),
           ),
+          if (canManage)
+            PopupMenuButton<String>(
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.more_vert, size: 18, color: AppColors.muted),
+              onSelected: (v) => v == 'role' ? onChangeRole() : onRemove(),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'role', child: Text('Change role')),
+                PopupMenuItem(value: 'remove', child: Text('Remove from family', style: TextStyle(color: AppColors.red))),
+              ],
+            ),
         ],
       ),
     );

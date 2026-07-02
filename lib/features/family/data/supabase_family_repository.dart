@@ -28,6 +28,9 @@ class SupabaseFamilyRepository implements FamilyRepository {
     }
   }
 
+  @override
+  String? get currentUserId => _client.auth.currentUser?.id;
+
   Family _family(Map<String, dynamic> row) =>
       Family(id: row['id'] as String, name: row['name'] as String, ownerId: row['owner_id'] as String);
 
@@ -56,6 +59,25 @@ class SupabaseFamilyRepository implements FamilyRepository {
             avatarUrl: user?['avatar_url'] as String?,
           );
         }).toList();
+      });
+
+  @override
+  Future<void> updateMemberRole({
+    required String familyId,
+    required String userId,
+    required FamilyRole role,
+  }) =>
+      _guard(() async {
+        await _client
+            .from('family_members')
+            .update({'role': role.name})
+            .eq('family_id', familyId)
+            .eq('user_id', userId);
+      });
+
+  @override
+  Future<void> removeMember({required String familyId, required String userId}) => _guard(() async {
+        await _client.from('family_members').delete().eq('family_id', familyId).eq('user_id', userId);
       });
 
   @override
