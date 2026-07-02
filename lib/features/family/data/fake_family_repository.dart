@@ -37,7 +37,7 @@ class FakeFamilyRepository implements FamilyRepository {
     _family = family;
     _members
       ..clear()
-      ..add(const FamilyMember(userId: 'me', displayName: 'You', role: FamilyRole.owner));
+      ..add(const FamilyMember(userId: 'me', displayName: 'You', role: FamilyRole.owner, phone: '+91 98123 45678'));
     return family;
   }
 
@@ -54,9 +54,10 @@ class FakeFamilyRepository implements FamilyRepository {
     // Demo behaviour: joining lands you in a shared family with an existing owner.
     _family ??= const Family(id: 'fam_shared', name: 'Shared Home', ownerId: 'owner');
     if (_members.isEmpty) {
-      _members.add(const FamilyMember(userId: 'owner', displayName: 'Anand Kumar', role: FamilyRole.owner));
+      _members.add(const FamilyMember(
+          userId: 'owner', displayName: 'Anand Kumar', role: FamilyRole.owner, phone: '+91 98000 11223'));
     }
-    _members.add(const FamilyMember(userId: 'me', displayName: 'You', role: FamilyRole.member));
+    _members.add(const FamilyMember(userId: 'me', displayName: 'You', role: FamilyRole.member, phone: '+91 98123 45678'));
     return _family!;
   }
 

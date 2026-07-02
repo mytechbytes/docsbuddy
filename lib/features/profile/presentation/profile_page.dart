@@ -286,17 +286,24 @@ class _FamilyCard extends ConsumerWidget {
                         Positioned(
                           left: i * 20.0,
                           child: Container(
-                            width: 28,
-                            height: 28,
                             decoration: BoxDecoration(
-                              color: AppColors.chipBlue,
                               shape: BoxShape.circle,
                               border: Border.all(color: AppColors.paper, width: 2),
                             ),
-                            alignment: Alignment.center,
-                            child: Text(members[i].initial,
-                                style: const TextStyle(
-                                    fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)),
+                            child: AssetThumb(
+                              imageRef: members[i].avatarUrl,
+                              size: 24,
+                              radius: 12,
+                              fallback: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: const BoxDecoration(color: AppColors.chipBlue, shape: BoxShape.circle),
+                                alignment: Alignment.center,
+                                child: Text(members[i].initial,
+                                    style: const TextStyle(
+                                        fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+                              ),
+                            ),
                           ),
                         ),
                     ],

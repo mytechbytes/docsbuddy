@@ -13,7 +13,10 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] Schema + RLS + RPCs (`supabase/migrations/0001_init.sql`, `0002_family_rpcs.sql`)
 - [x] App wiring (activates when `SUPABASE_URL` + `SUPABASE_ANON_KEY` are set)
 - [ ] Create the project; copy URL + anon key
-- [ ] Run both migrations (SQL editor / psql)
+- [ ] Run all migrations 0001–0008 in order (SQL editor / psql) — 0005
+      catalog seed + kind + category backfill, 0006 service fields +
+      location backfill, 0007 whatsapp channel, 0008 family profile
+      visibility
 - [ ] Auth → Providers: enable **Email** (+ **Email OTP** length 6 for reset)
 - [ ] Auth → URL Configuration: **Site URL** = `https://docsbuddy.mytechbytes.in`;
       **Redirect URLs** += `https://docsbuddy.mytechbytes.in/login-callback`

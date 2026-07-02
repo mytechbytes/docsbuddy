@@ -36,9 +36,10 @@ void main() {
     await tester.tap(find.text('Create'));
     await _settle(tester);
 
-    // Family view with the owner listed.
+    // Family view with the owner listed — name, contact number and role.
     expect(find.text('Kumar Family'), findsOneWidget);
     expect(find.text('You'), findsOneWidget);
+    expect(find.text('+91 98123 45678'), findsOneWidget);
     expect(find.text('Owner'), findsOneWidget);
 
     // Invite flow surfaces a shareable code sheet.

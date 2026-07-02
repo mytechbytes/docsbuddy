@@ -40,9 +40,11 @@ class SupabaseFamilyRepository implements FamilyRepository {
 
   @override
   Future<List<FamilyMember>> members(String familyId) => _guard(() async {
+        // Co-member profile fields are readable thanks to the
+        // "family members read profiles" policy (0008).
         final rows = await _client
             .from('family_members')
-            .select('user_id, role, users(display_name)')
+            .select('user_id, role, users(display_name, phone, avatar_url)')
             .eq('family_id', familyId);
         return rows.map((r) {
           final user = r['users'] as Map<String, dynamic>?;
@@ -50,6 +52,8 @@ class SupabaseFamilyRepository implements FamilyRepository {
             userId: r['user_id'] as String,
             displayName: (user?['display_name'] as String?) ?? 'Member',
             role: FamilyRole.fromName(r['role'] as String?),
+            phone: user?['phone'] as String?,
+            avatarUrl: user?['avatar_url'] as String?,
           );
         }).toList();
       });
