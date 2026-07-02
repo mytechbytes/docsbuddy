@@ -11,6 +11,8 @@ hourly without double-sending.
 
 ## Deploy
 
+> Getting the credentials step by step: `docs/service-credentials.md`.
+
 ```sh
 supabase functions deploy send-reminders-whatsapp --use-api
 supabase secrets set \

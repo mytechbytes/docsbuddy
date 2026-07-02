@@ -7,6 +7,8 @@ opted-in family member's `users.email`. Deduped through `notification_log`'s
 
 ## Deploy
 
+> Getting the credentials step by step: `docs/service-credentials.md`.
+
 ```sh
 supabase functions deploy send-reminders-email --use-api
 supabase secrets set \

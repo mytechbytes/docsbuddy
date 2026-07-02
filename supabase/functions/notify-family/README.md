@@ -7,6 +7,8 @@ on receipt.
 
 ## 1. Set the secret
 
+> Getting the JSON step by step: `docs/service-credentials.md` §1.
+
 You need a Firebase **service account** with the *Firebase Cloud Messaging API*
 enabled (Firebase Console → Project settings → Service accounts → Generate new
 private key → download the JSON):

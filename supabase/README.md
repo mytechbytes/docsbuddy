@@ -56,7 +56,9 @@ supabase functions deploy send-reminders-whatsapp  --use-api
 ```
 
 Set the secrets (`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are injected
-automatically):
+automatically). **Step-by-step instructions for obtaining each value —
+Firebase service-account JSON, Resend key + domain, Meta WhatsApp token /
+phone-number ID / template — are in `docs/service-credentials.md`.**
 
 ```sh
 # notify-family — FCM sync push
