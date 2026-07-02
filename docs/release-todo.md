@@ -151,8 +151,9 @@ Dart models → repository mapping → screens.
 - [x] 15 Settings restyle: Account / Notifications / Family / App sections
       (Security & 2FA row placeholder until screen 17)
 - [x] 16 Change password screen (re-auth verify, strength meter)
-- [ ] 17 Security: 2FA TOTP, biometric login + quick-unlock on sign-in,
-      app lock/auto-lock, recovery codes, active sessions — **largest item**
+- [x] 17 Security: 2FA TOTP (QR + verify), biometric unlock, app
+      lock/auto-lock with lock screen, recovery codes (hashes in user
+      metadata; login path = future server function), sign-out other devices
 
 ### Pending — wiring & debt
 - [x] Wire decorative UI: search page, notification inbox (offset-window
