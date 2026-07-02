@@ -58,6 +58,28 @@ class FamilyController extends AsyncNotifier<FamilyView> {
     await _repo.leaveFamily(family.id);
     await refresh();
   }
+
+  /// The signed-in user's membership row, if loaded.
+  FamilyMember? get me {
+    final uid = _repo.currentUserId;
+    return state.valueOrNull?.members.where((m) => m.userId == uid).firstOrNull;
+  }
+
+  Future<void> changeRole(FamilyMember member, FamilyRole role) async {
+    final family = state.valueOrNull?.family;
+    if (family == null) throw const FamilyFailure('No active family.');
+    if (member.userId == family.ownerId) throw const FamilyFailure("The owner's role can't be changed.");
+    await _repo.updateMemberRole(familyId: family.id, userId: member.userId, role: role);
+    await refresh();
+  }
+
+  Future<void> removeMember(FamilyMember member) async {
+    final family = state.valueOrNull?.family;
+    if (family == null) throw const FamilyFailure('No active family.');
+    if (member.userId == family.ownerId) throw const FamilyFailure("The owner can't be removed.");
+    await _repo.removeMember(familyId: family.id, userId: member.userId);
+    await refresh();
+  }
 }
 
 final familyControllerProvider =

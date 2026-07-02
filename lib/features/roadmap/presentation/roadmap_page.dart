@@ -43,6 +43,7 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Family members show photo, name & contact number'),
       (true, 'Edit & delete assets and services'),
       (true, 'Service detail: cost, record & per-service documents'),
+      (true, 'Family roles: change/remove members; call & WhatsApp'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),

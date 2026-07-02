@@ -18,9 +18,36 @@ class FakeFamilyRepository implements FamilyRepository {
   }
 
   @override
+  String? get currentUserId => 'me';
+
+  @override
   Future<Family?> currentFamily() async {
     await _delay();
     return _family;
+  }
+
+  @override
+  Future<void> updateMemberRole({
+    required String familyId,
+    required String userId,
+    required FamilyRole role,
+  }) async {
+    await _delay();
+    final i = _members.indexWhere((m) => m.userId == userId);
+    if (i < 0) throw const FamilyFailure('Member not found.');
+    if (_members[i].role == FamilyRole.owner) throw const FamilyFailure("The owner's role can't be changed.");
+    final m = _members[i];
+    _members[i] =
+        FamilyMember(userId: m.userId, displayName: m.displayName, role: role, phone: m.phone, avatarUrl: m.avatarUrl);
+  }
+
+  @override
+  Future<void> removeMember({required String familyId, required String userId}) async {
+    await _delay();
+    final target = _members.where((m) => m.userId == userId).firstOrNull;
+    if (target == null) throw const FamilyFailure('Member not found.');
+    if (target.role == FamilyRole.owner) throw const FamilyFailure("The owner can't be removed.");
+    _members.removeWhere((m) => m.userId == userId);
   }
 
   @override
