@@ -245,7 +245,7 @@ class _InfoCard extends StatelessWidget {
               children: [
                 Text(asset.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.2)),
                 const SizedBox(height: 6),
-                Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.category.label)),
+                Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.typeLabel)),
                 const SizedBox(height: 8),
                 Text(meta, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
               ],

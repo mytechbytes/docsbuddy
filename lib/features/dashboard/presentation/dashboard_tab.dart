@@ -37,7 +37,7 @@ class DashboardTab extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/asset-new'),
+        onPressed: () => context.push('/appliance-picker'),
         backgroundColor: AppColors.chipBlue,
         elevation: 2,
         child: const Icon(Icons.add, color: Colors.white),

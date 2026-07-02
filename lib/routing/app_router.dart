@@ -10,7 +10,9 @@ import '../features/auth/presentation/otp_verify_page.dart';
 import '../features/auth/presentation/reset_password_page.dart';
 import '../features/auth/presentation/sign_in_page.dart';
 import '../features/auth/presentation/sign_up_page.dart';
+import '../features/catalog/data/catalog_models.dart';
 import '../features/catalog/presentation/add_asset_page.dart';
+import '../features/catalog/presentation/appliance_picker_page.dart';
 import '../features/catalog/presentation/asset_detail_page.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
@@ -65,7 +67,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ── App ──
       GoRoute(path: '/dashboard', builder: (_, _) => const HomeShell()),
-      GoRoute(path: '/asset-new', builder: (_, _) => const AddAssetPage()),
+      GoRoute(path: '/appliance-picker', builder: (_, _) => const AppliancePickerPage()),
+      GoRoute(path: '/asset-new', builder: (_, state) => AddAssetPage(preset: state.extra as AssetCategory?)),
       GoRoute(path: '/asset/:id', builder: (_, state) => AssetDetailPage(assetId: state.pathParameters['id']!)),
       GoRoute(path: '/roadmap', builder: (_, _) => const RoadmapPage()),
     ],

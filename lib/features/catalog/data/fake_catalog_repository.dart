@@ -97,6 +97,51 @@ class FakeCatalogRepository implements CatalogRepository {
 
   List<Reminder> get _sorted => [..._reminders]..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
+  /// Mirrors the 0005 seed so the picker works offline.
+  static final _categories = <AssetCategory>[
+    const AssetCategory(id: 'cat_car', slug: 'vehicle-car', name: 'Car', iconToken: 'car', defaults: [
+      DefaultReminder(kind: ReminderKind.insurance, label: 'Insurance', startMonths: 12, recurrence: Recurrence.yearly),
+      DefaultReminder(kind: ReminderKind.pollution, label: 'Pollution (PUC)', startMonths: 6, recurrence: Recurrence.halfYearly),
+      DefaultReminder(kind: ReminderKind.service, label: 'Service Due', startMonths: 6, recurrence: Recurrence.halfYearly),
+    ]),
+    const AssetCategory(id: 'cat_bike', slug: 'vehicle-bike', name: 'Bike / Scooter', iconToken: 'bike', defaults: [
+      DefaultReminder(kind: ReminderKind.insurance, label: 'Insurance', startMonths: 12, recurrence: Recurrence.yearly),
+      DefaultReminder(kind: ReminderKind.pollution, label: 'Pollution (PUC)', startMonths: 6, recurrence: Recurrence.halfYearly),
+      DefaultReminder(kind: ReminderKind.service, label: 'Service Due', startMonths: 6, recurrence: Recurrence.halfYearly),
+    ]),
+    const AssetCategory(id: 'cat_ac', slug: 'appliance-ac', name: 'Air Conditioner', iconToken: 'ac', defaults: [
+      DefaultReminder(kind: ReminderKind.amc, label: 'AMC', startMonths: 12, recurrence: Recurrence.yearly),
+      DefaultReminder(kind: ReminderKind.service, label: 'Wet Service', startMonths: 6, recurrence: Recurrence.halfYearly),
+      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
+    ]),
+    const AssetCategory(id: 'cat_fridge', slug: 'appliance-fridge', name: 'Refrigerator', iconToken: 'fridge', defaults: [
+      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
+    ]),
+    const AssetCategory(id: 'cat_washer', slug: 'appliance-washing-machine', name: 'Washing Machine', iconToken: 'washer', defaults: [
+      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 24),
+      DefaultReminder(kind: ReminderKind.service, label: 'Service Due', startMonths: 12, recurrence: Recurrence.yearly),
+    ]),
+    const AssetCategory(id: 'cat_purifier', slug: 'appliance-water-purifier', name: 'Water Purifier', iconToken: 'water', defaults: [
+      DefaultReminder(kind: ReminderKind.amc, label: 'AMC', startMonths: 12, recurrence: Recurrence.yearly),
+      DefaultReminder(kind: ReminderKind.service, label: 'Filter Change', startMonths: 6, recurrence: Recurrence.halfYearly),
+    ]),
+    const AssetCategory(id: 'cat_tv', slug: 'appliance-tv', name: 'Television', iconToken: 'tv', defaults: [
+      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
+    ]),
+    const AssetCategory(id: 'cat_phone', slug: 'electronics-phone', name: 'Smartphone', iconToken: 'phone', defaults: [
+      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
+    ]),
+    const AssetCategory(id: 'cat_laptop', slug: 'electronics-laptop', name: 'Laptop', iconToken: 'laptop', defaults: [
+      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
+    ]),
+  ];
+
+  @override
+  Future<List<AssetCategory>> categories() async {
+    await _delay();
+    return List.unmodifiable(_categories);
+  }
+
   @override
   Future<List<Reminder>> upcomingReminders({int withinDays = 365}) async {
     await _delay();
@@ -135,6 +180,7 @@ class FakeCatalogRepository implements CatalogRepository {
   Future<Asset> addAsset({
     required String name,
     required AssetCategoryKind category,
+    String? categoryId,
     String? locationName,
     String? brand,
     String? model,
@@ -148,10 +194,13 @@ class FakeCatalogRepository implements CatalogRepository {
     if (loc != null && loc.isNotEmpty && !_locations.any((l) => l.name.toLowerCase() == loc.toLowerCase())) {
       _locations.add(Location(id: _id('l'), name: loc, kind: 'room'));
     }
+    final cat = _categories.where((c) => c.id == categoryId).firstOrNull;
     final a = Asset(
       id: _id('a'),
       name: name.trim(),
-      category: category,
+      category: cat?.kindGroup ?? category,
+      categoryId: categoryId,
+      categoryName: cat?.name,
       locationName: loc == null || loc.isEmpty ? null : loc,
       brand: brand,
       model: model,

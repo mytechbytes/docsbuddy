@@ -23,9 +23,9 @@ class SupabaseCatalogRepository implements CatalogRepository {
   String? _familyId;
 
   static const _assetCols =
-      'id, name, brand, model, serial_no, purchase_date, purchase_price, store, image_url, location_id, metadata, locations(name)';
+      'id, name, brand, model, serial_no, purchase_date, purchase_price, store, image_url, location_id, category_id, metadata, locations(name), asset_categories(slug, name)';
   static const _dateCols =
-      'id, asset_id, label, due_date, recurrence, notify_offsets, provider, policy_no, cost, notes';
+      'id, asset_id, label, kind, due_date, recurrence, notify_offsets, provider, policy_no, cost, notes';
 
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
@@ -56,7 +56,11 @@ class SupabaseCatalogRepository implements CatalogRepository {
   static AssetCategoryKind _catFromName(String? n) =>
       AssetCategoryKind.values.firstWhere((c) => c.name == n, orElse: () => AssetCategoryKind.other);
 
-  static ReminderKind _kindFromLabel(String label) => ReminderKind.values.firstWhere(
+  /// Kind comes from the stored `asset_dates.kind` (written since 0005);
+  /// label matching remains only as the fallback for old rows.
+  static ReminderKind _kindFor(String? kind, String label) =>
+      ReminderKind.values.asNameMap()[kind] ??
+      ReminderKind.values.firstWhere(
         (k) => k.label.toLowerCase() == label.toLowerCase(),
         orElse: () => ReminderKind.other,
       );
@@ -66,10 +70,16 @@ class SupabaseCatalogRepository implements CatalogRepository {
 
   Asset _asset(Map<String, dynamic> r) {
     final meta = (r['metadata'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final cat = (r['asset_categories'] as Map?)?.cast<String, dynamic>();
+    final slug = cat?['slug'] as String?;
     return Asset(
       id: r['id'] as String,
       name: r['name'] as String,
-      category: _catFromName(meta['category'] as String?),
+      // Group from the joined category slug's prefix; metadata is the
+      // fallback for rows created before the 0005 backfill.
+      category: _catFromName(slug?.split('-').first ?? meta['category'] as String?),
+      categoryId: r['category_id'] as String?,
+      categoryName: slug != null && slug.contains('-') ? (cat?['name'] as String?) : null,
       // Joined location name; old pre-0006 rows may still carry the metadata key.
       locationName: (r['locations'] as Map?)?['name'] as String? ?? meta['location'] as String?,
       locationId: r['location_id'] as String?,
@@ -89,7 +99,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
       id: r['id'] as String,
       assetId: r['asset_id'] as String,
       assetName: assetName ?? (r['assets'] as Map?)?['name'] as String? ?? '',
-      kind: _kindFromLabel(label),
+      kind: _kindFor(r['kind'] as String?, label),
       label: label,
       dueDate: DateTime.parse(r['due_date'] as String),
       recurrence: _recFromDb(r['recurrence'] as String?),
@@ -113,6 +123,32 @@ class SupabaseCatalogRepository implements CatalogRepository {
         final r = await _client.from('assets').select(_assetCols).eq('id', id).single();
         return _asset(r);
       });
+
+  @override
+  Future<List<AssetCategory>> categories() => _guard(() async {
+        final rows = await _client
+            .from('asset_categories')
+            .select('id, slug, name, icon, default_dates')
+            .order('name');
+        return rows
+            .map((r) => AssetCategory(
+                  id: r['id'] as String,
+                  slug: (r['slug'] as String?) ?? 'other',
+                  name: (r['name'] as String?) ?? 'Other',
+                  iconToken: r['icon'] as String?,
+                  defaults: ((r['default_dates'] as List?) ?? const [])
+                      .whereType<Map>()
+                      .map((j) => DefaultReminder.fromJson(j.cast<String, dynamic>()))
+                      .toList(),
+                ))
+            .toList();
+      });
+
+  /// Category row for the generic group matching the enum, if seeded.
+  Future<String?> _genericCategoryId(AssetCategoryKind kind) async {
+    final rows = await _client.from('asset_categories').select('id').eq('slug', kind.name).limit(1);
+    return rows.isEmpty ? null : rows.first['id'] as String;
+  }
 
   @override
   Future<List<Location>> locations() => _guard(() async {
@@ -182,6 +218,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
   Future<Asset> addAsset({
     required String name,
     required AssetCategoryKind category,
+    String? categoryId,
     String? locationName,
     String? brand,
     String? model,
@@ -194,6 +231,9 @@ class SupabaseCatalogRepository implements CatalogRepository {
         final familyId = await _family();
         final loc = locationName?.trim();
         final locationId = loc == null || loc.isEmpty ? null : await _locationIdFor(familyId, loc);
+        // Prefer the real FK; fall back to the generic group row, and only
+        // ride in metadata when the catalog isn't seeded yet (pre-0005).
+        final catId = categoryId ?? await _genericCategoryId(category);
         final row = await _client
             .from('assets')
             .insert({
@@ -206,8 +246,9 @@ class SupabaseCatalogRepository implements CatalogRepository {
               'purchase_price': purchasePrice,
               'store': store,
               'location_id': locationId,
+              'category_id': catId,
               'created_by': _client.auth.currentUser?.id,
-              'metadata': {'category': category.name},
+              'metadata': catId == null ? {'category': category.name} : const <String, dynamic>{},
             })
             .select(_assetCols)
             .single();
@@ -233,6 +274,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
             .insert({
               'asset_id': assetId,
               'label': label.trim().isEmpty ? kind.label : label.trim(),
+              'kind': kind.name,
               'due_date': _dbDate(dueDate),
               'recurrence': _recToDb(recurrence),
               'notify_offsets': ?notifyOffsets,

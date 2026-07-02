@@ -32,6 +32,13 @@ final assetRemindersProvider = FutureProvider.family<List<Reminder>, String>((re
   return ref.watch(catalogRepositoryProvider).remindersFor(assetId);
 });
 
+/// The appliance/vehicle type catalog (only specific types — generic group
+/// rows are filtered out; they exist for the enum backfill).
+final categoriesProvider = FutureProvider<List<AssetCategory>>((ref) async {
+  final all = await ref.watch(catalogRepositoryProvider).categories();
+  return all.where((c) => !c.isGeneric).toList();
+});
+
 /// Displayable URL for a stored image reference (signed for bucket paths),
 /// cached per reference so list rows don't re-sign on every rebuild.
 final assetImageUrlProvider = FutureProvider.family<String?, String>((ref, imageRef) {
