@@ -30,6 +30,8 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Dashboard stats: service counts + total appliances'),
       (true, 'WhatsApp reminder sender (Edge Function + channel)'),
       (true, 'Asset photos: upload, change, thumbnails everywhere'),
+      (true, 'Appliance type catalog + picker + auto-seeded services'),
+      (true, 'Add appliance: AMC date + invoice attach on create'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -42,9 +44,8 @@ class RoadmapPage extends StatelessWidget {
     ('Pending — design gap (see docs/design-gap.md)', [
       (false, 'Notify-offsets chips editor in the reminder UI'),
       (false, 'Per-service document grouping on asset detail'),
-      (false, 'Appliance category catalog + picker + auto-seeded reminders'),
       (false, 'Rooms & Room detail (real locations, photos, counts)'),
-      (false, 'Add appliance: AMC date + invoice capture (file/camera)'),
+      (false, 'Camera capture for invoices/photos (image_picker)'),
       (false, 'Add reminder as full page (offsets chips, attach document)'),
       (false, 'Asset list: in-page search + photo thumbnails'),
       (false, 'Profile screen (avatar, stats, family card)'),

@@ -11,9 +11,14 @@ abstract interface class CatalogRepository {
   Future<List<Reminder>> remindersFor(String assetId);
   Future<List<Location>> locations();
 
+  /// The `asset_categories` catalog (specific appliance/vehicle types with
+  /// their default services). Empty when the backend isn't seeded yet.
+  Future<List<AssetCategory>> categories();
+
   Future<Asset> addAsset({
     required String name,
     required AssetCategoryKind category,
+    String? categoryId,
     String? locationName,
     String? brand,
     String? model,

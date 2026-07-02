@@ -23,7 +23,7 @@ class AssetsPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.ink,
-        onPressed: () => context.push('/asset-new'),
+        onPressed: () => context.push('/appliance-picker'),
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Add asset', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
@@ -79,7 +79,7 @@ class _AssetTile extends StatelessWidget {
                 ],
               ),
             ),
-            CategoryChip(asset.category.label),
+            CategoryChip(asset.typeLabel),
             const Icon(Icons.chevron_right, color: AppColors.muted),
           ],
         ),

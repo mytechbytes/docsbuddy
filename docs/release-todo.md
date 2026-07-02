@@ -114,9 +114,10 @@ Dart models → repository mapping → screens.
 - [x] A3 Per-reminder `notify_offsets`: model + repos, real values rendered
       on rows/banner, scheduler uses per-service offsets (offsets-chips
       editor ships with the Add-reminder page rework)
-- [ ] A4 Category catalog: read `asset_categories`, auto-seed default
-      reminders on create, **new** `0005_seed_categories.sql` (+ migrate
-      `metadata.category` → `category_id` FK)
+- [x] A4 Category catalog: `0005_seed_categories.sql` seeds 19 types with
+      default services; asset create auto-seeds them (AMC date overrides);
+      explicit `asset_dates.kind`; `metadata.category` backfilled →
+      `category_id` FK
 - [ ] A5 Profile data: `ProfileRepository` + avatar upload + real `avatar_url`
 - [x] A6 Real locations: `public.locations` backs `locations()` with counts /
       kind / hierarchy; find-or-create on asset save; `0006` backfills the
@@ -136,9 +137,9 @@ Dart models → repository mapping → screens.
 - [ ] 02 Rooms (add-room composer, photo cards, asset counts, entry point)
 - [ ] 03 Room detail (hero photo, edit, appliance grid, add-asset-here)
 - [ ] 04 Asset list polish (in-page search bar, photo thumbnails, header style)
-- [ ] 05 Appliance picker (searchable category grid → add-asset)
-- [ ] 06 Add appliance: model no., serial, purchase date/price, store, AMC
-      date → seeds reminder, invoice capture (file/camera), validation
+- [x] 05 Appliance picker (searchable catalog list → add-asset)
+- [x] 06 Add appliance: type dropdown, model/serial/purchase/store, photo,
+      AMC date → seeds service, invoice attach (file); camera capture pending
 - [ ] 08 Add reminder → full page: type tile grid, "in N days" helper,
       offsets chips, attach document, family-push note
 - [ ] 14 Profile (avatar edit, stats row, family card + invite, menu rows)

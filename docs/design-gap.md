@@ -92,8 +92,8 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 | 02 | Rooms | ❌ Missing | Whole screen: add-room composer, photo cards, "N Registered", entry point |
 | 03 | Room detail | ❌ Missing | Whole screen: hero photo, edit room, summary line, appliance grid |
 | 04 | Asset list | 🟡 Partial | No in-page search; icon tiles instead of photos; header + chip styling |
-| 05 | Appliance picker | ❌ Missing | Whole screen: searchable category list feeding add-asset |
-| 06 | Add appliance | 🟡 Partial | No model no., purchase date/price, serial, store, AMC date, invoice capture, validation |
+| 05 | Appliance picker | ✅ Done | — |
+| 06 | Add appliance | ✅ Done | Camera capture for invoices/photos pending (`image_picker`) |
 | 07 | Asset detail | ✅ Done | Photo, serial in header, real offsets on banner/rows, Documents "View all" |
 | 08 | Add reminder | 🟡 Partial | Bottom sheet vs full page; no offsets chips, attach-document, "in N days", family note |
 | 09–13 | Auth flows | ✅ Done | Biometric quick-unlock button on sign-in (needs 17) |
@@ -135,10 +135,10 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 - [x] Feed them into `NotificationService.buildAlerts` instead of the constant
 
 **A4. Asset-category catalog (`asset_categories`) [schema ✓ table / new seed]**
-- [ ] `CatalogTypesRepository.categories()` reading `asset_categories`
-- [ ] On asset create, expand `default_dates` → `asset_dates` rows
-- [ ] Seed the table (**new** `0005_seed_categories.sql`)
-- [ ] Derive `ReminderKind` from the catalog (replaces fragile `_kindFromLabel`)
+- [x] `categories()` on `CatalogRepository` reading `asset_categories` (fake mirrors the seed offline)
+- [x] On asset create, expand `default_dates` → services (`expandDefaultReminders`: dues relative to purchase date, past recurrings roll forward, expired one-offs skipped, AMC date overrides)
+- [x] Seed the table + backfill (`0005_seed_categories.sql`: 5 generic groups + 14 specific types)
+- [x] Explicit `asset_dates.kind` written at create (label inference is now only the fallback for old rows — retires fragile `_kindFromLabel`)
 
 **A5. User profile (`users`) [schema ✓]**
 - [ ] `ProfileRepository` (get/update `users`, avatar upload) + `profileProvider`
@@ -176,8 +176,8 @@ is surfaced in Dart.
 
 - [ ] **02 Rooms** — `RoomsPage` over real `locations`: "Add a new room" composer, photo cards, "N Registered" counts; add tab/entry point (A2/A6)
 - [ ] **03 Room detail** — `RoomDetailPage(locationId)`: hero photo, edit-room, "managing N appliances" line, appliance grid with day pills, add-asset-here
-- [ ] **05 Appliance picker** — searchable category grid feeding add-asset (A4)
-- [ ] **06 Add appliance** *(partial)* — model no., serial, purchase date/price, store, AMC date (seeds an AMC reminder), invoice capture (file/camera → document), photo, required-field validation (A1/A2)
+- [x] **05 Appliance picker** — searchable catalog list feeding add-asset, with a "Something else" escape hatch (A4)
+- [x] **06 Add appliance** — type dropdown (catalog), model/serial/purchase/store (A1), photo (A2), AMC date (seeds/overrides the AMC service), invoice attach (file → invoice document), auto-seed note; *camera capture still pending (needs `image_picker`)*
 - [ ] **08 Add reminder** *(partial)* — promote sheet to full page: type tile grid, "in N days" helper, offsets chips, attach-document row (service-scoped via `asset_date_id`, A8), family-push note (A3/A7)
 - [ ] **14 Profile** — avatar + camera edit, name/email + Verified badge, stats row (assets/reminders/documents), family card + Invite, menu rows (A5)
 - [ ] **16 Change password** — current/new/confirm + strength meter + "signs out other devices" note; `SupabaseAuthRepository.updatePassword` already exists — wire from Settings
@@ -200,8 +200,8 @@ is surfaced in Dart.
 ### D. Backend debt
 
 - [x] **Metadata hack (location half)** — `location` migrated from `assets.metadata` to real `locations` rows + `location_id` FK with a one-time backfill (`0006_service_fields.sql`); the repo no longer writes it
-- [ ] **Metadata hack (category half)** — migrate `category` to the `category_id` FK once the catalog is seeded (A4, `0005_seed_categories.sql`)
-- [ ] **`_kindFromLabel` inference** — derive kind from the catalog once A4 lands
+- [x] **Metadata hack (category half)** — `0005` backfills `metadata.category` → `category_id` (via the generic group rows) and the repo now writes the FK; metadata is only the fallback when the catalog isn't seeded
+- [x] **`_kindFromLabel` inference** — kind is stored on `asset_dates.kind`; label matching remains only as the read fallback for pre-0005 rows
 
 ### E. Design decisions *(resolved)*
 
@@ -222,7 +222,7 @@ is surfaced in Dart.
 
 1. [x] **Model + repo widening** (A1, A3, A6, A7, A8 service layer) + metadata→FK debt (D, location half — category half moves with step 3) — **done**
 2. [x] **Asset photos** (A2) — biggest visual gap, self-contained — **done**
-3. [ ] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — high product value
+3. [x] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — **done** (camera capture deferred)
 4. [ ] **Rooms + Room detail** (A6, B-02/03)
 5. [ ] **Profile + Change password + Settings restyle** (A5, B-14/15/16)
 6. [ ] **Add-reminder full page + wire decorative UI** (B-08, C)
