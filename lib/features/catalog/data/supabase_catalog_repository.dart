@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'catalog_models.dart';
@@ -96,6 +98,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
       policyNo: r['policy_no'] as String?,
       cost: (r['cost'] as num?)?.toDouble(),
       notes: r['notes'] as String?,
+      assetImageUrl: (r['assets'] as Map?)?['image_url'] as String?,
     );
   }
 
@@ -136,7 +139,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
   Future<List<Reminder>> upcomingReminders({int withinDays = 365}) => _guard(() async {
         final rows = await _client
             .from('asset_dates')
-            .select('$_dateCols, assets(name)')
+            .select('$_dateCols, assets(name, image_url)')
             .isFilter('completed_at', null)
             .order('due_date');
         return rows.map((r) => _reminder(r)).where((r) => r.daysLeft <= withinDays).toList();
@@ -246,6 +249,61 @@ class SupabaseCatalogRepository implements CatalogRepository {
   @override
   Future<void> completeReminder(String reminderId) =>
       _guard(() => _client.rpc('complete_asset_date', params: {'p_id': reminderId}));
+
+  static const _bucket = 'docsbuddy-files';
+
+  @override
+  Future<Asset> setAssetImage(
+    String assetId, {
+    required Uint8List bytes,
+    required String fileName,
+    required String mimeType,
+  }) =>
+      _guard(() async {
+        final row = await _client.from('assets').select('family_id, image_url').eq('id', assetId).single();
+        final fam = row['family_id'] as String;
+        final old = row['image_url'] as String?;
+
+        final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+        final path = '$fam/assets/$assetId/photo/${DateTime.now().millisecondsSinceEpoch}_$safe';
+        try {
+          await _client.storage.from(_bucket).uploadBinary(
+                path,
+                bytes,
+                fileOptions: FileOptions(contentType: mimeType, upsert: false),
+              );
+        } on StorageException catch (e) {
+          throw Exception(e.message);
+        }
+
+        final updated = await _client
+            .from('assets')
+            .update({'image_url': path})
+            .eq('id', assetId)
+            .select(_assetCols)
+            .single();
+
+        // Best-effort cleanup of the replaced photo (bucket paths only).
+        if (old != null && !old.startsWith('http')) {
+          try {
+            await _client.storage.from(_bucket).remove([old]);
+          } on StorageException {
+            /* leave the orphan */
+          }
+        }
+        return _asset(updated);
+      });
+
+  @override
+  Future<String?> resolveImageUrl(String? imageRef) async {
+    if (imageRef == null || imageRef.isEmpty) return null;
+    if (imageRef.startsWith('http')) return imageRef;
+    try {
+      return await _client.storage.from(_bucket).createSignedUrl(imageRef, 3600);
+    } catch (_) {
+      return null; // missing object / offline → UI falls back to the icon
+    }
+  }
 
   @override
   Future<Location> createLocation(String name) => _guard(() async {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/catalog/application/catalog_providers.dart';
 import '../../features/catalog/data/catalog_models.dart';
 import '../theme/app_colors.dart';
 
@@ -16,6 +18,42 @@ class IconBubble extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(color: kind.bg, borderRadius: BorderRadius.circular(size * 0.3)),
       child: Icon(kind.icon, size: size * 0.5, color: kind.fg),
+    );
+  }
+}
+
+/// Asset photo thumbnail: resolves the stored reference (signed URL for the
+/// private bucket) and renders it rounded; shows [fallback] until resolved,
+/// when there's no photo, or when loading fails.
+class AssetThumb extends ConsumerWidget {
+  const AssetThumb({
+    super.key,
+    required this.imageRef,
+    required this.fallback,
+    this.size = 44,
+    this.radius,
+  });
+
+  final String? imageRef;
+  final Widget fallback;
+  final double size;
+  final double? radius;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final r = radius ?? size * 0.27;
+    if (imageRef == null || imageRef!.isEmpty) return fallback;
+    final url = ref.watch(assetImageUrlProvider(imageRef!)).valueOrNull;
+    if (url == null) return fallback;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(r),
+      child: Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => fallback,
+      ),
     );
   }
 }

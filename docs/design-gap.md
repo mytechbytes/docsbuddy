@@ -122,9 +122,9 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 - [x] Add inputs (model no., serial, purchase date/price, store) to `add_asset_page.dart`
 
 **A2. Asset photo (`image_url`) — biggest visual gap [schema ✓]**
-- [ ] `uploadAssetImage(assetId, file)` → `docsbuddy-files` bucket → `assets.image_url` (reuse `SupabaseDocumentRepository` pattern; RLS in `0004_storage.sql`)
-- [ ] Image picker in add/edit asset
-- [ ] Render `Image.network` (category-icon fallback) in dashboard rows, asset list, asset-detail header, room cards
+- [x] `setAssetImage(assetId, …)` → `docsbuddy-files` bucket → stores the bucket path on `assets.image_url`; `resolveImageUrl` signs it at render time (private bucket, RLS in `0004_storage.sql`); replaced photos are cleaned up
+- [x] Image picker on Add asset (preview box) + change-photo on the asset-detail header (camera badge)
+- [x] `AssetThumb` renders the photo (icon fallback) in dashboard rows, asset list, asset-detail header — room cards land with B-02
 
 **A3. `Reminder.notifyOffsets` — hardcoded in UI [schema ✓]**
 `asset_dates.notify_offsets int[]` exists per reminder; UI prints a static
@@ -221,7 +221,7 @@ is surfaced in Dart.
 ## Suggested sequencing (dependency + value)
 
 1. [x] **Model + repo widening** (A1, A3, A6, A7, A8 service layer) + metadata→FK debt (D, location half — category half moves with step 3) — **done**
-2. [ ] **Asset photos** (A2) — biggest visual gap, self-contained
+2. [x] **Asset photos** (A2) — biggest visual gap, self-contained — **done**
 3. [ ] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — high product value
 4. [ ] **Rooms + Room detail** (A6, B-02/03)
 5. [ ] **Profile + Change password + Settings restyle** (A5, B-14/15/16)

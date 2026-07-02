@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:docsbuddy/features/catalog/data/catalog_models.dart';
 import 'package:docsbuddy/features/catalog/data/fake_catalog_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -75,5 +77,24 @@ void main() {
     // Same name (case-insensitive) reuses the row.
     await repo.addAsset(name: 'TV', category: AssetCategoryKind.electronics, locationName: 'living room');
     expect((await repo.locations()).length, after.length);
+  });
+
+  test('setAssetImage stores a photo reference on the asset', () async {
+    final repo = FakeCatalogRepository();
+    final asset = (await repo.assets()).first;
+    expect(asset.imageUrl, isNull);
+
+    final updated = await repo.setAssetImage(
+      asset.id,
+      bytes: Uint8List.fromList([1, 2, 3]),
+      fileName: 'bike.jpg',
+      mimeType: 'image/jpeg',
+    );
+    expect(updated.imageUrl, isNotNull);
+    expect((await repo.asset(asset.id)).imageUrl, updated.imageUrl);
+
+    // Bucket paths only resolve with real storage; http refs pass through.
+    expect(await repo.resolveImageUrl(updated.imageUrl), isNull);
+    expect(await repo.resolveImageUrl('https://example.com/x.jpg'), 'https://example.com/x.jpg');
   });
 }

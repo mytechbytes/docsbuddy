@@ -32,6 +32,12 @@ final assetRemindersProvider = FutureProvider.family<List<Reminder>, String>((re
   return ref.watch(catalogRepositoryProvider).remindersFor(assetId);
 });
 
+/// Displayable URL for a stored image reference (signed for bucket paths),
+/// cached per reference so list rows don't re-sign on every rebuild.
+final assetImageUrlProvider = FutureProvider.family<String?, String>((ref, imageRef) {
+  return ref.watch(catalogRepositoryProvider).resolveImageUrl(imageRef);
+});
+
 /// Refreshes every catalog list view after a mutation.
 void refreshCatalog(WidgetRef ref) {
   ref.invalidate(upcomingRemindersProvider);

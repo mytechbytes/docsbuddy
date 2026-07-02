@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'catalog_models.dart';
 
 /// Assets, locations and services/reminders. Backend-agnostic, mirroring the
@@ -40,4 +42,17 @@ abstract interface class CatalogRepository {
 
   Future<Location> createLocation(String name);
   Future<void> updateLocation(String id, {String? name});
+
+  /// Uploads/replaces the asset's photo and stores its reference on
+  /// `assets.image_url`; returns the updated asset.
+  Future<Asset> setAssetImage(
+    String assetId, {
+    required Uint8List bytes,
+    required String fileName,
+    required String mimeType,
+  });
+
+  /// Resolves a stored image reference (private-bucket path or absolute URL)
+  /// to a displayable URL — signed for bucket paths; null when unavailable.
+  Future<String?> resolveImageUrl(String? imageRef);
 }
