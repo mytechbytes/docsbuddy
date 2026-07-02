@@ -35,4 +35,19 @@ void main() {
     final many = [for (var i = 1; i <= 40; i++) _due(i + 1)];
     expect(buildAlerts(many, now: now, cap: 60).length, lessThanOrEqualTo(60));
   });
+
+  test('uses each reminder’s own notify offsets', () {
+    final r = Reminder(
+      id: 'rx',
+      assetId: 'a1',
+      assetName: 'Bike',
+      kind: ReminderKind.insurance,
+      label: 'Insurance',
+      dueDate: DateTime(2026, 3, 1),
+      notifyOffsets: const [60, 14],
+    );
+    // 60d before 1 Mar 2026 is in the past; 14d-before and due-day remain.
+    final alerts = buildAlerts([r], now: now);
+    expect(alerts, hasLength(2));
+  });
 }

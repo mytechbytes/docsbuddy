@@ -25,9 +25,12 @@ class SupabaseDocumentRepository implements DocumentRepository {
     }
   }
 
+  static const _cols = 'id, asset_id, asset_date_id, title, kind, mime_type, size_bytes, storage_path, created_at';
+
   DocumentMeta _doc(Map<String, dynamic> r) => DocumentMeta(
         id: r['id'] as String,
         assetId: r['asset_id'] as String,
+        assetDateId: r['asset_date_id'] as String?,
         title: (r['title'] as String?) ?? 'Document',
         kind: DocKind.fromName(r['kind'] as String?),
         mimeType: (r['mime_type'] as String?) ?? 'application/octet-stream',
@@ -40,7 +43,7 @@ class SupabaseDocumentRepository implements DocumentRepository {
   Future<List<DocumentMeta>> forAsset(String assetId) => _guard(() async {
         final rows = await _client
             .from('documents')
-            .select('id, asset_id, title, kind, mime_type, size_bytes, storage_path, created_at')
+            .select(_cols)
             .eq('asset_id', assetId)
             .isFilter('deleted_at', null)
             .order('created_at', ascending: false);
@@ -54,6 +57,7 @@ class SupabaseDocumentRepository implements DocumentRepository {
     required Uint8List bytes,
     required String mimeType,
     required DocKind kind,
+    String? assetDateId,
   }) =>
       _guard(() async {
         final familyId = await _client.from('assets').select('family_id').eq('id', assetId).single();
@@ -72,6 +76,7 @@ class SupabaseDocumentRepository implements DocumentRepository {
             .insert({
               'family_id': fam,
               'asset_id': assetId,
+              'asset_date_id': assetDateId,
               'kind': kind.name,
               'title': fileName,
               'storage_path': path,
@@ -79,7 +84,7 @@ class SupabaseDocumentRepository implements DocumentRepository {
               'size_bytes': bytes.length,
               'uploaded_by': _client.auth.currentUser?.id,
             })
-            .select('id, asset_id, title, kind, mime_type, size_bytes, storage_path, created_at')
+            .select(_cols)
             .single();
         return _doc(row);
       });

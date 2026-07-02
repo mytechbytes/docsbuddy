@@ -115,11 +115,11 @@ migration/backend addition.
 `public.assets` has `serial_no, purchase_date, purchase_price, store,
 image_url, location_id, category_id`; Dart `Asset` carries only
 `id, name, category, locationName, brand, model`.
-- [ ] Add `serialNo, purchaseDate, purchasePrice, store, imageUrl, locationId` to `Asset` (`catalog_models.dart`)
-- [ ] Widen the `select` + map real columns in `supabase_catalog_repository.dart`
-- [ ] Extend the seed in `fake_catalog_repository.dart`
-- [ ] Extend `addAsset(...)` on the interface + both impls (incl. **model** — currently not passable)
-- [ ] Add inputs (model no., serial, purchase date/price, store) to `add_asset_page.dart`
+- [x] Add `serialNo, purchaseDate, purchasePrice, store, imageUrl, locationId` to `Asset` (`catalog_models.dart`)
+- [x] Widen the `select` + map real columns in `supabase_catalog_repository.dart`
+- [x] Extend the seed in `fake_catalog_repository.dart`
+- [x] Extend `addAsset(...)` on the interface + both impls (incl. **model** — currently not passable)
+- [x] Add inputs (model no., serial, purchase date/price, store) to `add_asset_page.dart`
 
 **A2. Asset photo (`image_url`) — biggest visual gap [schema ✓]**
 - [ ] `uploadAssetImage(assetId, file)` → `docsbuddy-files` bucket → `assets.image_url` (reuse `SupabaseDocumentRepository` pattern; RLS in `0004_storage.sql`)
@@ -129,10 +129,10 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 **A3. `Reminder.notifyOffsets` — hardcoded in UI [schema ✓]**
 `asset_dates.notify_offsets int[]` exists per reminder; UI prints a static
 "30 · 7 · 1d" and the scheduler uses a global `[30,7,1,0]`.
-- [ ] Add `List<int> notifyOffsets` to `Reminder` + map in both repos
-- [ ] Render real values on asset-detail rows + NEXT DUE banner ("Reminded 30/7/1")
+- [x] Add `List<int> notifyOffsets` to `Reminder` + map in both repos
+- [x] Render real values on asset-detail rows + NEXT DUE banner ("Reminded 30/7/1")
 - [ ] Multi-select offsets chips (60/30/14/7/3/1d) in the add/edit-reminder UI
-- [ ] Feed them into `NotificationService.buildAlerts` instead of the constant
+- [x] Feed them into `NotificationService.buildAlerts` instead of the constant
 
 **A4. Asset-category catalog (`asset_categories`) [schema ✓ table / new seed]**
 - [ ] `CatalogTypesRepository.categories()` reading `asset_categories`
@@ -146,12 +146,12 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 - [ ] Feed `timezone` into notification scheduling
 
 **A6. Locations backed by the real table [schema ✓]**
-- [ ] Back `locations()` with `public.locations` (not metadata grouping)
-- [ ] `createLocation/updateLocation` (name + photo); store `location_id` on assets
-- [ ] Expose `kind`, `image_url`, `parent_id` (room-within-home hierarchy)
+- [x] Back `locations()` with `public.locations` (not metadata grouping)
+- [x] `createLocation/updateLocation` (name; find-or-create on asset save); store `location_id` on assets — photo upload lands with A2
+- [x] Expose `kind`, `image_url`, `parent_id` (room-within-home hierarchy)
 
 **A7. Notification preferences (`notification_prefs`) — unwired [schema ✓] *(new)***
-- [ ] `NotificationPrefsRepository` (get/update channels, `default_offsets`, quiet hours)
+- [x] `NotificationPrefsRepository` (get/update channels, `default_offsets`, quiet hours)
 - [ ] Back the Settings toggles (Push / Email) + "Default offsets" row with it
 - [ ] Use `default_offsets` as the pre-selected chips on Add reminder
 
@@ -160,17 +160,17 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 `notify_offsets`, `complete_asset_date()` roll-forward) and
 `documents.asset_date_id` already scopes a document to a service; none of it
 is surfaced in Dart.
-- [ ] Reframe/extend the Dart `Reminder` as the **Service** entity mapping `asset_dates` 1:1 (service kind, label, schedule) — reminders are its `notify_offsets` (A3)
-- [ ] Add `assetDateId` to `DocumentMeta`; map `asset_date_id` in `supabase_document_repository.dart`; accept it in `uploadDocument(...)` / list-by-service
+- [x] Reframe/extend the Dart `Reminder` as the **Service** entity mapping `asset_dates` 1:1 (service kind, label, schedule) — reminders are its `notify_offsets` (A3)
+- [x] Add `assetDateId` to `DocumentMeta`; map `asset_date_id` in `supabase_document_repository.dart`; accept it in `uploadDocument(...)`
 - [ ] Asset detail: documents grouped per service (service row → its documents) in addition to the appliance-level Documents section
 - [ ] Attach-document in add/edit reminder writes `asset_date_id` (pairs with B-08)
-- [ ] Service completion: wire `complete_asset_date()` (mark done → roll due date forward per recurrence)
-- [ ] **[new]** Richer service fields — **decided: in scope for v1.** New migration
-      `0006_service_fields.sql` adding `provider text, policy_no text,
-      cost numeric(12,2), notes text` to `asset_dates`; map them on the Dart
-      `Service` model + both repos; inputs on add/edit service (provider,
-      policy/contract no., cost, notes); show provider + policy no. on the
-      service row and cost in the service detail
+- [x] Service completion: wire `complete_asset_date()` ("Mark as done" on the service row → rolls due date forward per recurrence)
+- [x] **[new]** Richer service fields — **decided: in scope for v1.** Migration
+      `0006_service_fields.sql` adds `provider text, policy_no text,
+      cost numeric(12,2), notes text` to `asset_dates`; mapped on the Dart
+      model + both repos; provider/policy-no./cost/notes inputs on the
+      add-reminder sheet; provider + policy no. shown on the service row
+      (cost display lands with the service-detail view)
 
 ### B. Screens
 
@@ -199,7 +199,8 @@ is surfaced in Dart.
 
 ### D. Backend debt
 
-- [ ] **Metadata hack** — migrate `category`/`location` from `assets.metadata` to `category_id`/`location_id` FKs (A1/A4/A6) + one-time backfill
+- [x] **Metadata hack (location half)** — `location` migrated from `assets.metadata` to real `locations` rows + `location_id` FK with a one-time backfill (`0006_service_fields.sql`); the repo no longer writes it
+- [ ] **Metadata hack (category half)** — migrate `category` to the `category_id` FK once the catalog is seeded (A4, `0005_seed_categories.sql`)
 - [ ] **`_kindFromLabel` inference** — derive kind from the catalog once A4 lands
 
 ### E. Open design decisions *(new)*
@@ -212,7 +213,7 @@ is surfaced in Dart.
 
 ## Suggested sequencing (dependency + value)
 
-1. [ ] **Model + repo widening** (A1, A3, A6, A7, A8 service layer) + metadata→FK debt (D) — unblocks everything, low UI
+1. [x] **Model + repo widening** (A1, A3, A6, A7, A8 service layer) + metadata→FK debt (D, location half — category half moves with step 3) — **done**
 2. [ ] **Asset photos** (A2) — biggest visual gap, self-contained
 3. [ ] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — high product value
 4. [ ] **Rooms + Room detail** (A6, B-02/03)

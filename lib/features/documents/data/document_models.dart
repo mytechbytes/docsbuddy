@@ -27,10 +27,16 @@ class DocumentMeta {
     required this.sizeBytes,
     required this.storagePath,
     required this.createdAt,
+    this.assetDateId,
   });
 
   final String id;
   final String assetId;
+
+  /// When set, the document belongs to a specific service on the asset
+  /// (`documents.asset_date_id`) — e.g. the insurance policy PDF on the
+  /// Insurance service — rather than the asset as a whole.
+  final String? assetDateId;
   final String title;
   final DocKind kind;
   final String mimeType;

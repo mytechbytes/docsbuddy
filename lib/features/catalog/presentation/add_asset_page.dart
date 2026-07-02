@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -18,7 +19,12 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   final _name = TextEditingController();
   final _location = TextEditingController();
   final _brand = TextEditingController();
+  final _model = TextEditingController();
+  final _serialNo = TextEditingController();
+  final _price = TextEditingController();
+  final _store = TextEditingController();
   AssetCategoryKind _category = AssetCategoryKind.vehicle;
+  DateTime? _purchaseDate;
   bool _saving = false;
 
   @override
@@ -26,7 +32,23 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     _name.dispose();
     _location.dispose();
     _brand.dispose();
+    _model.dispose();
+    _serialNo.dispose();
+    _price.dispose();
+    _store.dispose();
     super.dispose();
+  }
+
+  String? _text(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
+
+  Future<void> _pickPurchaseDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _purchaseDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) setState(() => _purchaseDate = picked);
   }
 
   Future<void> _save() async {
@@ -38,8 +60,13 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     await ref.read(catalogRepositoryProvider).addAsset(
           name: _name.text,
           category: _category,
-          locationName: _location.text.trim().isEmpty ? null : _location.text.trim(),
-          brand: _brand.text.trim().isEmpty ? null : _brand.text.trim(),
+          locationName: _text(_location),
+          brand: _text(_brand),
+          model: _text(_model),
+          serialNo: _text(_serialNo),
+          purchaseDate: _purchaseDate,
+          purchasePrice: double.tryParse(_price.text.trim().replaceAll(',', '')),
+          store: _text(_store),
         );
     if (!mounted) return;
     refreshCatalog(ref);
@@ -83,11 +110,92 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           const SizedBox(height: 14),
           AppTextField(label: 'Location', controller: _location, icon: Icons.place_outlined, hint: 'e.g. Kitchen'),
           const SizedBox(height: 14),
-          AppTextField(label: 'Brand', controller: _brand, icon: Icons.business_outlined, hint: 'optional'),
+          Row(
+            children: [
+              Expanded(child: AppTextField(label: 'Brand', controller: _brand, hint: 'optional')),
+              const SizedBox(width: 12),
+              Expanded(child: AppTextField(label: 'Model number', controller: _model, hint: 'optional')),
+            ],
+          ),
+          const SizedBox(height: 14),
+          AppTextField(label: 'Serial / registration no.', controller: _serialNo, icon: Icons.tag, hint: 'e.g. TN 01 AB 1234'),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _DateField(
+                  label: 'Purchase date',
+                  value: _purchaseDate,
+                  onTap: _pickPurchaseDate,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppTextField(
+                  label: 'Purchase price',
+                  controller: _price,
+                  hint: 'e.g. 42000',
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          AppTextField(label: 'Store', controller: _store, icon: Icons.storefront_outlined, hint: 'e.g. Croma'),
           const SizedBox(height: 24),
           PrimaryButton(label: 'Save asset', isLoading: _saving, onPressed: _save),
         ],
       ),
+    );
+  }
+}
+
+/// Tappable date field styled like [AppTextField].
+class _DateField extends StatelessWidget {
+  const _DateField({required this.label, required this.value, required this.onTap});
+  final String label;
+  final DateTime? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        const SizedBox(height: 6),
+        InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Container(
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+              color: AppColors.paper,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.event_outlined, size: 18, color: AppColors.muted),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    value == null ? 'optional' : DateFormat('d MMM yyyy').format(value!),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: value == null ? FontWeight.w400 : FontWeight.w600,
+                      color: value == null ? AppColors.placeholder : AppColors.ink,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

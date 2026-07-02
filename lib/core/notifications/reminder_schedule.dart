@@ -17,13 +17,13 @@ class ScheduledAlert {
   final String payload;
 }
 
-/// Pure: turn reminders into the local notifications to schedule. For each
-/// reminder we fire at each [offsets] threshold (days before due) at [hour]
-/// local time. Past thresholds are skipped; the soonest [cap] are kept (iOS and
-/// Android cap pending local notifications around 64).
+/// Pure: turn reminders into the local notifications to schedule. Each
+/// reminder fires at its own `notifyOffsets` thresholds (days before due,
+/// plus the due day itself) at [hour] local time. Past thresholds are
+/// skipped; the soonest [cap] are kept (iOS and Android cap pending local
+/// notifications around 64).
 List<ScheduledAlert> buildAlerts(
   List<Reminder> reminders, {
-  List<int> offsets = const [30, 7, 1, 0],
   DateTime? now,
   int hour = 9,
   int cap = 60,
@@ -32,7 +32,7 @@ List<ScheduledAlert> buildAlerts(
   final out = <ScheduledAlert>[];
 
   for (final r in reminders) {
-    for (final off in offsets) {
+    for (final off in {...r.notifyOffsets, 0}) {
       final day = r.dueDate.subtract(Duration(days: off));
       final when = DateTime(day.year, day.month, day.day, hour);
       if (!when.isAfter(base)) continue;

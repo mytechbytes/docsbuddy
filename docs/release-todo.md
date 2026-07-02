@@ -100,27 +100,32 @@ Dart models → repository mapping → screens.
 - [x] `updatePassword` repo method (backend for Change password screen)
 - [x] Document upload path to Supabase Storage (pattern reused for photos)
 
-### Pending — data layer (schema already has the columns)
-- [ ] A1 `Asset`: surface `serial_no, purchase_date, purchase_price, store,
-      image_url, location_id` + collect model no. in the add form
+### Data layer (schema already had the columns) — **phase 1 done**
+- [x] A1 `Asset`: `serial_no, purchase_date, purchase_price, store,
+      image_url, location_id` surfaced + model/serial/purchase/store inputs
+      on Add asset
 - [ ] A2 Asset photos: upload to `docsbuddy-files` → `assets.image_url`;
       picker in add/edit; render thumbnails (dashboard, list, detail, rooms)
-- [ ] A3 Per-reminder `notify_offsets`: model + repos + offsets chips in the
-      reminder UI + feed `NotificationService` (replace global 30/7/1)
+- [x] A3 Per-reminder `notify_offsets`: model + repos, real values rendered
+      on rows/banner, scheduler uses per-service offsets (offsets-chips
+      editor ships with the Add-reminder page rework)
 - [ ] A4 Category catalog: read `asset_categories`, auto-seed default
-      reminders on create, **new** `0005_seed_categories.sql`
+      reminders on create, **new** `0005_seed_categories.sql` (+ migrate
+      `metadata.category` → `category_id` FK)
 - [ ] A5 Profile data: `ProfileRepository` + avatar upload + real `avatar_url`
-- [ ] A6 Real locations: back rooms with `public.locations` (photo, hierarchy,
-      counts) instead of metadata grouping
-- [ ] A7 Wire `notification_prefs` (channels, default offsets, quiet hours) to
-      Settings toggles + Add-reminder defaults
-- [ ] A8 Service layer (appliance → service → reminders + documents):
-      surface `asset_dates` as the Service entity, map
-      `documents.asset_date_id` so documents attach per service as well as
-      per appliance, group documents by service on asset detail, wire
-      `complete_asset_date()` roll-forward; richer service fields (provider,
-      policy/contract no., cost, notes) via **new** `0006_service_fields.sql`
-      + add/edit inputs (decided: in scope)
+- [x] A6 Real locations: `public.locations` backs `locations()` with counts /
+      kind / hierarchy; find-or-create on asset save; `0006` backfills the
+      old `metadata.location` shortcut into FKs
+- [x] A7 `NotificationPrefsRepository` + provider (channels, default offsets,
+      quiet hours)
+- [ ] A7b Wire prefs to the Settings toggles + Add-reminder default chips
+- [x] A8 Service layer: `asset_dates` surfaced as the Service entity with
+      per-service offsets and provider / policy no. / cost / notes
+      (**`0006_service_fields.sql`**); add-reminder sheet collects them;
+      documents carry `asset_date_id`; "Mark as done" wires
+      `complete_asset_date()` roll-forward
+- [ ] A8b Per-service document grouping on asset detail + attach-document in
+      the reminder flow
 
 ### Pending — screens
 - [ ] 02 Rooms (add-room composer, photo cards, asset counts, entry point)
@@ -140,7 +145,9 @@ Dart models → repository mapping → screens.
 ### Pending — wiring & debt
 - [ ] Wire decorative UI: search icon, notification bell/dot (inbox from
       `notification_log`), stat-card "View ›" links, filter tile, avatar tap
-- [ ] Migrate `assets.metadata` category/location hack to real
-      `category_id`/`location_id` FKs + backfill
+- [x] Migrate `assets.metadata` **location** to real `locations` rows +
+      `location_id` FK with backfill (`0006_service_fields.sql`)
+- [ ] Migrate `assets.metadata` **category** to the `category_id` FK when the
+      catalog is seeded (with A4)
 - [ ] Decisions: WhatsApp reminders channel (not in schema — add or cut);
       "Active Invoices" stat-card semantics (assets vs documents count)
