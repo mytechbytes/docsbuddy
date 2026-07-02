@@ -97,9 +97,9 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 | 07 | Asset detail | ✅ Done | Photo, serial in header, real offsets on banner/rows, Documents "View all" |
 | 08 | Add reminder | 🟡 Partial | Bottom sheet vs full page; no offsets chips, attach-document, "in N days", family note |
 | 09–13 | Auth flows | ✅ Done | Biometric quick-unlock button on sign-in (needs 17) |
-| 14 | Profile | ❌ Missing | Whole screen: avatar edit, stats, family card, menu rows |
-| 15 | Settings | 🟡 Partial | Dev page today; needs Account/Notifications/Family sections, prefs wiring |
-| 16 | Change password | ❌ Missing | Screen only — `updatePassword` repo method already exists |
+| 14 | Profile | ✅ Done | — |
+| 15 | Settings | ✅ Done | Security & 2FA row is a placeholder until screen 17 |
+| 16 | Change password | ✅ Done | — |
 | 17 | Security / 2FA | ❌ Missing | TOTP enrollment + biometrics, app lock, recovery codes, sessions |
 
 ---
@@ -141,9 +141,9 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 - [x] Explicit `asset_dates.kind` written at create (label inference is now only the fallback for old rows — retires fragile `_kindFromLabel`)
 
 **A5. User profile (`users`) [schema ✓]**
-- [ ] `ProfileRepository` (get/update `users`, avatar upload) + `profileProvider`
-- [ ] Replace the decorative avatar with real `avatar_url`
-- [ ] Feed `timezone` into notification scheduling
+- [x] `ProfileRepository` (get/update `users`, avatar upload to the family bucket folder) + `profileProvider` / `profileStatsProvider`
+- [x] Real `avatar_url` rendered on the Profile screen (dashboard header avatar binds with the C-wiring pass)
+- [x] Device `timezone` synced to `users.timezone` on profile load (for server-side scheduling)
 
 **A6. Locations backed by the real table [schema ✓]**
 - [x] Back `locations()` with `public.locations` (not metadata grouping)
@@ -152,8 +152,8 @@ image_url, location_id, category_id`; Dart `Asset` carries only
 
 **A7. Notification preferences (`notification_prefs`) — unwired [schema ✓] *(new)***
 - [x] `NotificationPrefsRepository` (get/update channels, `default_offsets`, quiet hours)
-- [ ] Back the Settings toggles (Push / Email) + "Default offsets" row with it
-- [ ] Use `default_offsets` as the pre-selected chips on Add reminder
+- [x] Settings toggles (Push / Email / WhatsApp) + "Default offsets" chips editor backed by it
+- [x] `default_offsets` used as the defaults for newly created reminders
 
 **A8. Service layer — appliance → service → reminders + documents [schema ✓] *(new)***
 `asset_dates` already is the service entity (label, recurrence, per-service
@@ -179,11 +179,11 @@ is surfaced in Dart.
 - [x] **05 Appliance picker** — searchable catalog list feeding add-asset, with a "Something else" escape hatch (A4)
 - [x] **06 Add appliance** — type dropdown (catalog), model/serial/purchase/store (A1), photo (A2), AMC date (seeds/overrides the AMC service), invoice attach (file → invoice document), auto-seed note; *camera capture still pending (needs `image_picker`)*
 - [ ] **08 Add reminder** *(partial)* — promote sheet to full page: type tile grid, "in N days" helper, offsets chips, attach-document row (service-scoped via `asset_date_id`, A8), family-push note (A3/A7)
-- [ ] **14 Profile** — avatar + camera edit, name/email + Verified badge, stats row (assets/reminders/documents), family card + Invite, menu rows (A5)
-- [ ] **16 Change password** — current/new/confirm + strength meter + "signs out other devices" note; `SupabaseAuthRepository.updatePassword` already exists — wire from Settings
+- [x] **14 Profile** — avatar + camera edit (upload), name/email + Verified badge, stats row (assets/reminders/documents), family card with member avatars + Invite, edit-info sheet (name + WhatsApp phone), menu rows (A5)
+- [x] **16 Change password** — current password verified by re-auth, strength meter (Weak→Excellent), confirm match, other-devices note; wired from Settings and Profile
 - [ ] **17 Security / 2FA** — GoTrue MFA/TOTP (`auth.mfa.enroll/challenge/verify`) with QR + copy key; biometric login toggles (needs `local_auth`); app lock + auto-lock; recovery codes; active sessions; biometric quick-unlock on sign-in. **Largest single item**
 - [ ] **04 Asset list** *(partial)* — in-page search bar, photo thumbnails (A2), header + chip styling per design
-- [ ] **15 Settings** *(partial)* — Account section (Personal info, Email, Change password, Security & 2FA), Notifications section (toggles + Default offsets via A7), Family section (manage + member count)
+- [x] **15 Settings** — Account (Personal info → Profile, Email, Change password, Security & 2FA placeholder until B-17), Notifications (Push/Email/WhatsApp toggles + Default-offsets editor via A7), Family (manage + member count), App utilities, Sign out
 - [x] **00a–d Onboarding** — carousel implemented
 - [x] **01 Dashboard** — redesigned to match handoff
 - [x] **07 Asset detail** — redesigned to match handoff
@@ -224,7 +224,7 @@ is surfaced in Dart.
 2. [x] **Asset photos** (A2) — biggest visual gap, self-contained — **done**
 3. [x] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — **done** (camera capture deferred)
 4. [x] **Rooms + Room detail** (A6, B-02/03) — **done**
-5. [ ] **Profile + Change password + Settings restyle** (A5, B-14/15/16)
+5. [x] **Profile + Change password + Settings restyle** (A5, A7b, B-14/15/16) — **done**
 6. [ ] **Add-reminder full page + wire decorative UI** (B-08, C)
 7. [ ] **2FA / security** (B-17) — largest, do last
 

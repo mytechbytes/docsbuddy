@@ -17,6 +17,12 @@ class FakeDocumentRepository implements DocumentRepository {
   }
 
   @override
+  Future<int> countAll() async {
+    await _delay();
+    return _byAsset.values.fold<int>(0, (sum, list) => sum + list.length);
+  }
+
+  @override
   Future<DocumentMeta> upload({
     required String assetId,
     required String fileName,

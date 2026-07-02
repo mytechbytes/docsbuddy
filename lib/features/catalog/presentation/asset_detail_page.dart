@@ -9,6 +9,7 @@ import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/catalog_widgets.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../../documents/presentation/asset_documents_section.dart';
+import '../../settings/application/settings_providers.dart';
 import '../application/catalog_providers.dart';
 import '../data/catalog_models.dart';
 
@@ -408,12 +409,15 @@ class _AddReminderSheetState extends ConsumerState<_AddReminderSheet> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
+    // New reminders default to the user's preferred offsets (A7b).
+    final prefs = ref.read(notificationPrefsProvider).valueOrNull;
     await ref.read(catalogRepositoryProvider).addReminder(
           assetId: widget.asset.id,
           kind: _kind,
           label: _label.text.trim().isEmpty ? _kind.label : _label.text.trim(),
           dueDate: _due,
           recurrence: _recurrence,
+          notifyOffsets: prefs?.defaultOffsets,
           provider: _text(_provider),
           policyNo: _text(_policyNo),
           cost: double.tryParse(_cost.text.trim().replaceAll(',', '')),

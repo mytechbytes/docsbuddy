@@ -118,13 +118,14 @@ Dart models → repository mapping → screens.
       default services; asset create auto-seeds them (AMC date overrides);
       explicit `asset_dates.kind`; `metadata.category` backfilled →
       `category_id` FK
-- [ ] A5 Profile data: `ProfileRepository` + avatar upload + real `avatar_url`
+- [x] A5 Profile data: `ProfileRepository` + avatar upload + timezone sync
 - [x] A6 Real locations: `public.locations` backs `locations()` with counts /
       kind / hierarchy; find-or-create on asset save; `0006` backfills the
       old `metadata.location` shortcut into FKs
 - [x] A7 `NotificationPrefsRepository` + provider (channels, default offsets,
       quiet hours)
-- [ ] A7b Wire prefs to the Settings toggles + Add-reminder default chips
+- [x] A7b Prefs wired: Settings toggles (Push/Email/WhatsApp) +
+      default-offsets editor; new reminders use the preferred offsets
 - [x] A8 Service layer: `asset_dates` surfaced as the Service entity with
       per-service offsets and provider / policy no. / cost / notes
       (**`0006_service_fields.sql`**); add-reminder sheet collects them;
@@ -144,9 +145,11 @@ Dart models → repository mapping → screens.
       AMC date → seeds service, invoice attach (file); camera capture pending
 - [ ] 08 Add reminder → full page: type tile grid, "in N days" helper,
       offsets chips, attach document, family-push note
-- [ ] 14 Profile (avatar edit, stats row, family card + invite, menu rows)
-- [ ] 15 Settings restyle: Account / Notifications / Family sections
-- [ ] 16 Change password screen (strength meter; repo method exists)
+- [x] 14 Profile (avatar edit + upload, Verified badge, stats row, family
+      card + invite, edit-info sheet)
+- [x] 15 Settings restyle: Account / Notifications / Family / App sections
+      (Security & 2FA row placeholder until screen 17)
+- [x] 16 Change password screen (re-auth verify, strength meter)
 - [ ] 17 Security: 2FA TOTP, biometric login + quick-unlock on sign-in,
       app lock/auto-lock, recovery codes, active sessions — **largest item**
 

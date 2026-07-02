@@ -15,9 +15,12 @@ import '../features/catalog/presentation/add_asset_page.dart';
 import '../features/catalog/presentation/appliance_picker_page.dart';
 import '../features/catalog/presentation/asset_detail_page.dart';
 import '../features/catalog/presentation/room_detail_page.dart';
+import '../features/family/presentation/family_page.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
+import '../features/profile/presentation/profile_page.dart';
 import '../features/roadmap/presentation/roadmap_page.dart';
+import '../features/settings/presentation/change_password_page.dart';
 import '../features/shell/presentation/home_shell.dart';
 
 const _authRoutes = {
@@ -81,6 +84,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/asset/:id', builder: (_, state) => AssetDetailPage(assetId: state.pathParameters['id']!)),
       GoRoute(path: '/room/:id', builder: (_, state) => RoomDetailPage(locationId: state.pathParameters['id']!)),
+      GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
+      GoRoute(path: '/change-password', builder: (_, _) => const ChangePasswordPage()),
+      GoRoute(path: '/family-manage', builder: (_, _) => const FamilyPage()),
       GoRoute(path: '/roadmap', builder: (_, _) => const RoadmapPage()),
     ],
   );
