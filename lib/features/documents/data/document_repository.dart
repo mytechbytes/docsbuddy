@@ -8,6 +8,9 @@ import 'document_models.dart';
 abstract interface class DocumentRepository {
   Future<List<DocumentMeta>> forAsset(String assetId);
 
+  /// Total (non-deleted) documents across the family — the profile stat.
+  Future<int> countAll();
+
   Future<DocumentMeta> upload({
     required String assetId,
     required String fileName,

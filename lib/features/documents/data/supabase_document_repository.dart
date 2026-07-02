@@ -51,6 +51,12 @@ class SupabaseDocumentRepository implements DocumentRepository {
       });
 
   @override
+  Future<int> countAll() => _guard(() async {
+        final rows = await _client.from('documents').select('id').isFilter('deleted_at', null);
+        return rows.length;
+      });
+
+  @override
   Future<DocumentMeta> upload({
     required String assetId,
     required String fileName,
