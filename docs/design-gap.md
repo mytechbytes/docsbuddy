@@ -231,6 +231,17 @@ models → repository mapping → screens.
 
 ---
 
+## Post-plan requirements audit (2026-07-02)
+
+A verification pass over data ↔ screen connections after the plan closed:
+
+- [x] **Fixed: co-members rendered as "Member" on the real backend** — the
+      `users` RLS was `self read` only, so the family screen's profile join
+      returned NULL for everyone but the caller. `0008_family_profile_visibility.sql`
+      adds a security-definer `shares_family_with()` policy; member tiles now
+      show the **profile photo, name and contact number** (and the Profile
+      screen's family stack uses real avatars)
+
 ## Remaining polish (deliberate deferrals)
 
 - [ ] Per-service document grouping on asset detail (documents already carry

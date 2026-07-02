@@ -29,11 +29,19 @@ class FamilyMember {
     required this.userId,
     required this.displayName,
     required this.role,
+    this.phone,
+    this.avatarUrl,
   });
 
   final String userId;
   final String displayName;
   final FamilyRole role;
+
+  /// Contact number (E.164) — shown on the member tile.
+  final String? phone;
+
+  /// Profile photo reference (bucket path or URL).
+  final String? avatarUrl;
 
   /// First-letter avatar fallback.
   String get initial => displayName.trim().isEmpty ? '?' : displayName.trim()[0].toUpperCase();

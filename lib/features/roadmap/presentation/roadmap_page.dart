@@ -40,6 +40,7 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Search, notification inbox, stat links, filter, avatar'),
       (true, 'Asset list: in-page search + photo thumbnails'),
       (true, 'Security: 2FA (TOTP), biometric unlock, app lock, sessions'),
+      (true, 'Family members show photo, name & contact number'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),

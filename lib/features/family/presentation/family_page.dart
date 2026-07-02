@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Family;
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/catalog_widgets.dart';
 import '../data/family_models.dart';
 import '../data/family_repository.dart';
 import '../application/family_controller.dart';
@@ -252,16 +253,39 @@ class _MemberTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppColors.greenSoft, shape: BoxShape.circle),
-            child: Text(member.initial, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.greenLeaf)),
+          AssetThumb(
+            imageRef: member.avatarUrl,
+            size: 40,
+            radius: 20,
+            fallback: Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: AppColors.greenSoft, shape: BoxShape.circle),
+              child: Text(member.initial, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.greenLeaf)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(member.displayName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(member.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                if (member.phone != null) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone_outlined, size: 12, color: AppColors.muted),
+                      const SizedBox(width: 4),
+                      Text(member.phone!, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
