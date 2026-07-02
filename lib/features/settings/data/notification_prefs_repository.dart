@@ -12,7 +12,8 @@ class NotificationPrefs {
     this.quietEnd = '07:00',
   });
 
-  /// Enabled delivery channels: `push` | `local` | `email`.
+  /// Enabled delivery channels: `push` | `local` | `email` | `whatsapp`
+  /// (whatsapp delivery is the `send-reminders-whatsapp` Edge Function).
   final List<String> channels;
 
   /// Days-before-due used to pre-fill new reminders.

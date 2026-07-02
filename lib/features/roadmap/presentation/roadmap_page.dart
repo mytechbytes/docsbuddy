@@ -27,6 +27,8 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Service fields: provider, policy no., cost, notes'),
       (true, 'Mark service done → next due date rolls forward'),
       (true, 'Documents can attach to a specific service'),
+      (true, 'Dashboard stats: service counts + total appliances'),
+      (true, 'WhatsApp reminder sender (Edge Function + channel)'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -34,6 +36,7 @@ class RoadmapPage extends StatelessWidget {
       (false, 'Upload-key reset (lost key) + GitHub signing secrets'),
       (false, 'Host /.well-known/assetlinks.json + apple-app-site-association'),
       (false, 'Play Console: internal track, privacy policy, data safety'),
+      (false, 'WhatsApp: deploy sender + Meta API secrets + daily cron'),
     ]),
     ('Pending — design gap (see docs/design-gap.md)', [
       (false, 'Asset photos — upload + thumbnails everywhere'),

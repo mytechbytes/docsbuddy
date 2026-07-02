@@ -19,6 +19,9 @@ Status of what's needed to ship a Play **internal testing** build.
       **Redirect URLs** += `https://docsbuddy.mytechbytes.in/login-callback`
       **and** `in.mytechbytes.docsbuddy://login-callback`
 - [ ] (Optional) Google/Apple OAuth providers + their redirect URLs
+- [ ] WhatsApp reminders: deploy `send-reminders-whatsapp`, set
+      `WHATSAPP_ACCESS_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID` (+ optional
+      template) secrets, schedule the daily cron — see the function README
 
 ## B. Signing key (you lost the old one)
 - [ ] Generate a new upload keystore (`keytool -genkey … -alias upload`)
@@ -149,5 +152,9 @@ Dart models → repository mapping → screens.
       `location_id` FK with backfill (`0006_service_fields.sql`)
 - [ ] Migrate `assets.metadata` **category** to the `category_id` FK when the
       catalog is seeded (with A4)
-- [ ] Decisions: WhatsApp reminders channel (not in schema — add or cut);
-      "Active Invoices" stat-card semantics (assets vs documents count)
+- [x] WhatsApp reminders channel: `0007_whatsapp_channel.sql` +
+      `send-reminders-whatsapp` Edge Function (Meta Cloud API, log-deduped);
+      **you:** deploy + `WHATSAPP_ACCESS_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID`
+      secrets + daily cron (see the function README). Settings toggle = A7b
+- [x] Dashboard stats: all tiles count services (Active Services / Secured /
+      Expiring Soon / Expired) + full-width Total Active Appliances card

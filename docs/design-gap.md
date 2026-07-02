@@ -203,10 +203,17 @@ is surfaced in Dart.
 - [ ] **Metadata hack (category half)** — migrate `category` to the `category_id` FK once the catalog is seeded (A4, `0005_seed_categories.sql`)
 - [ ] **`_kindFromLabel` inference** — derive kind from the catalog once A4 lands
 
-### E. Open design decisions *(new)*
+### E. Design decisions *(resolved)*
 
-- [ ] **WhatsApp reminders** toggle (15) — channel not in schema (`push | local | email`); add the channel + a sender, or cut from v1
-- [ ] **"Active Invoices" stat card** (01) — impl counts assets; decide semantics (documents/invoices count?) and wire accordingly
+- [x] **WhatsApp reminders** — **decided: in scope.** `whatsapp` documented as a
+      channel value (`0007_whatsapp_channel.sql`); new cron-driven
+      `send-reminders-whatsapp` Edge Function sends via the Meta WhatsApp
+      Cloud API to opted-in members' `users.phone`, deduped through
+      `notification_log`. Deploy + secrets + cron are a setup step
+      (`docs/release-todo.md` §A); the Settings toggle ships with A7b/screen 15
+- [x] **Dashboard stat cards** — **decided: services-based.** All four tiles
+      count services (Active Services / Secured / Expiring Soon / Expired) and
+      a full-width **Total Active Appliances** card shows the asset count
 - [ ] **Dashboard reminder rows** — adopt design's photo + category subtitle once A1/A2 land
 
 ---
