@@ -1,22 +1,7 @@
-import 'dart:math';
-
-import 'package:docsbuddy/features/security/application/recovery_codes.dart';
 import 'package:docsbuddy/features/security/data/security_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('recovery codes are well-formed, unique and hash deterministically', () {
-    final codes = generateRecoveryCodes(random: Random(42));
-    expect(codes, hasLength(10));
-    expect(codes.toSet(), hasLength(10));
-    for (final c in codes) {
-      expect(RegExp(r'^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$').hasMatch(c), isTrue, reason: c);
-    }
-    // Hashing normalizes case/whitespace.
-    expect(hashRecoveryCode(' ${codes.first.toLowerCase()} '), hashRecoveryCode(codes.first));
-    expect(hashRecoveryCode(codes.first), isNot(hashRecoveryCode(codes.last)));
-  });
-
   test('fake TOTP flow: enroll → verify → enabled → disable', () async {
     final repo = FakeSecurityRepository();
     expect((await repo.status()).totpEnabled, isFalse);
@@ -33,11 +18,10 @@ void main() {
     expect((await repo.status()).totpEnabled, isFalse);
   });
 
-  test('generating recovery codes updates the unused count', () async {
+  test('MFA challenge: fake never requires it and validates code shape', () async {
     final repo = FakeSecurityRepository();
-    expect((await repo.status()).unusedRecoveryCodes, 0);
-    final codes = await repo.generateRecoveryCodes();
-    expect(codes, hasLength(10));
-    expect((await repo.status()).unusedRecoveryCodes, 10);
+    expect(await repo.needsMfaChallenge(), isFalse);
+    expect(() => repo.verifyMfaChallenge('123'), throwsException);
+    await repo.verifyMfaChallenge('123456'); // 6 digits accepted
   });
 }

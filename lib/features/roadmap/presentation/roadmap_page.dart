@@ -61,7 +61,6 @@ class RoadmapPage extends StatelessWidget {
     ]),
     ('Pending — design gap (see docs/design-gap.md)', [
       (false, 'Camera capture for invoices/photos (image_picker)'),
-      (false, 'Sign-in with recovery code (server check)'),
     ]),
     ('Pending — next features', [
       (false, 'Branded splash screen'),
