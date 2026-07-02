@@ -1,6 +1,14 @@
 -- ============================================================================
 -- Cron schedules for the reminder senders (NOT a migration — run manually).
 --
+-- ⚠️ Prefer the Cron UI instead of this file: Dashboard → Integrations →
+-- Cron → Jobs → Create job → Type "Supabase Edge Function" → pick the
+-- sender, schedule '0 9 * * *' (GMT). No SQL or placeholders needed.
+--
+-- If you do use this file: run it ONCE in the SQL EDITOR — never paste it
+-- into a cron job's "SQL Snippet" (it contains the cron.schedule wrappers;
+-- a snippet body must be only the inner net.http_post call).
+--
 -- Prerequisites: enable the pg_cron and pg_net extensions
 -- (Dashboard → Database → Extensions), deploy the functions, set their
 -- secrets (see README.md), then replace the two placeholders below and run
