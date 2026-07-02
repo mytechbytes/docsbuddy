@@ -24,10 +24,10 @@ supabase secrets set \
 supabase secrets set WHATSAPP_TEMPLATE=docsbuddy_reminder WHATSAPP_TEMPLATE_LANG=en
 ```
 
-## Schedule (daily at 09:00 GMT)
+## Schedule (daily at 09:00 IST)
 
 **Cron UI (easiest):** Dashboard → **Integrations → Cron** (Enable once) →
-**Jobs → Create job** → Name `whatsapp-reminders` · Schedule `0 9 * * *` ·
+**Jobs → Create job** → Name `whatsapp-reminders` · Schedule `30 3 * * *` (= 09:00 IST; pg_cron runs in GMT) ·
 Type **Supabase Edge Function** → `send-reminders-whatsapp`, method POST, max timeout →
 Create. The auth header is added automatically.
 

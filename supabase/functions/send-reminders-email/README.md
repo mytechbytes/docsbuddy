@@ -16,10 +16,10 @@ supabase secrets set \
   EMAIL_FROM="DocsBuddy <reminders@yourdomain.tld>"   # verified sender/domain
 ```
 
-## Schedule (daily at 09:00 GMT)
+## Schedule (daily at 09:00 IST)
 
 **Cron UI (easiest):** Dashboard → **Integrations → Cron** (Enable once) →
-**Jobs → Create job** → Name `email-reminders` · Schedule `0 9 * * *` ·
+**Jobs → Create job** → Name `email-reminders` · Schedule `30 3 * * *` (= 09:00 IST; pg_cron runs in GMT) ·
 Type **Supabase Edge Function** → `send-reminders-email`, method POST, max timeout →
 Create. The auth header is added automatically.
 
