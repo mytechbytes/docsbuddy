@@ -9,7 +9,7 @@ Status of what's needed to ship a Play **internal testing** build.
 > profile, security/2FA, asset photos — is tracked in **§H** and
 > `docs/design-gap.md`. Decide if that's acceptable for testers to see.
 
-## A. Backend (Supabase)
+## A. Backend (Supabase) — one-stop guide: `supabase/README.md`
 - [x] Schema + RLS + RPCs (`supabase/migrations/` — 10 feature-based files)
 - [x] App wiring (activates when `SUPABASE_URL` + `SUPABASE_ANON_KEY` are set)
 - [ ] Create the project; copy URL + anon key
@@ -21,11 +21,9 @@ Status of what's needed to ship a Play **internal testing** build.
       **Redirect URLs** += `https://docsbuddy.mytechbytes.in/login-callback`
       **and** `in.mytechbytes.docsbuddy://login-callback`
 - [ ] (Optional) Google/Apple OAuth providers + their redirect URLs
-- [ ] WhatsApp reminders: deploy `send-reminders-whatsapp`, set
-      `WHATSAPP_ACCESS_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID` (+ optional
-      template) secrets, schedule the daily cron — see the function README
-- [ ] Email reminders: deploy `send-reminders-email`, set `RESEND_API_KEY`
-      + `EMAIL_FROM` secrets, schedule the daily cron — see the README
+- [ ] Deploy the 3 Edge Functions + secrets (`notify-family` webhooks;
+      reminder-sender crons via `supabase/schedules.sql`) — commands in
+      `supabase/README.md`
 
 ## B. Signing key (you lost the old one)
 - [ ] Generate a new upload keystore (`keytool -genkey … -alias upload`)
