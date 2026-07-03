@@ -17,3 +17,10 @@ final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
 final assetDocumentsProvider = FutureProvider.family<List<DocumentMeta>, String>((ref, assetId) {
   return ref.watch(documentRepositoryProvider).forAsset(assetId);
 });
+
+/// Signed display URL for a document's storage path, cached per path so
+/// thumbnail grids don't re-sign on every rebuild (15-min expiry from the
+/// repository is fine for a viewing session).
+final documentUrlProvider = FutureProvider.family<String?, DocumentMeta>((ref, doc) {
+  return ref.watch(documentRepositoryProvider).viewUrl(doc);
+});

@@ -91,7 +91,7 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 | 05 | Appliance picker | ✅ Done | — |
 | 06 | Add appliance | ✅ Done | Type tile picker with icons + Others (custom type + per-type properties); camera capture shipped |
 | 07 | Asset detail | ✅ Done | Photo, serial in header, real offsets on banner/rows, Documents "View all" |
-| 08 | Add reminder | ✅ Done | — |
+| 08 | Add reminder | ✅ Done | 4-step flow: type → details → notifications → attachments |
 | 09–13 | Auth flows | ✅ Done | Biometric quick-unlock button on sign-in (needs 17) |
 | 14 | Profile | ✅ Done | — |
 | 15 | Settings | ✅ Done | Security & 2FA row is a placeholder until screen 17 |
@@ -174,7 +174,7 @@ is surfaced in Dart.
 - [x] **03 Room detail** — `RoomDetailPage(locationId)`: hero photo (tap to change), rename dialog, "managing N appliances" line, 3-column appliance grid with day pills, "Add here" → picker with the room pre-filled
 - [x] **05 Appliance picker** — searchable catalog list feeding add-asset, with a "Something else" escape hatch (A4)
 - [x] **06 Add appliance** — type dropdown (catalog), model/serial/purchase/store (A1), photo (A2; camera / gallery / files), AMC date (seeds/overrides the AMC service), invoice attach (multi-select → invoice documents), auto-seed note, appliance-type tiles with icons + Others popup + type-specific properties
-- [x] **08 Add reminder** — full page: 4-across type tile grid, due date with "in N days" helper, repeat chips, multi-select offsets chips pre-filled from prefs, service details, service-scoped attach-document (uploads with `asset_date_id`), family-push note (A3/A7/A8)
+- [x] **08 Add reminder** — 4-step flow: type tile grid → details (due date with "in N days" helper, repeat chips, provider/policy/cost/notes) → notification settings (offsets chips pre-filled from prefs, family-push note) → attachments (camera/gallery/files with thumbnails); service-scoped uploads with `asset_date_id` (A3/A7/A8)
 - [x] **14 Profile** — avatar + camera edit (upload), name/email + Verified badge, stats row (assets/reminders/documents), family card with member avatars + Invite, edit-info sheet (name + WhatsApp phone), menu rows (A5)
 - [x] **16 Change password** — current password verified by re-auth, strength meter (Weak→Excellent), confirm match, other-devices note; wired from Settings and Profile
 - [x] **17 Security / 2FA** — GoTrue MFA/TOTP enroll → QR (`qr_flutter`) + copy key → challenge/verify, disable with confirm; biometric unlock toggle (`local_auth`, device-credential fallback; FragmentActivity + USE_BIOMETRIC + NSFaceIDUsageDescription wired); app lock + auto-lock (1/5/15 min) enforced by a lock screen on launch/resume — this is the biometric quick-unlock surface; active-sessions sheet with "Sign out other devices" (GoTrue scope). *Recovery codes were cut from scope (no login path planned) — losing the authenticator is recovered via the password-reset flow*

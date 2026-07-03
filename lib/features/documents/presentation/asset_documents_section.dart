@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../application/document_providers.dart';
+import 'attachment_widgets.dart';
 import '../data/document_models.dart';
 
 DocKind _kindFor(String? ext) =>
@@ -54,6 +55,8 @@ class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
     }
   }
 
+  /// Images open in the in-app full-page viewer; other file types open in
+  /// the platform's viewer for that type.
   Future<void> _view(DocumentMeta doc) async {
     final url = await ref.read(documentRepositoryProvider).viewUrl(doc);
     if (!mounted) return;
@@ -61,7 +64,11 @@ class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
       _snack('Connect Supabase to open files.', error: true);
       return;
     }
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (isImageMime(doc.mimeType) || isImageName(doc.title)) {
+      ImageViewerPage.open(context, title: doc.title, url: url);
+    } else {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
   }
 
   Future<void> _delete(DocumentMeta doc) async {
@@ -121,12 +128,7 @@ class _DocTile extends StatelessWidget {
         decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(12)),
-              child: Icon(doc.kind.icon, color: AppColors.ink2, size: 20),
-            ),
+            DocumentThumb(doc: doc, size: 44, radius: 12),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
