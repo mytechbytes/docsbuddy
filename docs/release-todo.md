@@ -148,7 +148,9 @@ Dart models → repository mapping → screens.
 - [x] 04 Asset list polish (in-page search bar, photo thumbnails, type chips)
 - [x] 05 Appliance picker (searchable catalog list → add-asset)
 - [x] 06 Add appliance: type dropdown, model/serial/purchase/store, photo,
-      AMC date → seeds service, invoice attach (file); camera capture pending
+      AMC date → seeds service, invoice attach (multi-select), camera capture
+      everywhere (photos & documents), appliance-type tiles + Others (custom
+      type with per-type properties), rooms FAB with photo-at-create
 - [x] 08 Add reminder → full page: type tile grid, "in N days" helper,
       offsets chips (pref-defaults), service-scoped attach document,
       family-push note

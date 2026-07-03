@@ -61,6 +61,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   local_auth: ^3.0.1
   qr_flutter: ^4.1.0
+  image_picker: ^1.2.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

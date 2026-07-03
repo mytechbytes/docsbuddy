@@ -1,9 +1,9 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/catalog_widgets.dart';
 import '../../../core/widgets/db_logo.dart';
@@ -105,16 +105,14 @@ class AssetDetailPage extends ConsumerWidget {
 
   /// Picks an image and uploads it as the asset's photo.
   Future<void> _changePhoto(BuildContext context, WidgetRef ref, Asset asset) async {
-    final res = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
-    final f = res?.files.firstOrNull;
-    final bytes = f?.bytes;
-    if (f == null || bytes == null) return;
+    final f = await pickImage(context);
+    if (f == null) return;
     try {
       await ref.read(catalogRepositoryProvider).setAssetImage(
             asset.id,
-            bytes: bytes,
+            bytes: f.bytes,
             fileName: f.name,
-            mimeType: _imageMime(f.extension),
+            mimeType: f.imageMime,
           );
       ref.invalidate(assetProvider(assetId));
       refreshCatalog(ref);
@@ -126,13 +124,6 @@ class AssetDetailPage extends ConsumerWidget {
     }
   }
 
-  static String _imageMime(String? ext) => switch (ext?.toLowerCase()) {
-        'png' => 'image/png',
-        'webp' => 'image/webp',
-        'heic' => 'image/heic',
-        'gif' => 'image/gif',
-        _ => 'image/jpeg',
-      };
 
   /// Marks a service done — recurring ones roll their due date forward.
   Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
@@ -342,6 +333,35 @@ class _InfoCard extends StatelessWidget {
                 Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.typeLabel)),
                 const SizedBox(height: 8),
                 Text(meta, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                // Type-specific properties (Tonnage, IMEI, …) from Add asset.
+                if (asset.properties.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final e in asset.properties.entries)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                          decoration: BoxDecoration(
+                              color: AppColors.bg,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: AppColors.line)),
+                          child: Text.rich(
+                            TextSpan(
+                              text: '${e.key}  ',
+                              style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600),
+                              children: [
+                                TextSpan(
+                                    text: e.value,
+                                    style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

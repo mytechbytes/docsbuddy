@@ -1,8 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
@@ -105,20 +105,13 @@ class ProfilePage extends ConsumerWidget {
   }
 
   Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
-    final res = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
-    final f = res?.files.firstOrNull;
-    final bytes = f?.bytes;
-    if (f == null || bytes == null) return;
+    final f = await pickImage(context);
+    if (f == null) return;
     try {
       await ref.read(profileRepositoryProvider).setAvatar(
-            bytes: bytes,
+            bytes: f.bytes,
             fileName: f.name,
-            mimeType: switch (f.extension?.toLowerCase()) {
-              'png' => 'image/png',
-              'webp' => 'image/webp',
-              'heic' => 'image/heic',
-              _ => 'image/jpeg',
-            },
+            mimeType: f.imageMime,
           );
       ref.invalidate(profileProvider);
     } catch (e) {

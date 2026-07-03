@@ -15,10 +15,14 @@ abstract interface class CatalogRepository {
   /// their default services). Empty when the backend isn't seeded yet.
   Future<List<AssetCategory>> categories();
 
+  /// [categoryId] may be a real catalog FK or a built-in `cat_*` fallback id
+  /// (treated as no-FK). [typeName] carries the display name for fallback or
+  /// custom ("Others") types; [properties] are the type-specific extras.
   Future<Asset> addAsset({
     required String name,
     required AssetCategoryKind category,
     String? categoryId,
+    String? typeName,
     String? locationName,
     String? brand,
     String? model,
@@ -26,14 +30,18 @@ abstract interface class CatalogRepository {
     DateTime? purchaseDate,
     double? purchasePrice,
     String? store,
+    Map<String, String>? properties,
   });
 
   /// Updates an asset's editable fields (null = leave unchanged; the location
-  /// is find-or-created by name like on create).
+  /// is find-or-created by name like on create). A non-null [typeName] with a
+  /// non-DB [categoryId] switches the asset to a custom/fallback type.
   Future<Asset> updateAsset(
     String id, {
     String? name,
+    AssetCategoryKind? category,
     String? categoryId,
+    String? typeName,
     String? locationName,
     String? brand,
     String? model,
@@ -41,6 +49,7 @@ abstract interface class CatalogRepository {
     DateTime? purchaseDate,
     double? purchasePrice,
     String? store,
+    Map<String, String>? properties,
   });
 
   /// Deletes the asset — its services and document metadata cascade.

@@ -1,22 +1,11 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../application/document_providers.dart';
 import '../data/document_models.dart';
-
-String _mimeFor(String? ext) => switch (ext?.toLowerCase()) {
-      'pdf' => 'application/pdf',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'png' => 'image/png',
-      'webp' => 'image/webp',
-      'heic' => 'image/heic',
-      'doc' => 'application/msword',
-      'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      _ => 'application/octet-stream',
-    };
 
 DocKind _kindFor(String? ext) =>
     {'jpg', 'jpeg', 'png', 'webp', 'heic'}.contains(ext?.toLowerCase()) ? DocKind.photo : DocKind.other;
@@ -38,29 +27,30 @@ class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
       ..showSnackBar(SnackBar(content: Text(msg), backgroundColor: error ? AppColors.red : AppColors.green));
   }
 
+  /// Camera scan, gallery multi-select, or file browser multi-select —
+  /// every picked file is uploaded.
   Future<void> _add() async {
-    final res = await FilePicker.platform.pickFiles(withData: true);
-    if (res == null || res.files.isEmpty) return;
-    final f = res.files.first;
-    final bytes = f.bytes;
-    if (bytes == null) {
-      _snack('Could not read that file.', error: true);
-      return;
-    }
+    final files = await pickDocuments(context);
+    if (files.isEmpty) return;
     setState(() => _busy = true);
-    try {
-      await ref.read(documentRepositoryProvider).upload(
-            assetId: widget.assetId,
-            fileName: f.name,
-            bytes: bytes,
-            mimeType: _mimeFor(f.extension),
-            kind: _kindFor(f.extension),
-          );
-      ref.invalidate(assetDocumentsProvider(widget.assetId));
-    } catch (e) {
-      if (mounted) _snack('Upload failed: $e', error: true);
-    } finally {
-      if (mounted) setState(() => _busy = false);
+    var failed = 0;
+    for (final f in files) {
+      try {
+        await ref.read(documentRepositoryProvider).upload(
+              assetId: widget.assetId,
+              fileName: f.name,
+              bytes: f.bytes,
+              mimeType: f.docMime,
+              kind: _kindFor(f.extension),
+            );
+      } catch (_) {
+        failed++;
+      }
+    }
+    ref.invalidate(assetDocumentsProvider(widget.assetId));
+    if (mounted) {
+      setState(() => _busy = false);
+      if (failed > 0) _snack('$failed of ${files.length} uploads failed.', error: true);
     }
   }
 

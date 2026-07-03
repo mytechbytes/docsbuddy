@@ -161,6 +161,7 @@ class Asset {
     this.purchasePrice,
     this.store,
     this.imageUrl,
+    this.properties = const {},
   });
 
   final String id;
@@ -169,6 +170,9 @@ class Asset {
 
   /// FK into `asset_categories` (specific type, e.g. "Air Conditioner").
   final String? categoryId;
+
+  /// Specific type name — the joined catalog row, a built-in fallback type,
+  /// or a user-entered custom type ("Others" on Add asset).
   final String? categoryName;
   final String? locationName;
   final String? locationId;
@@ -179,6 +183,9 @@ class Asset {
   final double? purchasePrice;
   final String? store;
   final String? imageUrl;
+
+  /// Type-specific extras (e.g. Tonnage, IMEI) — `assets.metadata.properties`.
+  final Map<String, String> properties;
 
   /// Specific type when known, else the generic group label.
   String get typeLabel => categoryName ?? category.label;

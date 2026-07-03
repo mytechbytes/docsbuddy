@@ -97,4 +97,42 @@ void main() {
     expect(await repo.resolveImageUrl(updated.imageUrl), isNull);
     expect(await repo.resolveImageUrl('https://example.com/x.jpg'), 'https://example.com/x.jpg');
   });
+
+  test('custom "Others" type and properties are stored on the asset', () async {
+    final repo = FakeCatalogRepository();
+
+    final a = await repo.addAsset(
+      name: 'Bosch Dishwasher',
+      category: AssetCategoryKind.appliance,
+      typeName: 'Dishwasher',
+      properties: {'Place settings': '13', 'Colour': 'Silver'},
+    );
+    expect(a.categoryName, 'Dishwasher');
+    expect(a.typeLabel, 'Dishwasher');
+    expect(a.properties, {'Place settings': '13', 'Colour': 'Silver'});
+
+    final updated = await repo.updateAsset(
+      a.id,
+      category: AssetCategoryKind.appliance,
+      typeName: 'Dishwasher',
+      properties: {'Place settings': '14'},
+    );
+    expect(updated.properties, {'Place settings': '14'});
+  });
+
+  test('a built-in catalog type maps to its kind group and name', () async {
+    final repo = FakeCatalogRepository();
+    final cats = await repo.categories();
+    final ac = cats.firstWhere((c) => c.slug == 'appliance-ac');
+
+    final a = await repo.addAsset(
+      name: 'Bedroom AC',
+      category: AssetCategoryKind.other, // overridden by the type's group
+      categoryId: ac.id,
+      properties: {'Tonnage': '1.5 ton'},
+    );
+    expect(a.category, AssetCategoryKind.appliance);
+    expect(a.categoryName, 'Air Conditioner');
+    expect(a.properties['Tonnage'], '1.5 ton');
+  });
 }

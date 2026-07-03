@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import '../application/common_categories.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 
@@ -98,43 +99,7 @@ class FakeCatalogRepository implements CatalogRepository {
   List<Reminder> get _sorted => [..._reminders]..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
   /// Mirrors the 0005 seed so the picker works offline.
-  static final _categories = <AssetCategory>[
-    const AssetCategory(id: 'cat_car', slug: 'vehicle-car', name: 'Car', iconToken: 'car', defaults: [
-      DefaultReminder(kind: ReminderKind.insurance, label: 'Insurance', startMonths: 12, recurrence: Recurrence.yearly),
-      DefaultReminder(kind: ReminderKind.pollution, label: 'Pollution (PUC)', startMonths: 6, recurrence: Recurrence.halfYearly),
-      DefaultReminder(kind: ReminderKind.service, label: 'Service Due', startMonths: 6, recurrence: Recurrence.halfYearly),
-    ]),
-    const AssetCategory(id: 'cat_bike', slug: 'vehicle-bike', name: 'Bike / Scooter', iconToken: 'bike', defaults: [
-      DefaultReminder(kind: ReminderKind.insurance, label: 'Insurance', startMonths: 12, recurrence: Recurrence.yearly),
-      DefaultReminder(kind: ReminderKind.pollution, label: 'Pollution (PUC)', startMonths: 6, recurrence: Recurrence.halfYearly),
-      DefaultReminder(kind: ReminderKind.service, label: 'Service Due', startMonths: 6, recurrence: Recurrence.halfYearly),
-    ]),
-    const AssetCategory(id: 'cat_ac', slug: 'appliance-ac', name: 'Air Conditioner', iconToken: 'ac', defaults: [
-      DefaultReminder(kind: ReminderKind.amc, label: 'AMC', startMonths: 12, recurrence: Recurrence.yearly),
-      DefaultReminder(kind: ReminderKind.service, label: 'Wet Service', startMonths: 6, recurrence: Recurrence.halfYearly),
-      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
-    ]),
-    const AssetCategory(id: 'cat_fridge', slug: 'appliance-fridge', name: 'Refrigerator', iconToken: 'fridge', defaults: [
-      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
-    ]),
-    const AssetCategory(id: 'cat_washer', slug: 'appliance-washing-machine', name: 'Washing Machine', iconToken: 'washer', defaults: [
-      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 24),
-      DefaultReminder(kind: ReminderKind.service, label: 'Service Due', startMonths: 12, recurrence: Recurrence.yearly),
-    ]),
-    const AssetCategory(id: 'cat_purifier', slug: 'appliance-water-purifier', name: 'Water Purifier', iconToken: 'water', defaults: [
-      DefaultReminder(kind: ReminderKind.amc, label: 'AMC', startMonths: 12, recurrence: Recurrence.yearly),
-      DefaultReminder(kind: ReminderKind.service, label: 'Filter Change', startMonths: 6, recurrence: Recurrence.halfYearly),
-    ]),
-    const AssetCategory(id: 'cat_tv', slug: 'appliance-tv', name: 'Television', iconToken: 'tv', defaults: [
-      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
-    ]),
-    const AssetCategory(id: 'cat_phone', slug: 'electronics-phone', name: 'Smartphone', iconToken: 'phone', defaults: [
-      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
-    ]),
-    const AssetCategory(id: 'cat_laptop', slug: 'electronics-laptop', name: 'Laptop', iconToken: 'laptop', defaults: [
-      DefaultReminder(kind: ReminderKind.warranty, label: 'Warranty', startMonths: 12),
-    ]),
-  ];
+  static const _categories = commonAssetCategories;
 
   @override
   Future<List<AssetCategory>> categories() async {
@@ -181,6 +146,7 @@ class FakeCatalogRepository implements CatalogRepository {
     required String name,
     required AssetCategoryKind category,
     String? categoryId,
+    String? typeName,
     String? locationName,
     String? brand,
     String? model,
@@ -188,6 +154,7 @@ class FakeCatalogRepository implements CatalogRepository {
     DateTime? purchaseDate,
     double? purchasePrice,
     String? store,
+    Map<String, String>? properties,
   }) async {
     await _delay();
     final loc = locationName?.trim();
@@ -200,7 +167,7 @@ class FakeCatalogRepository implements CatalogRepository {
       name: name.trim(),
       category: cat?.kindGroup ?? category,
       categoryId: categoryId,
-      categoryName: cat?.name,
+      categoryName: cat?.name ?? typeName,
       locationName: loc == null || loc.isEmpty ? null : loc,
       brand: brand,
       model: model,
@@ -208,6 +175,7 @@ class FakeCatalogRepository implements CatalogRepository {
       purchaseDate: purchaseDate,
       purchasePrice: purchasePrice,
       store: store,
+      properties: properties ?? const {},
     );
     _assets.add(a);
     return a;
@@ -217,7 +185,9 @@ class FakeCatalogRepository implements CatalogRepository {
   Future<Asset> updateAsset(
     String id, {
     String? name,
+    AssetCategoryKind? category,
     String? categoryId,
+    String? typeName,
     String? locationName,
     String? brand,
     String? model,
@@ -225,6 +195,7 @@ class FakeCatalogRepository implements CatalogRepository {
     DateTime? purchaseDate,
     double? purchasePrice,
     String? store,
+    Map<String, String>? properties,
   }) async {
     await _delay();
     final i = _assets.indexWhere((a) => a.id == id);
@@ -238,9 +209,9 @@ class FakeCatalogRepository implements CatalogRepository {
     final updated = Asset(
       id: a.id,
       name: name?.trim().isNotEmpty == true ? name!.trim() : a.name,
-      category: cat?.kindGroup ?? a.category,
+      category: cat?.kindGroup ?? category ?? a.category,
       categoryId: categoryId ?? a.categoryId,
-      categoryName: cat?.name ?? a.categoryName,
+      categoryName: cat?.name ?? typeName ?? a.categoryName,
       locationName: loc?.isNotEmpty == true ? loc : a.locationName,
       locationId: a.locationId,
       brand: brand,
@@ -250,6 +221,7 @@ class FakeCatalogRepository implements CatalogRepository {
       purchasePrice: purchasePrice,
       store: store,
       imageUrl: a.imageUrl,
+      properties: properties ?? a.properties,
     );
     _assets[i] = updated;
     // Keep reminder rows' asset name in sync.

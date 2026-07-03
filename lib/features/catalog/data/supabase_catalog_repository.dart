@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../application/common_categories.dart';
 import 'catalog_models.dart';
 import 'catalog_repository.dart';
 
@@ -79,7 +80,12 @@ class SupabaseCatalogRepository implements CatalogRepository {
       // fallback for rows created before the 0005 backfill.
       category: _catFromName(slug?.split('-').first ?? meta['category'] as String?),
       categoryId: r['category_id'] as String?,
-      categoryName: slug != null && slug.contains('-') ? (cat?['name'] as String?) : null,
+      // Joined specific type, else a custom/fallback type riding in metadata.
+      categoryName: slug != null && slug.contains('-')
+          ? (cat?['name'] as String?)
+          : meta['custom_type'] as String?,
+      properties:
+          ((meta['properties'] as Map?) ?? const {}).map((k, v) => MapEntry('$k', '$v')),
       // Joined location name; old pre-0006 rows may still carry the metadata key.
       locationName: (r['locations'] as Map?)?['name'] as String? ?? meta['location'] as String?,
       locationId: r['location_id'] as String?,
@@ -221,6 +227,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
     required String name,
     required AssetCategoryKind category,
     String? categoryId,
+    String? typeName,
     String? locationName,
     String? brand,
     String? model,
@@ -228,14 +235,15 @@ class SupabaseCatalogRepository implements CatalogRepository {
     DateTime? purchaseDate,
     double? purchasePrice,
     String? store,
+    Map<String, String>? properties,
   }) =>
       _guard(() async {
         final familyId = await _family();
         final loc = locationName?.trim();
         final locationId = loc == null || loc.isEmpty ? null : await _locationIdFor(familyId, loc);
-        // Prefer the real FK; fall back to the generic group row, and only
-        // ride in metadata when the catalog isn't seeded yet (pre-0005).
-        final catId = categoryId ?? await _genericCategoryId(category);
+        // Prefer the real FK; built-in fallback/custom types have no DB row,
+        // so they land on the generic group row + metadata.custom_type.
+        final catId = isDbCategoryId(categoryId) ? categoryId : await _genericCategoryId(category);
         final row = await _client
             .from('assets')
             .insert({
@@ -250,7 +258,11 @@ class SupabaseCatalogRepository implements CatalogRepository {
               'location_id': locationId,
               'category_id': catId,
               'created_by': _client.auth.currentUser?.id,
-              'metadata': catId == null ? {'category': category.name} : const <String, dynamic>{},
+              'metadata': {
+                if (catId == null) 'category': category.name,
+                if (!isDbCategoryId(categoryId) && typeName != null) 'custom_type': typeName,
+                if (properties != null && properties.isNotEmpty) 'properties': properties,
+              },
             })
             .select(_assetCols)
             .single();
@@ -261,7 +273,9 @@ class SupabaseCatalogRepository implements CatalogRepository {
   Future<Asset> updateAsset(
     String id, {
     String? name,
+    AssetCategoryKind? category,
     String? categoryId,
+    String? typeName,
     String? locationName,
     String? brand,
     String? model,
@@ -269,6 +283,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
     DateTime? purchaseDate,
     double? purchasePrice,
     String? store,
+    Map<String, String>? properties,
   }) =>
       _guard(() async {
         String? locationId;
@@ -276,11 +291,31 @@ class SupabaseCatalogRepository implements CatalogRepository {
         if (loc != null && loc.isNotEmpty) {
           locationId = await _locationIdFor(await _family(), loc);
         }
+
+        // Merge custom_type/properties into the existing metadata; picking a
+        // real catalog type clears any earlier custom type.
+        final hasDbCat = isDbCategoryId(categoryId);
+        // Custom/fallback types re-anchor on the generic group row (keeps the
+        // kind group without a specific FK).
+        final genericId =
+            !hasDbCat && typeName != null && category != null ? await _genericCategoryId(category) : null;
+        final current = await _client.from('assets').select('metadata').eq('id', id).single();
+        final meta = {...((current['metadata'] as Map?)?.cast<String, dynamic>() ?? const {})};
+        if (hasDbCat) {
+          meta.remove('custom_type');
+        } else if (typeName != null) {
+          meta['custom_type'] = typeName;
+          if (genericId == null && category != null) meta['category'] = category.name;
+        }
+        if (properties != null) {
+          properties.isEmpty ? meta.remove('properties') : meta['properties'] = properties;
+        }
+
         final row = await _client
             .from('assets')
             .update({
               if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
-              'category_id': ?categoryId,
+              if (hasDbCat) 'category_id': categoryId else if (typeName != null) 'category_id': genericId,
               'location_id': ?locationId,
               'brand': brand,
               'model': model,
@@ -288,6 +323,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
               'purchase_date': purchaseDate == null ? null : _dbDate(purchaseDate),
               'purchase_price': purchasePrice,
               'store': store,
+              'metadata': meta,
             })
             .eq('id', id)
             .select(_assetCols)

@@ -82,5 +82,9 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>DocsBuddy uses the camera to capture photos of your rooms, appliances and documents.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DocsBuddy lets you pick photos of your rooms, appliances and documents from your library.</string>
 </dict>
 </plist>

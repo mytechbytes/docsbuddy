@@ -89,7 +89,7 @@ items need **no migration**. Known debt: `SupabaseCatalogRepository` stores
 | 03 | Room detail | ✅ Done | — |
 | 04 | Asset list | ✅ Done | — |
 | 05 | Appliance picker | ✅ Done | — |
-| 06 | Add appliance | ✅ Done | Camera capture for invoices/photos pending (`image_picker`) |
+| 06 | Add appliance | ✅ Done | Type tile picker with icons + Others (custom type + per-type properties); camera capture shipped |
 | 07 | Asset detail | ✅ Done | Photo, serial in header, real offsets on banner/rows, Documents "View all" |
 | 08 | Add reminder | ✅ Done | — |
 | 09–13 | Auth flows | ✅ Done | Biometric quick-unlock button on sign-in (needs 17) |
@@ -173,7 +173,7 @@ is surfaced in Dart.
 - [x] **02 Rooms** — `RoomsPage` over real `locations`: "Add a new room" composer, photo cards (upload via `setLocationImage`), "N Registered" counts, Rooms tab in the bottom nav (A2/A6)
 - [x] **03 Room detail** — `RoomDetailPage(locationId)`: hero photo (tap to change), rename dialog, "managing N appliances" line, 3-column appliance grid with day pills, "Add here" → picker with the room pre-filled
 - [x] **05 Appliance picker** — searchable catalog list feeding add-asset, with a "Something else" escape hatch (A4)
-- [x] **06 Add appliance** — type dropdown (catalog), model/serial/purchase/store (A1), photo (A2), AMC date (seeds/overrides the AMC service), invoice attach (file → invoice document), auto-seed note; *camera capture still pending (needs `image_picker`)*
+- [x] **06 Add appliance** — type dropdown (catalog), model/serial/purchase/store (A1), photo (A2; camera / gallery / files), AMC date (seeds/overrides the AMC service), invoice attach (multi-select → invoice documents), auto-seed note, appliance-type tiles with icons + Others popup + type-specific properties
 - [x] **08 Add reminder** — full page: 4-across type tile grid, due date with "in N days" helper, repeat chips, multi-select offsets chips pre-filled from prefs, service details, service-scoped attach-document (uploads with `asset_date_id`), family-push note (A3/A7/A8)
 - [x] **14 Profile** — avatar + camera edit (upload), name/email + Verified badge, stats row (assets/reminders/documents), family card with member avatars + Invite, edit-info sheet (name + WhatsApp phone), menu rows (A5)
 - [x] **16 Change password** — current password verified by re-auth, strength meter (Weak→Excellent), confirm match, other-devices note; wired from Settings and Profile
@@ -218,7 +218,7 @@ is surfaced in Dart.
 
 1. [x] **Model + repo widening** (A1, A3, A6, A7, A8 service layer) + metadata→FK debt (D, location half — category half moves with step 3) — **done**
 2. [x] **Asset photos** (A2) — biggest visual gap, self-contained — **done**
-3. [x] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — **done** (camera capture deferred)
+3. [x] **Category catalog + appliance picker + auto-seed reminders** (A4, B-05, B-06) — **done** (incl. camera capture)
 4. [x] **Rooms + Room detail** (A6, B-02/03) — **done**
 5. [x] **Profile + Change password + Settings restyle** (A5, A7b, B-14/15/16) — **done**
 6. [x] **Add-reminder full page + wire decorative UI** (B-08, B-04, C) — **done**
@@ -264,7 +264,7 @@ A verification pass over data ↔ screen connections after the plan closed:
       schema-only)
 - [x] Phone validation — profile phone is validated/normalized to E.164
       before saving (WhatsApp delivery requires it)
-- [ ] Camera capture for invoices/photos (`image_picker` + iOS plist)
+- [x] Camera capture for invoices/photos (`image_picker` + iOS plist) — every photo/document picker offers camera / gallery / files; documents support multi-select
 - [ ] Dashboard reminder rows: category subtitle per design (photo already
       shown)
 
