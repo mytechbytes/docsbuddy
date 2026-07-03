@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
@@ -40,20 +41,47 @@ IconData fileTypeIcon(String name, [String? mime]) {
   };
 }
 
+/// Shares raw bytes as a file via the platform share sheet.
+Future<void> shareBytes(Uint8List bytes, {required String name, required String mime}) {
+  return SharePlus.instance.share(ShareParams(
+    files: [XFile.fromData(bytes, mimeType: mime, name: name)],
+    fileNameOverrides: [name],
+  ));
+}
+
+/// Downloads a stored document and opens the share sheet; snacks on failure.
+Future<void> shareDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
+  final bytes = await ref.read(documentRepositoryProvider).download(doc);
+  if (bytes == null) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Connect Supabase to share files.'), backgroundColor: AppColors.red));
+    }
+    return;
+  }
+  await shareBytes(bytes, name: doc.title, mime: doc.mimeType);
+}
+
 /// Full-page image viewer: pinch-zoom / pan / double-tap zoom on a dark
 /// canvas, with the file name in the bar. Works from a URL (stored
 /// documents) or raw bytes (attachments not yet uploaded).
 class ImageViewerPage extends StatefulWidget {
-  const ImageViewerPage({super.key, required this.title, this.url, this.bytes})
+  const ImageViewerPage({super.key, required this.title, this.url, this.bytes, this.onShare})
       : assert(url != null || bytes != null, 'Provide a url or bytes');
 
   final String title;
   final String? url;
   final Uint8List? bytes;
 
-  static void open(BuildContext context, {required String title, String? url, Uint8List? bytes}) {
+  /// Shown as a share action in the bar when provided (or when [bytes] is
+  /// set, which shares the bytes directly).
+  final Future<void> Function()? onShare;
+
+  static void open(BuildContext context,
+      {required String title, String? url, Uint8List? bytes, Future<void> Function()? onShare}) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ImageViewerPage(title: title, url: url, bytes: bytes)),
+      MaterialPageRoute(
+          builder: (_) => ImageViewerPage(title: title, url: url, bytes: bytes, onShare: onShare)),
     );
   }
 
@@ -106,6 +134,16 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+        actions: [
+          if (widget.onShare != null || widget.bytes != null)
+            IconButton(
+              icon: const Icon(Icons.share_outlined, color: Colors.white),
+              onPressed: () => widget.onShare != null
+                  ? widget.onShare!()
+                  : shareBytes(widget.bytes!,
+                      name: widget.title, mime: 'image/${widget.title.split('.').last}'),
+            ),
+        ],
       ),
       body: GestureDetector(
         onDoubleTapDown: (d) => _doubleTapDetails = d,
@@ -136,7 +174,8 @@ class DocumentThumb extends ConsumerWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(radius)),
-      child: Icon(fileTypeIcon(doc.title, doc.mimeType), color: AppColors.ink2, size: size * 0.5),
+      child: Icon(fileTypeIcon(doc.title, doc.mimeType),
+          color: AppColors.ink2, size: size.isFinite ? size * 0.5 : 30),
     );
     if (!isImageMime(doc.mimeType) && !isImageName(doc.title)) return iconBox;
 
@@ -227,6 +266,127 @@ class PickedMediaGrid extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
         ],
+      ),
+    );
+  }
+}
+
+/// Grid of stored documents: image thumbnails or file-type icons, title +
+/// size, and a ⋮ menu (View / Share / optional Delete). Images open the
+/// in-app viewer with share; other types call [onOpen] (platform viewer).
+class DocumentGrid extends ConsumerWidget {
+  const DocumentGrid({super.key, required this.docs, required this.onOpen, this.onDelete});
+
+  final List<DocumentMeta> docs;
+
+  /// Opens a non-image document (e.g. external viewer via signed URL).
+  final void Function(DocumentMeta doc) onOpen;
+  final void Function(DocumentMeta doc)? onDelete;
+
+  void _view(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
+    if (isImageMime(doc.mimeType) || isImageName(doc.title)) {
+      final url = await ref.read(documentUrlProvider(doc).future);
+      if (!context.mounted) return;
+      if (url == null) {
+        onOpen(doc); // falls back to the caller's no-storage handling
+        return;
+      }
+      ImageViewerPage.open(context,
+          title: doc.title, url: url, onShare: () => shareDocument(context, ref, doc));
+    } else {
+      onOpen(doc);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cols = constraints.maxWidth < 360 ? 2 : 3;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: cols, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.82),
+          itemCount: docs.length,
+          itemBuilder: (context, i) => _DocCard(
+            doc: docs[i],
+            onTap: () => _view(context, ref, docs[i]),
+            onShare: () => shareDocument(context, ref, docs[i]),
+            onDelete: onDelete == null ? null : () => onDelete!(docs[i]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DocCard extends ConsumerWidget {
+  const _DocCard({required this.doc, required this.onTap, required this.onShare, this.onDelete});
+  final DocumentMeta doc;
+  final VoidCallback onTap;
+  final VoidCallback onShare;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+            color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: SizedBox(
+                width: double.infinity,
+                child: DocumentThumb(doc: doc, size: double.infinity, radius: 0),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 6, 2, 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(doc.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                        Text('${doc.kind.label} · ${doc.prettySize}',
+                            style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 28,
+                    child: PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.more_vert, size: 17, color: AppColors.muted),
+                      onSelected: (v) {
+                        if (v == 'view') onTap();
+                        if (v == 'share') onShare();
+                        if (v == 'delete') onDelete?.call();
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(value: 'view', child: Text('View')),
+                        const PopupMenuItem(value: 'share', child: Text('Share')),
+                        if (onDelete != null)
+                          const PopupMenuItem(
+                              value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.red))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

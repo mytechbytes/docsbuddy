@@ -108,7 +108,7 @@ class RoomDetailPage extends ConsumerWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.82),
+                      crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.88),
                   itemCount: inRoom.length,
                   itemBuilder: (context, i) => _ApplianceCard(
                     asset: inRoom[i],
@@ -187,36 +187,66 @@ class _ApplianceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brandModel = [asset.brand, asset.model].whereType<String>().join(' · ');
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => context.push('/asset/${asset.id}'),
       child: Container(
-        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
             color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+        clipBehavior: Clip.antiAlias,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Photo strip (falls back to the category icon).
             AssetThumb(
               imageRef: asset.imageUrl,
-              size: 40,
-              fallback: soonest != null
-                  ? IconBubble(kind: soonest!.kind, size: 40)
-                  : Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(12)),
-                      child: Icon(asset.category.icon, size: 20, color: AppColors.ink2),
-                    ),
+              width: double.infinity,
+              height: 74,
+              radius: 0,
+              fallback: Container(
+                width: double.infinity,
+                height: 74,
+                color: const Color(0xFFEEF3FB),
+                child: Icon(asset.category.icon, size: 30, color: AppColors.chipBlue),
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(asset.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink, height: 1.2)),
-            const SizedBox(height: 6),
-            if (soonest != null) DayPill(daysLeft: soonest!.daysLeft),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(asset.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.2)),
+                    const SizedBox(height: 2),
+                    Text(brandModel.isEmpty ? asset.typeLabel : '${asset.typeLabel} · $brandModel',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        if (soonest != null) ...[
+                          DayPill(daysLeft: soonest!.daysLeft),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(soonest!.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
+                          ),
+                        ] else
+                          const Text('No reminders',
+                              style: TextStyle(fontSize: 10.5, color: AppColors.muted)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

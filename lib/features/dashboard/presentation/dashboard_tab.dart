@@ -24,6 +24,9 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
   /// Kind filter for the Upcoming list (empty = everything).
   Set<ReminderKind> _kinds = {};
 
+  /// Group the Upcoming list by asset (design 01) instead of a flat list.
+  bool _groupByAsset = false;
+
   Future<void> _openFilter() async {
     final selected = {..._kinds};
     final applied = await showModalBottomSheet<bool>(
@@ -138,7 +141,9 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('$e')),
           data: (list) {
-            final visible = filterByKinds(list, _kinds);
+            // Soonest expiration first, always.
+            final visible = filterByKinds(list, _kinds)
+              ..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
               children: [
@@ -150,6 +155,28 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                       child: Text('Upcoming Expirations',
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     ),
+                    PopupMenuButton<bool>(
+                      tooltip: 'Group by',
+                      onSelected: (v) => setState(() => _groupByAsset = v),
+                      itemBuilder: (_) => [
+                        CheckedPopupMenuItem(
+                            value: false, checked: !_groupByAsset, child: const Text('Group by: None')),
+                        CheckedPopupMenuItem(
+                            value: true, checked: _groupByAsset, child: const Text('Group by: Asset')),
+                      ],
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: _groupByAsset ? AppColors.ink : AppColors.paper,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.line),
+                        ),
+                        child: Icon(Icons.layers_outlined,
+                            size: 17, color: _groupByAsset ? Colors.white : AppColors.ink2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     InkWell(
                       borderRadius: BorderRadius.circular(10),
                       onTap: _openFilter,
@@ -177,6 +204,8 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                                 : 'Nothing matches the selected types.',
                             style: const TextStyle(color: AppColors.muted))),
                   )
+                else if (_groupByAsset)
+                  for (final group in _groupedByAsset(visible)) _AssetGroupCard(reminders: group)
                 else
                   for (final r in visible) _ReminderTile(reminder: r),
               ],
@@ -438,6 +467,104 @@ class _ReminderTile extends StatelessWidget {
             DayPill(daysLeft: reminder.daysLeft),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Buckets the (already daysLeft-sorted) reminders by asset, keeping groups
+/// ordered by their soonest expiration.
+List<List<Reminder>> _groupedByAsset(List<Reminder> sorted) {
+  final byAsset = <String, List<Reminder>>{};
+  for (final r in sorted) {
+    byAsset.putIfAbsent(r.assetId, () => []).add(r);
+  }
+  return byAsset.values.toList();
+}
+
+/// Design 01 grouped card: asset header (photo, name, soonest pill) with the
+/// asset's expirations listed inside.
+class _AssetGroupCard extends ConsumerWidget {
+  const _AssetGroupCard({required this.reminders});
+  final List<Reminder> reminders;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final first = reminders.first;
+    final asset = ref
+        .watch(assetsProvider)
+        .valueOrNull
+        ?.where((a) => a.id == first.assetId)
+        .firstOrNull;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            onTap: () => context.push('/asset/${first.assetId}'),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  AssetThumb(
+                    imageRef: first.assetImageUrl,
+                    size: 46,
+                    fallback: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(14)),
+                      child: Icon(asset?.category.icon ?? Icons.category_outlined,
+                          size: 22, color: AppColors.ink2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(first.assetName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.15)),
+                        const SizedBox(height: 3),
+                        Text(asset?.typeLabel ?? 'Asset',
+                            style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  DayPill(daysLeft: first.daysLeft),
+                ],
+              ),
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.line),
+          for (final r in reminders)
+            InkWell(
+              onTap: () => context.push('/asset/${r.assetId}'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    IconBubble(kind: r.kind, size: 34),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text('${r.label} · ${DateFormat('d MMM').format(r.dueDate)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                    ),
+                    DayPill(daysLeft: r.daysLeft),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 4),
+        ],
       ),
     );
   }

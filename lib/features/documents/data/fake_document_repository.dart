@@ -51,6 +51,9 @@ class FakeDocumentRepository implements DocumentRepository {
   Future<String?> viewUrl(DocumentMeta doc) async => null;
 
   @override
+  Future<Uint8List?> download(DocumentMeta doc) async => null;
+
+  @override
   Future<void> delete(DocumentMeta doc) async {
     await _delay();
     _byAsset[doc.assetId]?.removeWhere((d) => d.id == doc.id);

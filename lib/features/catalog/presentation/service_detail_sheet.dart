@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/catalog_widgets.dart';
 import '../../documents/application/document_providers.dart';
 import '../../documents/data/document_models.dart';
+import '../../documents/presentation/attachment_widgets.dart';
 import '../data/catalog_models.dart';
 
 /// What the caller wants done after the sheet closes.
@@ -87,7 +88,7 @@ class ServiceDetailSheet extends ConsumerWidget {
               const Text('DOCUMENTS FOR THIS SERVICE',
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
               const SizedBox(height: 8),
-              for (final d in docs) _DocRow(doc: d),
+              DocumentGrid(docs: docs, onOpen: (d) => _openExternal(context, ref, d)),
             ],
             const SizedBox(height: 18),
             Row(
@@ -154,42 +155,13 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-class _DocRow extends ConsumerWidget {
-  const _DocRow({required this.doc});
-  final DocumentMeta doc;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: () async {
-        final url = await ref.read(documentRepositoryProvider).viewUrl(doc);
-        if (!context.mounted) return;
-        if (url == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Connect Supabase to open files.'), backgroundColor: AppColors.red));
-          return;
-        }
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            Icon(doc.kind.icon, size: 16, color: AppColors.ink2),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(doc.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
-            ),
-            Text(doc.prettySize, style: const TextStyle(fontSize: 11.5, color: AppColors.muted)),
-            const SizedBox(width: 4),
-            const Icon(Icons.open_in_new, size: 13, color: AppColors.muted),
-          ],
-        ),
-      ),
-    );
+Future<void> _openExternal(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
+  final url = await ref.read(documentRepositoryProvider).viewUrl(doc);
+  if (!context.mounted) return;
+  if (url == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connect Supabase to open files.'), backgroundColor: AppColors.red));
+    return;
   }
+  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 }

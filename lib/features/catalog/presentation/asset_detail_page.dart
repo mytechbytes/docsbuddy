@@ -127,6 +127,23 @@ class AssetDetailPage extends ConsumerWidget {
 
   /// Marks a service done — recurring ones roll their due date forward.
   Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.paper,
+        title: const Text('Mark as done?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: Text(r.recurrence == Recurrence.none
+            ? '“${r.label}” will be completed and removed from upcoming reminders.'
+            : '“${r.label}” will be completed and its next due date scheduled (${r.recurrence.label.toLowerCase()}).'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Mark done', style: TextStyle(color: AppColors.green, fontWeight: FontWeight.w700))),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
     await ref.read(catalogRepositoryProvider).completeReminder(r.id);
     ref.invalidate(assetRemindersProvider(assetId));
     refreshCatalog(ref);
@@ -269,11 +286,22 @@ class _AddPill extends StatelessWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
+class _InfoCard extends StatefulWidget {
   const _InfoCard({required this.asset, required this.reminderCount, required this.onChangePhoto});
   final Asset asset;
   final int reminderCount;
   final VoidCallback onChangePhoto;
+
+  @override
+  State<_InfoCard> createState() => _InfoCardState();
+}
+
+class _InfoCardState extends State<_InfoCard> {
+  bool _expanded = false;
+
+  Asset get asset => widget.asset;
+  int get reminderCount => widget.reminderCount;
+  VoidCallback get onChangePhoto => widget.onChangePhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -286,7 +314,10 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.line)),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
@@ -364,6 +395,58 @@ class _InfoCard extends StatelessWidget {
                 ],
               ],
             ),
+          ),
+          // Expand: the full asset record inline.
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: _expanded ? 'Hide details' : 'Show all details',
+            icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: AppColors.ink2),
+            onPressed: () => setState(() => _expanded = !_expanded),
+          ),
+        ],
+      ),
+          if (_expanded) ...[
+            const SizedBox(height: 6),
+            const Divider(color: AppColors.line, height: 16),
+            _InfoRow('Type', asset.typeLabel),
+            _InfoRow('Category', asset.category.label),
+            if (asset.locationName != null) _InfoRow('Room', asset.locationName!),
+            if (asset.brand != null) _InfoRow('Brand', asset.brand!),
+            if (asset.model != null) _InfoRow('Model', asset.model!),
+            if (asset.serialNo != null) _InfoRow('Serial / reg. no.', asset.serialNo!),
+            if (asset.purchaseDate != null)
+              _InfoRow('Purchase date', DateFormat('d MMM yyyy').format(asset.purchaseDate!)),
+            if (asset.purchasePrice != null)
+              _InfoRow('Purchase price', '₹ ${NumberFormat('#,##0.##').format(asset.purchasePrice)}'),
+            if (asset.store != null) _InfoRow('Store', asset.store!),
+            for (final e in asset.properties.entries) _InfoRow(e.key, e.value),
+            _InfoRow('Reminders tracked', '$reminderCount'),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow(this.label, this.value);
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 128,
+            child: Text(label, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
           ),
         ],
       ),
