@@ -1,8 +1,18 @@
 # Play Store listing assets
 
-Generated from the brand mark by `tool/make_brand_assets.py`
-(`pip install pillow numpy`, run from the repo root; launcher icons then
-regenerate with `dart run flutter_launcher_icons`).
+Every asset here (and the launcher icons) is derived from the **original
+logo file** `assets/icon/source_logo.png` — the exact provided pixels, no
+redrawing. To regenerate (e.g. after replacing the source file):
+
+```sh
+pip install pillow numpy
+python3 tool/apply_brand_icon.py     # derives ALL assets from the exact pixels
+dart run flutter_launcher_icons      # regenerates Android mipmaps + iOS AppIcon
+```
+
+`apply_brand_icon.py` only trims padding, removes a uniform background when
+the file has no alpha channel, then resizes and pads. The same source file
+is bundled as a Flutter asset and rendered by `DbLogo` on every page header.
 
 | File | Play Console slot |
 |------|-------------------|

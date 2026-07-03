@@ -84,6 +84,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Brand mark (the provided gradient-Z logo) — rendered by DbLogo on every
+  # page header; also the source for all launcher/store icons (store/README.md).
+  assets:
+    - assets/icon/source_logo.png
+
   # Plus Jakarta Sans — the design system typeface (bundled so the app renders
   # correctly offline). Variable font; weights are selected via FontWeight.
   fonts:
