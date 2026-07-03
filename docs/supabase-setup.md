@@ -24,9 +24,33 @@ repository — so every screen works offline. This guide turns on real Supabase.
      logs in immediately; keep it on for production.
    - **Email OTP** — enable, length **6**. The forgot-password flow uses a
      6-digit code (`signInWithOtp` → `verifyOTP` → `updateUser`).
-   - **Google / Apple** (optional, for the social buttons) — create OAuth
-     credentials in Google Cloud / Apple Developer, paste client ID/secret here,
-     and add the redirect URLs from Part E.
+   - **Google / Apple** (optional, for the social buttons) — Apple needs an
+     Apple Developer Services ID; Google step by step:
+
+     **Google sign-in, end to end**
+
+     1. <https://console.cloud.google.com> → create/select a project (the
+        Firebase project used for FCM is fine).
+     2. **APIs & Services → OAuth consent screen** — app name `DocsBuddy`,
+        support + developer emails, audience **External**, authorized domain
+        `mytechbytes.in`. While in *Testing* mode only listed test users can
+        sign in — **Publish** for everyone.
+     3. **APIs & Services → Credentials → Create credentials → OAuth client
+        ID** — type **Web application** (Supabase brokers the flow, so *web*,
+        not Android), name `docsbuddy-supabase`, **Authorized redirect URI**
+        `https://<project-ref>.supabase.co/auth/v1/callback` → copy the
+        **Client ID** and **Client secret**.
+     4. Supabase → **Authentication → Sign In / Providers → Google** →
+        Enable, paste both values, save.
+     5. Make sure the app's return URLs are in **Redirect URLs** (step 4
+        below) — the app calls
+        `signInWithOAuth(google, redirectTo: Env.authRedirectUrl)`.
+     6. ⚠️ The HTTPS return link only re-opens the app once
+        `/.well-known/assetlinks.json` is hosted (Part E). Until then,
+        temporarily set `Env.authRedirectUrl` to
+        `in.mytechbytes.docsbuddy://login-callback` to get back into the app.
+     7. Test: Sign in → **Continue with Google** → account chooser → signed
+        in; the `public.users` row auto-appears via `handle_new_user`.
 4. **Authentication → URL Configuration** — **required so confirm-email / magic
    links return to the app instead of `localhost`:**
    - **Redirect URLs** → add **`https://docsbuddy.mytechbytes.in/login-callback`**
