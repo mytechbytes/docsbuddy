@@ -111,21 +111,32 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                 child: _AddRoomComposer(controller: _newRoom, busy: _adding, onSubmit: _addRoom),
               ),
               Expanded(
-                child: list.isEmpty
-                    ? const Center(
-                        child: Text('No rooms yet. Add your first room above.',
-                            style: TextStyle(color: AppColors.muted)))
-                    : RefreshIndicator(
-                        onRefresh: () async => ref.invalidate(locationsProvider),
-                        // Long-press-drag a card to reorder rooms.
-                        child: ReorderableListView.builder(
+                // Pull-to-refresh works for both the list and the empty state
+                // (e.g. right after joining a family, to pull its rooms in).
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(locationsProvider);
+                    ref.invalidate(assetsProvider);
+                  },
+                  child: list.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const [
+                            SizedBox(height: 140),
+                            Center(
+                                child: Text('No rooms yet. Add your first room above.',
+                                    style: TextStyle(color: AppColors.muted))),
+                          ],
+                        )
+                      // Long-press-drag a card to reorder rooms.
+                      : ReorderableListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
                           itemCount: list.length,
                           onReorderItem: (oldIndex, newIndex) => _reorder(list, oldIndex, newIndex),
                           itemBuilder: (context, i) =>
                               _RoomCard(key: ValueKey(list[i].id), location: list[i]),
                         ),
-                      ),
+                ),
               ),
             ],
           );
