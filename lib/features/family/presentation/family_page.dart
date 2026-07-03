@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/catalog_widgets.dart';
+import '../../catalog/application/catalog_providers.dart';
 import '../data/family_models.dart';
 import '../data/family_repository.dart';
 import '../application/family_controller.dart';
@@ -32,23 +33,31 @@ class FamilyPage extends ConsumerWidget {
         title: const Text('Family', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
         iconTheme: const IconThemeData(color: AppColors.ink),
       ),
-      body: state.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorState(message: '$e', onRetry: () => ref.read(familyControllerProvider.notifier).refresh()),
-        data: (view) => view.family == null
-            ? _EmptyState(
-                onCreate: () => _createDialog(context, ref),
-                onJoin: () => _joinDialog(context, ref),
-              )
-            : _FamilyView(
-                family: view.family!,
-                members: view.members,
-                myUserId: ref.read(familyRepositoryProvider).currentUserId,
-                onInvite: () => _inviteSheet(context, ref),
-                onLeave: () => _leave(context, ref),
-                onChangeRole: (m) => _changeRole(context, ref, m),
-                onRemove: (m) => _removeMember(context, ref, m),
-              ),
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(familyControllerProvider.notifier).refresh(),
+        child: state.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => _ErrorState(message: '$e', onRetry: () => ref.read(familyControllerProvider.notifier).refresh()),
+          data: (view) => view.family == null
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    _EmptyState(
+                      onCreate: () => _createDialog(context, ref),
+                      onJoin: () => _joinDialog(context, ref),
+                    ),
+                  ],
+                )
+              : _FamilyView(
+                  family: view.family!,
+                  members: view.members,
+                  myUserId: ref.read(familyRepositoryProvider).currentUserId,
+                  onInvite: () => _inviteSheet(context, ref),
+                  onLeave: () => _leave(context, ref),
+                  onChangeRole: (m) => _changeRole(context, ref, m),
+                  onRemove: (m) => _removeMember(context, ref, m),
+                ),
+        ),
       ),
     );
   }
@@ -73,9 +82,18 @@ class FamilyPage extends ConsumerWidget {
     if (name == null || name.trim().isEmpty) return;
     try {
       await ref.read(familyControllerProvider.notifier).createFamily(name);
+      _refreshCatalogScope(ref);
     } catch (e) {
       if (context.mounted) _error(context, e);
     }
+  }
+
+  /// Joining/creating/leaving a family changes what the catalog can see —
+  /// rebuild the repository (drops its cached family id) so rooms, assets
+  /// and reminders refetch under the new membership.
+  void _refreshCatalogScope(WidgetRef ref) {
+    ref.invalidate(catalogRepositoryProvider);
+    refreshCatalog(ref);
   }
 
   Future<void> _joinDialog(BuildContext context, WidgetRef ref) async {
@@ -99,6 +117,12 @@ class FamilyPage extends ConsumerWidget {
     if (code == null || code.trim().isEmpty) return;
     try {
       await ref.read(familyControllerProvider.notifier).acceptInvite(code.trim().toUpperCase());
+      _refreshCatalogScope(ref);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Joined! Family rooms, assets and reminders are syncing.'),
+            backgroundColor: AppColors.green));
+      }
     } catch (e) {
       if (context.mounted) _error(context, e);
     }
@@ -204,6 +228,7 @@ class FamilyPage extends ConsumerWidget {
     if (confirm != true) return;
     try {
       await ref.read(familyControllerProvider.notifier).leave();
+      _refreshCatalogScope(ref);
     } catch (e) {
       if (context.mounted) _error(context, e);
     }

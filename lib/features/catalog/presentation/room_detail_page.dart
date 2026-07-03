@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
@@ -40,7 +41,14 @@ class RoomDetailPage extends ConsumerWidget {
                   a.locationId == room.id ||
                   (a.locationName ?? '').toLowerCase() == room.name.toLowerCase())
               .toList();
-          return ListView(
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(locationsProvider);
+              ref.invalidate(assetsProvider);
+              ref.invalidate(upcomingRemindersProvider);
+            },
+            child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
             children: [
               InkWell(
@@ -104,18 +112,10 @@ class RoomDetailPage extends ConsumerWidget {
                       child: Text('Nothing registered here yet.', style: TextStyle(color: AppColors.muted))),
                 )
               else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.88),
-                  itemCount: inRoom.length,
-                  itemBuilder: (context, i) => _ApplianceCard(
-                    asset: inRoom[i],
-                    soonest: _soonestFor(inRoom[i].id, reminders),
-                  ),
-                ),
+                for (final a in inRoom)
+                  _ApplianceGroupCard(asset: a, reminders: _remindersFor(a.id, reminders)),
             ],
+          ),
           );
         },
       ),
@@ -131,10 +131,9 @@ class RoomDetailPage extends ConsumerWidget {
     );
   }
 
-  static Reminder? _soonestFor(String assetId, List<Reminder> reminders) {
-    final mine = reminders.where((r) => r.assetId == assetId).toList()
+  static List<Reminder> _remindersFor(String assetId, List<Reminder> reminders) {
+    return reminders.where((r) => r.assetId == assetId).toList()
       ..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
-    return mine.firstOrNull;
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref, Location room) async {
@@ -180,75 +179,115 @@ class RoomDetailPage extends ConsumerWidget {
   }
 }
 
-class _ApplianceCard extends StatelessWidget {
-  const _ApplianceCard({required this.asset, required this.soonest});
+/// Dashboard-style card: appliance header with full details, then every
+/// service/reminder on the appliance with its own day pill.
+class _ApplianceGroupCard extends StatelessWidget {
+  const _ApplianceGroupCard({required this.asset, required this.reminders});
   final Asset asset;
-  final Reminder? soonest;
+  final List<Reminder> reminders;
 
   @override
   Widget build(BuildContext context) {
-    final brandModel = [asset.brand, asset.model].whereType<String>().join(' · ');
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () => context.push('/asset/${asset.id}'),
-      child: Container(
-        decoration: BoxDecoration(
-            color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Photo strip (falls back to the category icon).
-            AssetThumb(
-              imageRef: asset.imageUrl,
-              width: double.infinity,
-              height: 74,
-              radius: 0,
-              fallback: Container(
-                width: double.infinity,
-                height: 74,
-                color: const Color(0xFFEEF3FB),
-                child: Icon(asset.category.icon, size: 30, color: AppColors.chipBlue),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(asset.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.2)),
-                    const SizedBox(height: 2),
-                    Text(brandModel.isEmpty ? asset.typeLabel : '${asset.typeLabel} · $brandModel',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 11, color: AppColors.muted)),
-                    const Spacer(),
-                    Row(
+    final detailLine = [
+      asset.typeLabel,
+      if (asset.brand != null) asset.brand!,
+      if (asset.model != null) asset.model!,
+    ].join(' · ');
+    final extraLine = [
+      if (asset.serialNo != null) asset.serialNo!,
+      if (asset.purchaseDate != null) 'since ${DateFormat('MMM yyyy').format(asset.purchaseDate!)}',
+      ...asset.properties.entries.map((e) => '${e.key} ${e.value}'),
+    ].join(' · ');
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            onTap: () => context.push('/asset/${asset.id}'),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  AssetThumb(
+                    imageRef: asset.imageUrl,
+                    size: 52,
+                    fallback: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(14)),
+                      child: Icon(asset.category.icon, size: 24, color: AppColors.chipBlue),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (soonest != null) ...[
-                          DayPill(daysLeft: soonest!.daysLeft),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(soonest!.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
-                          ),
-                        ] else
-                          const Text('No reminders',
-                              style: TextStyle(fontSize: 10.5, color: AppColors.muted)),
+                        Text(asset.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.15)),
+                        const SizedBox(height: 3),
+                        Text(detailLine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                        if (extraLine.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(extraLine,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 11.5, color: AppColors.muted)),
+                        ],
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (reminders.isNotEmpty)
+                    DayPill(daysLeft: reminders.first.daysLeft)
+                  else
+                    const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          if (reminders.isNotEmpty) ...[
+            const Divider(height: 1, color: AppColors.line),
+            for (final r in reminders)
+              InkWell(
+                onTap: () => context.push('/asset/${r.assetId}'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconBubble(kind: r.kind, size: 34),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text('${r.label} · ${DateFormat('d MMM').format(r.dueDate)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                      ),
+                      DayPill(daysLeft: r.daysLeft),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 4),
+          ] else
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('No reminders on this appliance yet.',
+                    style: TextStyle(fontSize: 11.5, color: AppColors.muted)),
+              ),
+            ),
+        ],
       ),
     );
   }
