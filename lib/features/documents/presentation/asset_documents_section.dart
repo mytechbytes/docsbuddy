@@ -55,20 +55,15 @@ class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
     }
   }
 
-  /// Images open in the in-app full-page viewer; other file types open in
-  /// the platform's viewer for that type.
-  Future<void> _view(DocumentMeta doc) async {
+  /// Opens a non-image document in the platform's viewer for its type.
+  Future<void> _open(DocumentMeta doc) async {
     final url = await ref.read(documentRepositoryProvider).viewUrl(doc);
     if (!mounted) return;
     if (url == null) {
       _snack('Connect Supabase to open files.', error: true);
       return;
     }
-    if (isImageMime(doc.mimeType) || isImageName(doc.title)) {
-      ImageViewerPage.open(context, title: doc.title, url: url);
-    } else {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    }
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
   Future<void> _delete(DocumentMeta doc) async {
@@ -104,52 +99,9 @@ class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
           error: (e, _) => Text('$e', style: const TextStyle(color: AppColors.muted)),
           data: (list) => list.isEmpty
               ? const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Text('No documents yet. Attach invoices, warranties or photos.', style: TextStyle(color: AppColors.muted)))
-              : Column(children: [for (final d in list) _DocTile(doc: d, onView: () => _view(d), onDelete: () => _delete(d))]),
+              : DocumentGrid(docs: list, onOpen: _open, onDelete: _delete),
         ),
       ],
-    );
-  }
-}
-
-class _DocTile extends StatelessWidget {
-  const _DocTile({required this.doc, required this.onView, required this.onDelete});
-  final DocumentMeta doc;
-  final VoidCallback onView;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: onView,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
-        child: Row(
-          children: [
-            DocumentThumb(doc: doc, size: 44, radius: 12),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(doc.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                  Text('${doc.kind.label} · ${doc.prettySize}', style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: AppColors.muted),
-              onSelected: (v) => v == 'view' ? onView() : onDelete(),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'view', child: Text('View')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

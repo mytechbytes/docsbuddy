@@ -100,6 +100,10 @@ class SupabaseDocumentRepository implements DocumentRepository {
       _guard(() => _client.storage.from(_bucket).createSignedUrl(doc.storagePath, 900));
 
   @override
+  Future<Uint8List?> download(DocumentMeta doc) =>
+      _guard(() => _client.storage.from(_bucket).download(doc.storagePath));
+
+  @override
   Future<void> delete(DocumentMeta doc) => _guard(() async {
         await _client.storage.from(_bucket).remove([doc.storagePath]);
         await _client.from('documents').delete().eq('id', doc.id);

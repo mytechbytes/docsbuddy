@@ -24,5 +24,8 @@ abstract interface class DocumentRepository {
   /// (e.g. the local fake backend has no real storage).
   Future<String?> viewUrl(DocumentMeta doc);
 
+  /// The raw file bytes (for sharing), or null if unavailable.
+  Future<Uint8List?> download(DocumentMeta doc);
+
   Future<void> delete(DocumentMeta doc);
 }
