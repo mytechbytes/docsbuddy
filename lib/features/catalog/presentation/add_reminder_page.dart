@@ -1,8 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
@@ -38,7 +38,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   late Recurrence _recurrence = widget.editing?.recurrence ?? Recurrence.yearly;
   late DateTime _due = widget.editing?.dueDate ?? DateTime.now().add(const Duration(days: 30));
   late Set<int>? _offsets = widget.editing == null ? null : {...widget.editing!.notifyOffsets};
-  PlatformFile? _attachment;
+  final _attachments = <PickedMedia>[];
   bool _saving = false;
 
   bool get _isEdit => widget.editing != null;
@@ -80,9 +80,8 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   }
 
   Future<void> _pickAttachment() async {
-    final res = await FilePicker.platform.pickFiles(withData: true);
-    final f = res?.files.firstOrNull;
-    if (f?.bytes != null) setState(() => _attachment = f);
+    final picked = await pickDocuments(context);
+    if (picked.isNotEmpty) setState(() => _attachments.addAll(picked));
   }
 
   Future<void> _save(Set<int> offsets) async {
@@ -120,26 +119,20 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         );
       }
 
-      // Service-scoped document (documents.asset_date_id).
-      final attachment = _attachment;
-      if (attachment?.bytes != null) {
+      // Service-scoped documents (documents.asset_date_id).
+      for (final attachment in _attachments) {
         try {
           await ref.read(documentRepositoryProvider).upload(
                 assetId: widget.assetId,
                 assetDateId: reminder.id,
-                fileName: attachment!.name,
-                bytes: attachment.bytes!,
-                mimeType: switch (attachment.extension?.toLowerCase()) {
-                  'pdf' => 'application/pdf',
-                  'jpg' || 'jpeg' => 'image/jpeg',
-                  'png' => 'image/png',
-                  _ => 'application/octet-stream',
-                },
+                fileName: attachment.name,
+                bytes: attachment.bytes,
+                mimeType: attachment.docMime,
                 kind: _kind == ReminderKind.insurance ? DocKind.insurance : DocKind.other,
               );
-          ref.invalidate(assetDocumentsProvider(widget.assetId));
         } catch (_) {/* reminder saved; the document can be attached later */}
       }
+      if (_attachments.isNotEmpty) ref.invalidate(assetDocumentsProvider(widget.assetId));
 
       if (!mounted) return;
       ref.invalidate(assetRemindersProvider(widget.assetId));
@@ -329,14 +322,19 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
                   border: Border.all(color: AppColors.line)),
               child: Row(
                 children: [
-                  Icon(_attachment == null ? Icons.attach_file : Icons.check_circle_outline,
-                      size: 20, color: _attachment == null ? AppColors.ink2 : AppColors.green),
+                  Icon(_attachments.isEmpty ? Icons.attach_file : Icons.check_circle_outline,
+                      size: 20, color: _attachments.isEmpty ? AppColors.ink2 : AppColors.green),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_attachment?.name ?? 'Attach document',
+                        Text(
+                            switch (_attachments.length) {
+                              0 => 'Attach documents',
+                              1 => _attachments.first.name,
+                              final n => '$n files attached',
+                            },
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),

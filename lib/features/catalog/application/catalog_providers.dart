@@ -6,6 +6,7 @@ import '../data/catalog_models.dart';
 import '../data/catalog_repository.dart';
 import '../data/fake_catalog_repository.dart';
 import '../data/supabase_catalog_repository.dart';
+import 'common_categories.dart';
 
 /// Catalog repository: Supabase-backed when configured, else a seeded fake so
 /// the app runs and is testable without a backend.
@@ -38,10 +39,16 @@ final locationsProvider = FutureProvider<List<Location>>((ref) {
 });
 
 /// The appliance/vehicle type catalog (only specific types — generic group
-/// rows are filtered out; they exist for the enum backfill).
+/// rows are filtered out; they exist for the enum backfill). Falls back to
+/// the built-in common types when the backend catalog is empty or
+/// unreachable, so the type picker is never blank.
 final categoriesProvider = FutureProvider<List<AssetCategory>>((ref) async {
-  final all = await ref.watch(catalogRepositoryProvider).categories();
-  return all.where((c) => !c.isGeneric).toList();
+  try {
+    final all = await ref.watch(catalogRepositoryProvider).categories();
+    final specific = all.where((c) => !c.isGeneric).toList();
+    if (specific.isNotEmpty) return specific;
+  } catch (_) {/* fall through to the built-ins */}
+  return commonAssetCategories;
 });
 
 /// Displayable URL for a stored image reference (signed for bucket paths),
