@@ -81,6 +81,10 @@ Status of what's needed to ship a Play **internal testing** build.
       `asset_dates`/`assets`/`documents`. **Not live-tested.**
 - [x] App icon applied via `flutter_launcher_icons` (`assets/icon/*`); regenerate
       with `dart run flutter_launcher_icons`
+- [ ] Swap in the **original** logo file (current icons are a programmatic
+      recreation): commit it as `assets/icon/source_logo.png`, then
+      `python3 tool/apply_brand_icon.py` + `dart run flutter_launcher_icons`
+      (see `store/README.md`)
 - [x] Release build green on CI — AGP 9 / Flutter plugin JVM-target (→17) and
       `compileSdk` (→36) alignment handled in `android/build.gradle.kts` via the
       AGP variant `finalizeDsl` hook; signed AAB artifact produced
