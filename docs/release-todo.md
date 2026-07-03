@@ -147,11 +147,13 @@ Dart models → repository mapping → screens.
       pills, "Add here" flow)
 - [x] 04 Asset list polish (in-page search bar, photo thumbnails, type chips)
 - [x] 05 Appliance picker (searchable catalog list → add-asset)
-- [x] 06 Add appliance: type dropdown, model/serial/purchase/store, photo,
-      AMC date → seeds service, invoice attach (multi-select), camera capture
-      everywhere (photos & documents), appliance-type tiles + Others (custom
-      type with per-type properties), rooms FAB with photo-at-create
-- [x] 08 Add reminder → full page: type tile grid, "in N days" helper,
+- [x] 06 Add appliance — 3-step flow: category grid (responsive 1/2/3
+      cols, incl. Other) → appliance type for that category (+ custom
+      "Others" with per-type properties) → details with optional existing-
+      room dropdown; camera capture everywhere, multi-select invoices,
+      rooms FAB with photo-at-create
+- [x] 08 Add reminder → 4-step flow (type → details → notification
+      settings → attachments w/ thumbnails + image viewer): type tile grid, "in N days" helper,
       offsets chips (pref-defaults), service-scoped attach document,
       family-push note
 - [x] 14 Profile (avatar edit + upload, Verified badge, stats row, family
