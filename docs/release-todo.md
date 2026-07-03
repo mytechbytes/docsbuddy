@@ -61,7 +61,7 @@ Status of what's needed to ship a Play **internal testing** build.
 - [ ] **Privacy policy URL** (e.g. `https://docsbuddy.mytechbytes.in/privacy`)
 - [ ] Data safety form, content rating, target audience
 - [ ] Confirm **Play App Signing** is enabled
-- [ ] Store listing assets (icon, screenshots) — for testing tracks these are light
+- [ ] Store listing assets — **icon + feature graphic ready in `store/`**; screenshots still to capture (testing tracks are light)
 
 ## G. Known gaps / next features
 - [x] Core features: assets, locations & reminders (dashboard, asset CRUD, add
