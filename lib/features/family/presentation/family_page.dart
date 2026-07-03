@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Family;
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -466,7 +467,7 @@ class _InviteSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -475,9 +476,26 @@ class _InviteSheet extends StatelessWidget {
             const SizedBox(height: 18),
             const Text('Invite a member', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
             const SizedBox(height: 6),
-            Text('Share this code. They can join as ${invite.role.label}. Expires in 7 days.',
+            Text('Share this code — or let them scan it. They can join as ${invite.role.label}. Expires in 7 days.',
                 textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
+            // Scannable version of the same invite code (any QR app reads it;
+            // paste it into Family → "Join with a code").
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: QrImageView(
+                data: invite.code,
+                version: QrVersions.auto,
+                size: 168,
+                gapless: true,
+              ),
+            ),
+            const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
