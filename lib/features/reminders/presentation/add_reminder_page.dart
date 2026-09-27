@@ -115,7 +115,8 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   @override
   Widget build(BuildContext context) {
     final asset = ref.watch(assetProvider(widget.assetId)).value;
-    final offsets = _offsets ?? {...ref.watch(defaultNotifyOffsetsProvider)};
+    final defaultOffsets = ref.watch(defaultNotifyOffsetsProvider);
+    final offsets = _offsets ?? defaultOffsets.toSet();
     final saving = ref.watch(reminderEditorControllerProvider).isLoading;
 
     return Scaffold(
