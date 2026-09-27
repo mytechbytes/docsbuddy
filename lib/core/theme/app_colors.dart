@@ -71,6 +71,12 @@ abstract final class AppColors {
   static const registrationFg = Color(0xFF4D8A64);
   static const otherKindBg = Color(0xFFEEF1F6);
 
+  // Microsoft brand mark
+  static const msRed = Color(0xFFF25022);
+  static const msGreen = Color(0xFF7FBA00);
+  static const msBlue = Color(0xFF00A4EF);
+  static const msYellow = Color(0xFFFFB900);
+
   // Onboarding illustrations
   static const illustrationLabel = Color(0xFF7A6A53);
   static const tintBlue = Color(0xFFEAF0FB);

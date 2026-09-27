@@ -37,6 +37,16 @@ void main() {
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
     expect(find.text('Continue with Apple'), findsOneWidget);
+    expect(find.text('Continue with Microsoft'), findsOneWidget);
+  });
+
+  testWidgets('Microsoft button signs in (fake backend) and reaches the app', (tester) async {
+    await tester.pumpWidget(_harness());
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Continue with Microsoft'));
+    await tester.tap(find.text('Continue with Microsoft'));
+    await settle(tester, const Duration(seconds: 1));
+    expect(find.text('DASH'), findsOneWidget);
   });
 
   testWidgets('valid credentials sign in and reach the app', (tester) async {
@@ -70,6 +80,7 @@ void main() {
     await tester.pumpWidget(_harness());
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Sign up'));
     await tester.tap(find.text('Sign up'));
     await tester.pumpAndSettle();
 

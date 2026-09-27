@@ -42,6 +42,8 @@ class AuthController extends AsyncNotifier<void> {
 
   Future<bool> apple() => _run(_repo.signInWithApple);
 
+  Future<bool> microsoft() => _run(_repo.signInWithMicrosoft);
+
   Future<bool> sendResetCode(String email) => _run(() => _repo.sendPasswordResetCode(email.trim()));
 
   Future<bool> verifyResetCode(String email, String token) =>

@@ -6,7 +6,7 @@ import 'auth_remote_data_source.dart';
 /// input normalisation and error translation (`guardBackend` maps GoTrue's
 /// `AuthException` to a user-safe `AuthFailure`).
 ///
-/// NOTE: OAuth (Google/Apple) additionally requires the providers to be enabled
+/// NOTE: OAuth (Google/Apple/Microsoft) additionally requires the providers to be enabled
 /// in the Supabase dashboard and a deep-link redirect configured per platform;
 /// the recovery-code flow assumes email OTP is enabled.
 class RemoteAuthRepository implements AuthRepository {
@@ -43,6 +43,10 @@ class RemoteAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithApple() => guardBackend(() => _remote.signInWithOAuth(OAuthProviderKind.apple, redirectUrl));
+
+  @override
+  Future<void> signInWithMicrosoft() =>
+      guardBackend(() => _remote.signInWithOAuth(OAuthProviderKind.microsoft, redirectUrl));
 
   @override
   Future<void> sendPasswordResetCode(String email) => guardBackend(() => _remote.sendEmailOtp(email.trim()));

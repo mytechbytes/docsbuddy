@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Which backend implementation the app talks to. Adding a backend means
 /// adding a value here and a `BackendModule` for it (see
 /// `bootstrap/backend_module.dart`).
@@ -18,11 +20,23 @@ abstract final class Env {
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  /// Where auth emails / OAuth redirect back into the app. An Android App Link /
-  /// iOS Universal Link served from the marketing site, with the custom scheme
-  /// (in.mytechbytes.docsbuddy://login-callback) still registered as a fallback.
-  /// Must also be listed in the backend's allowed redirect URLs.
-  static const authRedirectUrl = 'https://docsbuddy.mytechbytes.in/login-callback';
+  /// App Link / Universal Link served from the marketing site.
+  static const authRedirectAppLink = 'https://docsbuddy.mytechbytes.in/login-callback';
+
+  /// Custom-scheme fallback registered in Info.plist / AndroidManifest.
+  static const authRedirectScheme = 'in.mytechbytes.docsbuddy://login-callback';
+
+  /// Where auth emails / OAuth redirect back into the app. Both URLs must be
+  /// listed in the backend's allowed redirect URLs.
+  ///
+  /// iOS uses the custom scheme until Associated Domains + the hosted
+  /// apple-app-site-association file are in place (the https link would
+  /// otherwise open the website instead of the app). Set
+  /// `--dart-define=IOS_UNIVERSAL_LINKS=true` once they are.
+  static String get authRedirectUrl =>
+      defaultTargetPlatform == TargetPlatform.iOS && !_iosUniversalLinks ? authRedirectScheme : authRedirectAppLink;
+
+  static const _iosUniversalLinks = bool.fromEnvironment('IOS_UNIVERSAL_LINKS');
 
   static bool get hasSupabase => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 

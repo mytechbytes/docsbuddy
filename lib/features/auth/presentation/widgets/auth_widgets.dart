@@ -6,6 +6,7 @@ import '../../../../core/widgets/db_logo.dart';
 import '../../application/auth_controller.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Wire this in a page's `build` to surface [AuthController] failures as a
 /// SnackBar. Safe to call once per build (ref.listen dedupes).
@@ -142,9 +143,9 @@ class OrDivider extends StatelessWidget {
   }
 }
 
-enum SocialProvider { google, apple }
+enum SocialProvider { google, apple, microsoft }
 
-/// Outlined "Continue with Google/Apple" button.
+/// Outlined "Continue with Google/Apple/Microsoft" button.
 class SocialButton extends StatelessWidget {
   const SocialButton({super.key, required this.provider, required this.onPressed});
 
@@ -153,15 +154,20 @@ class SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isApple = provider == SocialProvider.apple;
+    final (icon, label) = switch (provider) {
+      SocialProvider.google => (
+          Icon(Icons.g_mobiledata, size: 30, color: context.palette.accent) as Widget,
+          context.l10n.authContinueWithGoogle,
+        ),
+      SocialProvider.apple => (Icon(Icons.apple, size: 22, color: context.palette.text), context.l10n.authContinueWithApple),
+      SocialProvider.microsoft => (const _MicrosoftLogo(), context.l10n.authContinueWithMicrosoft),
+    };
     return SizedBox(
       height: 50,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: isApple
-            ? Icon(Icons.apple, size: 22, color: context.palette.text)
-            : Icon(Icons.g_mobiledata, size: 30, color: context.palette.accent),
-        label: Text(isApple ? context.l10n.authContinueWithApple : context.l10n.authContinueWithGoogle),
+        icon: icon,
+        label: Text(label),
         style: OutlinedButton.styleFrom(
           foregroundColor: context.palette.text,
           backgroundColor: context.palette.surface,
@@ -169,6 +175,28 @@ class SocialButton extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'PlusJakartaSans'),
         ),
+      ),
+    );
+  }
+}
+
+/// Microsoft's four-square mark (brand colours, fixed in both themes).
+class _MicrosoftLogo extends StatelessWidget {
+  const _MicrosoftLogo();
+
+  static const _squares = [AppColors.msRed, AppColors.msGreen, AppColors.msBlue, AppColors.msYellow];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 18,
+      height: 18,
+      child: GridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 2,
+        crossAxisSpacing: 2,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [for (final c in _squares) ColoredBox(color: c)],
       ),
     );
   }

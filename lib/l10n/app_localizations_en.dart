@@ -1397,4 +1397,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appearanceDark => 'Dark';
+
+  @override
+  String get authContinueWithMicrosoft => 'Continue with Microsoft';
 }

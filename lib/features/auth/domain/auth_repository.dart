@@ -14,6 +14,9 @@ abstract interface class AuthRepository {
 
   Future<void> signInWithApple();
 
+  /// Microsoft work, school or personal account (Supabase "Azure").
+  Future<void> signInWithMicrosoft();
+
   /// Sends a 6-digit recovery code to [email].
   Future<void> sendPasswordResetCode(String email);
 

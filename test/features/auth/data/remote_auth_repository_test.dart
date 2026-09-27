@@ -36,6 +36,12 @@ void main() {
     verify(() => remote.signInWithOAuth(OAuthProviderKind.apple, 'app://callback')).called(1);
   });
 
+  test('Microsoft uses its own provider with the same redirect', () async {
+    when(() => remote.signInWithOAuth(any(), any())).thenAnswer((_) async {});
+    await repo.signInWithMicrosoft();
+    verify(() => remote.signInWithOAuth(OAuthProviderKind.microsoft, 'app://callback')).called(1);
+  });
+
   test('GoTrue errors become user-safe AuthFailures', () async {
     when(() => remote.signInWithPassword(any(), any())).thenThrow(const AuthException('Invalid login credentials'));
     await expectLater(

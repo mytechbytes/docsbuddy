@@ -55,6 +55,11 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
+  Future<void> _microsoft() async {
+    final ok = await ref.read(authControllerProvider.notifier).microsoft();
+    if (ok && mounted) context.go(AppRoutes.dashboard);
+  }
+
   @override
   Widget build(BuildContext context) {
     listenAuthErrors(ref, context);
@@ -83,6 +88,8 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         SocialButton(provider: SocialProvider.google, onPressed: _google),
         const SizedBox(height: 10),
         SocialButton(provider: SocialProvider.apple, onPressed: _apple),
+        const SizedBox(height: 10),
+        SocialButton(provider: SocialProvider.microsoft, onPressed: _microsoft),
         const SizedBox(height: 22),
         InlineLink(lead: context.l10n.authHaveAccountLead, action: context.l10n.commonSignIn, onTap: () => context.go(AppRoutes.signIn)),
       ],

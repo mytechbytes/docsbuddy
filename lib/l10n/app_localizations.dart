@@ -2559,6 +2559,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get appearanceDark;
+
+  /// No description provided for @authContinueWithMicrosoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Microsoft'**
+  String get authContinueWithMicrosoft;
 }
 
 class _AppLocalizationsDelegate

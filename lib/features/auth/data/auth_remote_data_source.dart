@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-enum OAuthProviderKind { google, apple }
+enum OAuthProviderKind { google, apple, microsoft }
 
 /// Thin GoTrue wrapper — no validation, no error translation.
 abstract interface class AuthRemoteDataSource {
@@ -41,8 +41,12 @@ class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
         switch (provider) {
           OAuthProviderKind.google => OAuthProvider.google,
           OAuthProviderKind.apple => OAuthProvider.apple,
+          // Supabase's provider for Microsoft Entra ID / personal accounts.
+          OAuthProviderKind.microsoft => OAuthProvider.azure,
         },
         redirectTo: redirectTo,
+        // Azure only returns the email address when asked for it.
+        scopes: provider == OAuthProviderKind.microsoft ? 'email' : null,
       );
 
   @override

@@ -55,6 +55,12 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> signInWithMicrosoft() async {
+    await _delay();
+    _setSignedIn(true);
+  }
+
+  @override
   Future<void> sendPasswordResetCode(String email) async {
     await _delay();
     if (!_emailRe.hasMatch(email)) throw const AuthFailure('Enter a valid email address.');

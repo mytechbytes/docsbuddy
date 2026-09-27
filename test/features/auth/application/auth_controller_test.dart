@@ -29,6 +29,12 @@ void main() {
     expect(container.read(authControllerProvider), isA<AsyncData<void>>());
   });
 
+  test('Microsoft sign-in goes through the repository', () async {
+    when(() => auth.signInWithMicrosoft()).thenAnswer((_) async {});
+    expect(await controller().microsoft(), isTrue);
+    verify(() => auth.signInWithMicrosoft()).called(1);
+  });
+
   test('failures land in state as AppFailure and report false', () async {
     when(() => auth.signInWithPassword(email: any(named: 'email'), password: any(named: 'password')))
         .thenThrow(const AuthFailure('Incorrect email or password.'));

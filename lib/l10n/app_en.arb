@@ -678,5 +678,6 @@
   "settingsAppearance": "Appearance",
   "appearanceSystem": "System",
   "appearanceLight": "Light",
-  "appearanceDark": "Dark"
+  "appearanceDark": "Dark",
+  "authContinueWithMicrosoft": "Continue with Microsoft"
 }
