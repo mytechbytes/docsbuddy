@@ -1,35 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-/// Injected in `main()` after `SharedPreferences.getInstance()`.
-final sharedPreferencesProvider = Provider<SharedPreferences>(
-  (ref) => throw UnimplementedError('Override in ProviderScope'),
+import '../domain/onboarding_store.dart';
+
+/// Bound at the composition root (`bootstrap/dependencies.dart`).
+final onboardingStoreProvider = Provider<OnboardingStore>(
+  (ref) => throw UnimplementedError('onboardingStoreProvider must be overridden'),
 );
 
-/// Tracks whether first-launch onboarding has been completed on this device.
-///
-/// Local-first: this is a device flag, not synced state, so SharedPreferences
-/// is the right home for it (refresh tokens still go to secure storage).
+/// Whether first-launch onboarding has been completed on this device.
 class OnboardingController extends Notifier<bool> {
-  static const _key = 'onboarding_complete';
-
   @override
-  bool build() {
-    return ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-  }
+  bool build() => ref.watch(onboardingStoreProvider).isComplete;
 
-  /// Marks onboarding finished and persists it.
   Future<void> complete() async {
-    await ref.read(sharedPreferencesProvider).setBool(_key, true);
+    await ref.read(onboardingStoreProvider).setComplete(true);
     state = true;
   }
 
-  /// Clears the flag so the walkthrough shows again (used for testing/replay).
+  /// Clears the flag so the walkthrough shows again (replay from Settings).
   Future<void> reset() async {
-    await ref.read(sharedPreferencesProvider).remove(_key);
+    await ref.read(onboardingStoreProvider).setComplete(false);
     state = false;
   }
 }
 
-final onboardingControllerProvider =
-    NotifierProvider<OnboardingController, bool>(OnboardingController.new);
+final onboardingControllerProvider = NotifierProvider<OnboardingController, bool>(OnboardingController.new);

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/catalog/application/catalog_providers.dart';
-import '../../features/catalog/data/catalog_models.dart';
-import '../theme/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../application/catalog_providers.dart';
+import '../../domain/catalog_models.dart';
+import 'catalog_style.dart';
+
+export 'catalog_style.dart';
 
 /// Rounded icon tile coloured by reminder kind (the design's `IconBubble`).
 class IconBubble extends StatelessWidget {
@@ -50,7 +53,7 @@ class AssetThumb extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final r = radius ?? size * 0.27;
     if (imageRef == null || imageRef!.isEmpty) return fallback;
-    final url = ref.watch(assetImageUrlProvider(imageRef!)).valueOrNull;
+    final url = ref.watch(assetImageUrlProvider(imageRef!)).value;
     if (url == null) return fallback;
     return ClipRRect(
       borderRadius: BorderRadius.circular(r),

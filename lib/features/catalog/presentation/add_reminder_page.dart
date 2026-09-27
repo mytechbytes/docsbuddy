@@ -5,13 +5,16 @@ import 'package:intl/intl.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
-import '../../documents/application/document_providers.dart';
-import '../../documents/data/document_models.dart';
 import '../../documents/presentation/attachment_widgets.dart';
 import '../../settings/application/settings_providers.dart';
+import '../../settings/domain/notification_prefs.dart';
 import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../application/editor_controllers.dart';
+import '../domain/catalog_inputs.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// Design screen 08 — Add Reminder as a 4-step flow:
 ///   1. Reminder type
@@ -49,11 +52,8 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   late DateTime _due = widget.editing?.dueDate ?? DateTime.now().add(const Duration(days: 30));
   late Set<int>? _offsets = widget.editing == null ? null : {...widget.editing!.notifyOffsets};
   final _attachments = <PickedMedia>[];
-  bool _saving = false;
 
   bool get _isEdit => widget.editing != null;
-
-  static const _offsetOptions = [60, 30, 14, 7, 3, 1];
 
   @override
   void initState() {
@@ -71,13 +71,6 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
     super.dispose();
   }
 
-  String? _text(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
-
-  int get _daysAway {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return DateTime(_due.year, _due.month, _due.day).difference(today).inDays;
-  }
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -95,74 +88,34 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   }
 
   Future<void> _save(Set<int> offsets) async {
-    setState(() => _saving = true);
-    final repo = ref.read(catalogRepositoryProvider);
-    try {
-      final sorted = offsets.toList()..sort((a, b) => b.compareTo(a));
-      final label = _label.text.trim().isEmpty ? _kind.label : _label.text.trim();
-      final Reminder reminder;
-      if (_isEdit) {
-        reminder = await repo.updateReminder(
-          widget.editing!.id,
-          kind: _kind,
-          label: label,
-          dueDate: _due,
-          recurrence: _recurrence,
-          notifyOffsets: sorted,
-          provider: _text(_provider),
-          policyNo: _text(_policyNo),
-          cost: double.tryParse(_cost.text.trim().replaceAll(',', '')),
-          notes: _text(_notes),
-        );
-      } else {
-        reminder = await repo.addReminder(
-          assetId: widget.assetId,
-          kind: _kind,
-          label: label,
-          dueDate: _due,
-          recurrence: _recurrence,
-          notifyOffsets: sorted,
-          provider: _text(_provider),
-          policyNo: _text(_policyNo),
-          cost: double.tryParse(_cost.text.trim().replaceAll(',', '')),
-          notes: _text(_notes),
-        );
-      }
-
-      // Service-scoped documents (documents.asset_date_id).
-      for (final attachment in _attachments) {
-        try {
-          await ref.read(documentRepositoryProvider).upload(
-                assetId: widget.assetId,
-                assetDateId: reminder.id,
-                fileName: attachment.name,
-                bytes: attachment.bytes,
-                mimeType: attachment.docMime,
-                kind: _kind == ReminderKind.insurance ? DocKind.insurance : DocKind.other,
-              );
-        } catch (_) {/* reminder saved; the document can be attached later */}
-      }
-      if (_attachments.isNotEmpty) ref.invalidate(assetDocumentsProvider(widget.assetId));
-
-      if (!mounted) return;
-      ref.invalidate(assetRemindersProvider(widget.assetId));
-      refreshCatalog(ref);
-      Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) {
-        setState(() => _saving = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.red));
-      }
-    }
+    final draft = ReminderDraft(
+      kind: _kind,
+      dueDate: _due,
+      recurrence: _recurrence,
+      notifyOffsets: offsets,
+      label: _label.text,
+      provider: _provider.text,
+      policyNo: _policyNo.text,
+      cost: _cost.text,
+      notes: _notes.text,
+    );
+    final ok = await runAction(
+      context,
+      () => ref.read(reminderEditorControllerProvider.notifier).save(
+            assetId: widget.assetId,
+            draft: draft,
+            editing: widget.editing,
+            attachments: _attachments,
+          ),
+    );
+    if (ok && mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final asset = ref.watch(assetProvider(widget.assetId)).valueOrNull;
-    final prefDefaults =
-        ref.watch(notificationPrefsProvider).valueOrNull?.defaultOffsets ?? const [30, 7, 1];
-    final offsets = _offsets ?? {...prefDefaults};
+    final asset = ref.watch(assetProvider(widget.assetId)).value;
+    final offsets = _offsets ?? {...ref.watch(defaultNotifyOffsetsProvider)};
+    final saving = ref.watch(reminderEditorControllerProvider).isLoading;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -210,7 +163,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: StepNav(
                 step: _step,
-                busy: _saving,
+                busy: saving,
                 nextLabel: _step < _stepAttach ? 'Next' : (_isEdit ? 'Save Changes' : 'Save Reminder'),
                 onBack: () => setState(() => _step--),
                 onNext: () {
@@ -287,7 +240,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
               ),
               Text(
-                _daysAway < 0 ? '${-_daysAway}d ago' : 'in $_daysAway day${_daysAway == 1 ? '' : 's'}',
+                relativeDays(calendarDaysBetween(DateTime.now(), _due)),
                 style: const TextStyle(fontSize: 12, color: AppColors.muted),
               ),
             ],
@@ -361,7 +314,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         spacing: 8,
         runSpacing: 8,
         children: [
-          for (final d in _offsetOptions)
+          for (final d in notifyOffsetOptions)
             FilterChip(
               selected: offsets.contains(d),
               onSelected: (v) => setState(() {
@@ -389,7 +342,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         child: Text(
           offsets.isEmpty
               ? 'No reminders will fire for this service — pick at least one offset to be notified.'
-              : 'You\'ll be reminded ${(offsets.toList()..sort((a, b) => b.compareTo(a))).map((d) => '${d}d').join(', ')} before the due date, on your enabled channels (see Settings).',
+              : 'You\'ll be reminded ${sortedOffsets(offsets).map((d) => '${d}d').join(', ')} before the due date, on your enabled channels (see Settings).',
           style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
         ),
       ),

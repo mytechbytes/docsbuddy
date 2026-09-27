@@ -1,422 +1,193 @@
 import 'dart:typed_data';
 
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/data/file_storage.dart';
+import '../../../core/data/supabase_guard.dart';
+import '../../../core/providers/core_providers.dart';
+import '../domain/catalog_inputs.dart';
+import '../domain/catalog_models.dart';
+import '../domain/catalog_repository.dart';
+import '../domain/common_categories.dart';
+import 'catalog_mappers.dart';
+import 'catalog_remote_data_source.dart';
 
-import '../application/common_categories.dart';
-import 'catalog_models.dart';
-import 'catalog_repository.dart';
-
-/// Real backend catalog, mapped onto the 0001 schema:
-///   - `assets` with real columns (`serial_no`, `purchase_*`, `store`,
-///     `image_url`, `location_id`; only `category` still rides in `metadata`
-///     until the category catalog lands),
-///   - `locations` as a real table (find-or-created by name on asset save),
-///   - `asset_dates` as the **service** rows (kind inferred from `label`;
-///     per-service `notify_offsets`, provider/policy/cost/notes from 0006),
+/// Backend catalog over the 0001 schema:
+///   - `assets` with real columns (only the custom type/properties ride in
+///     `metadata`),
+///   - `locations` find-or-created by name on asset save,
+///   - `asset_dates` as the **service** rows,
 ///   - the `complete_asset_date` RPC for completion/recurrence.
 ///
 /// Everything is family-scoped; the caller's family is resolved (and a default
 /// "My Home" created) on first use. RLS scopes all reads/writes.
-class SupabaseCatalogRepository implements CatalogRepository {
-  SupabaseCatalogRepository(this._client);
+class RemoteCatalogRepository implements CatalogRepository {
+  RemoteCatalogRepository(this._remote, this._files, {Clock clock = DateTime.now}) : _now = clock;
 
-  final SupabaseClient _client;
+  final CatalogRemoteDataSource _remote;
+  final FileStorage _files;
+  final Clock _now;
   String? _familyId;
-
-  static const _assetCols =
-      'id, name, brand, model, serial_no, purchase_date, purchase_price, store, image_url, location_id, category_id, metadata, locations(name), asset_categories(slug, name)';
-  static const _dateCols =
-      'id, asset_id, label, kind, due_date, recurrence, notify_offsets, provider, policy_no, cost, notes';
-
-  Future<T> _guard<T>(Future<T> Function() run) async {
-    try {
-      return await run();
-    } on PostgrestException catch (e) {
-      throw Exception(e.message);
-    }
-  }
 
   Future<String> _family() async {
     if (_familyId != null) return _familyId!;
-    final rows = await _client.from('families').select('id').limit(1);
-    if (rows.isNotEmpty) return _familyId = rows.first['id'] as String;
-    final created = await _client.rpc('create_family', params: {'p_name': 'My Home'}) as Map<String, dynamic>;
-    return _familyId = created['id'] as String;
+    final existing = await _remote.firstFamilyId();
+    if (existing != null) return _familyId = existing;
+    return _familyId = (await _remote.createFamily('My Home'))['id'] as String;
   }
 
-  // ── enum mapping ──
-  static String _recToDb(Recurrence r) => r == Recurrence.halfYearly ? 'half_yearly' : r.name;
-  static Recurrence _recFromDb(String? s) => switch (s) {
-        'monthly' => Recurrence.monthly,
-        'quarterly' => Recurrence.quarterly,
-        'half_yearly' => Recurrence.halfYearly,
-        'yearly' => Recurrence.yearly,
-        _ => Recurrence.none,
+  /// Find-or-create a `locations` row by (family, case-insensitive name).
+  Future<String> _locationIdFor(String familyId, String name) async =>
+      await _remote.locationIdByName(familyId, name) ??
+      await _remote.insertLocation({
+        'family_id': familyId,
+        'name': name,
+        'kind': 'room',
+        'created_by': _remote.currentUserId,
+      });
+
+  Future<String?> _genericCategoryId(AssetCategoryKind kind) => _remote.categoryIdForSlug(kind.name);
+
+  String _photoPath(String familyId, String folder, String id, String fileName) =>
+      '$familyId/$folder/$id/photo/${_now().millisecondsSinceEpoch}_${safeFileName(fileName)}';
+
+  /// Uploads a new photo and deletes the replaced one (best-effort).
+  Future<void> _replacePhoto({
+    required String path,
+    required String? previous,
+    required Uint8List bytes,
+    required String mimeType,
+    required Future<void> Function() savePath,
+  }) async {
+    await _files.upload(path, bytes, mimeType: mimeType);
+    await savePath();
+    if (isBucketPath(previous)) {
+      try {
+        await _files.remove(previous!);
+      } catch (_) {/* leave the orphan for a maintenance job */}
+    }
+  }
+
+  Json _assetValues(AssetInput i) => {
+        'brand': i.brand,
+        'model': i.model,
+        'serial_no': i.serialNo,
+        'purchase_date': i.purchaseDate == null ? null : CatalogMapper.dbDate(i.purchaseDate!),
+        'purchase_price': i.purchasePrice,
+        'store': i.store,
       };
 
-  static AssetCategoryKind _catFromName(String? n) =>
-      AssetCategoryKind.values.firstWhere((c) => c.name == n, orElse: () => AssetCategoryKind.other);
+  Json _dateValues(ReminderInput i) => {
+        'label': i.label.trim().isEmpty ? i.kind.label : i.label.trim(),
+        'kind': i.kind.name,
+        'due_date': CatalogMapper.dbDate(i.dueDate),
+        'recurrence': CatalogMapper.recurrenceToDb(i.recurrence),
+        'notify_offsets': ?i.notifyOffsets,
+        'provider': i.provider,
+        'policy_no': i.policyNo,
+        'cost': i.cost,
+        'notes': i.notes,
+      };
 
-  /// Kind comes from the stored `asset_dates.kind` (written since 0005);
-  /// label matching remains only as the fallback for old rows.
-  static ReminderKind _kindFor(String? kind, String label) =>
-      ReminderKind.values.asNameMap()[kind] ??
-      ReminderKind.values.firstWhere(
-        (k) => k.label.toLowerCase() == label.toLowerCase(),
-        orElse: () => ReminderKind.other,
-      );
-
-  static DateTime? _date(String? s) => s == null ? null : DateTime.parse(s);
-  static String _dbDate(DateTime d) => d.toIso8601String().substring(0, 10);
-
-  Asset _asset(Map<String, dynamic> r) {
-    final meta = (r['metadata'] as Map?)?.cast<String, dynamic>() ?? const {};
-    final cat = (r['asset_categories'] as Map?)?.cast<String, dynamic>();
-    final slug = cat?['slug'] as String?;
-    return Asset(
-      id: r['id'] as String,
-      name: r['name'] as String,
-      // Group from the joined category slug's prefix; metadata is the
-      // fallback for rows created before the 0005 backfill.
-      category: _catFromName(slug?.split('-').first ?? meta['category'] as String?),
-      categoryId: r['category_id'] as String?,
-      // Joined specific type, else a custom/fallback type riding in metadata.
-      categoryName: slug != null && slug.contains('-')
-          ? (cat?['name'] as String?)
-          : meta['custom_type'] as String?,
-      properties:
-          ((meta['properties'] as Map?) ?? const {}).map((k, v) => MapEntry('$k', '$v')),
-      // Joined location name; old pre-0006 rows may still carry the metadata key.
-      locationName: (r['locations'] as Map?)?['name'] as String? ?? meta['location'] as String?,
-      locationId: r['location_id'] as String?,
-      brand: r['brand'] as String?,
-      model: r['model'] as String?,
-      serialNo: r['serial_no'] as String?,
-      purchaseDate: _date(r['purchase_date'] as String?),
-      purchasePrice: (r['purchase_price'] as num?)?.toDouble(),
-      store: r['store'] as String?,
-      imageUrl: r['image_url'] as String?,
-    );
-  }
-
-  Reminder _reminder(Map<String, dynamic> r, {String? assetName}) {
-    final label = r['label'] as String;
-    return Reminder(
-      id: r['id'] as String,
-      assetId: r['asset_id'] as String,
-      assetName: assetName ?? (r['assets'] as Map?)?['name'] as String? ?? '',
-      kind: _kindFor(r['kind'] as String?, label),
-      label: label,
-      dueDate: DateTime.parse(r['due_date'] as String),
-      recurrence: _recFromDb(r['recurrence'] as String?),
-      notifyOffsets: (r['notify_offsets'] as List?)?.cast<int>() ?? const [30, 7, 1],
-      provider: r['provider'] as String?,
-      policyNo: r['policy_no'] as String?,
-      cost: (r['cost'] as num?)?.toDouble(),
-      notes: r['notes'] as String?,
-      assetImageUrl: (r['assets'] as Map?)?['image_url'] as String?,
-    );
-  }
+  // ── reads ──
 
   @override
-  Future<List<Asset>> assets() => _guard(() async {
-        final rows = await _client.from('assets').select(_assetCols).order('created_at');
-        return rows.map(_asset).toList();
-      });
+  Future<List<Asset>> assets() => guardBackend(() async => (await _remote.assets()).map(CatalogMapper.asset).toList());
 
   @override
-  Future<Asset> asset(String id) => _guard(() async {
-        final r = await _client.from('assets').select(_assetCols).eq('id', id).single();
-        return _asset(r);
-      });
+  Future<Asset> asset(String id) => guardBackend(() async => CatalogMapper.asset(await _remote.asset(id)));
 
   @override
-  Future<List<AssetCategory>> categories() => _guard(() async {
-        final rows = await _client
-            .from('asset_categories')
-            .select('id, slug, name, icon, default_dates')
-            .order('name');
-        return rows
-            .map((r) => AssetCategory(
-                  id: r['id'] as String,
-                  slug: (r['slug'] as String?) ?? 'other',
-                  name: (r['name'] as String?) ?? 'Other',
-                  iconToken: r['icon'] as String?,
-                  defaults: ((r['default_dates'] as List?) ?? const [])
-                      .whereType<Map>()
-                      .map((j) => DefaultReminder.fromJson(j.cast<String, dynamic>()))
-                      .toList(),
-                ))
+  Future<List<AssetCategory>> categories() =>
+      guardBackend(() async => (await _remote.categories()).map(CatalogMapper.category).toList());
+
+  @override
+  Future<List<Location>> locations() =>
+      guardBackend(() async => (await _remote.locations()).map(CatalogMapper.location).toList());
+
+  @override
+  Future<List<Reminder>> upcomingReminders({int withinDays = 365}) => guardBackend(() async {
+        final now = _now();
+        return (await _remote.openAssetDates())
+            .map((r) => CatalogMapper.reminder(r))
+            .where((r) => r.daysLeftOn(now) <= withinDays)
             .toList();
       });
 
-  /// Category row for the generic group matching the enum, if seeded.
-  Future<String?> _genericCategoryId(AssetCategoryKind kind) async {
-    final rows = await _client.from('asset_categories').select('id').eq('slug', kind.name).limit(1);
-    return rows.isEmpty ? null : rows.first['id'] as String;
+  @override
+  Future<List<Reminder>> remindersFor(String assetId) => guardBackend(() async =>
+      (await _remote.openAssetDates(assetId: assetId)).map((r) => CatalogMapper.reminder(r, assetName: '')).toList());
+
+  @override
+  Future<String?> resolveImageUrl(String? imageRef) async {
+    if (imageRef == null || imageRef.isEmpty) return null;
+    if (!isBucketPath(imageRef)) return imageRef;
+    try {
+      return await _files.signedUrl(imageRef, expiresIn: const Duration(hours: 1));
+    } catch (_) {
+      return null; // missing object / offline → UI falls back to the icon
+    }
   }
 
-  @override
-  Future<List<Location>> locations() => _guard(() async {
-        final rows = await _client
-            .from('locations')
-            .select('id, name, kind, image_url, parent_id, assets(count)')
-            .order('sort_order')
-            .order('name');
-        return rows.map((r) {
-          final counts = r['assets'] as List?;
-          final count = counts == null || counts.isEmpty ? 0 : (counts.first as Map)['count'] as int? ?? 0;
-          return Location(
-            id: r['id'] as String,
-            name: r['name'] as String,
-            assetCount: count,
-            kind: r['kind'] as String?,
-            imageUrl: r['image_url'] as String?,
-            parentId: r['parent_id'] as String?,
-          );
-        }).toList();
-      });
+  // ── assets ──
 
   @override
-  Future<List<Reminder>> upcomingReminders({int withinDays = 365}) => _guard(() async {
-        final rows = await _client
-            .from('asset_dates')
-            .select('$_dateCols, assets(name, image_url)')
-            .isFilter('completed_at', null)
-            .isFilter('deleted_at', null)
-            .order('due_date');
-        return rows.map((r) => _reminder(r)).where((r) => r.daysLeft <= withinDays).toList();
-      });
-
-  @override
-  Future<List<Reminder>> remindersFor(String assetId) => _guard(() async {
-        final rows = await _client
-            .from('asset_dates')
-            .select(_dateCols)
-            .eq('asset_id', assetId)
-            .isFilter('completed_at', null)
-            .isFilter('deleted_at', null)
-            .order('due_date');
-        return rows.map((r) => _reminder(r, assetName: '')).toList();
-      });
-
-  /// Find-or-create a `locations` row by (family, case-insensitive name).
-  Future<String> _locationIdFor(String familyId, String name) async {
-    final existing = await _client
-        .from('locations')
-        .select('id')
-        .eq('family_id', familyId)
-        .ilike('name', name)
-        .limit(1);
-    if (existing.isNotEmpty) return existing.first['id'] as String;
-    final row = await _client
-        .from('locations')
-        .insert({
-          'family_id': familyId,
-          'name': name,
-          'kind': 'room',
-          'created_by': _client.auth.currentUser?.id,
-        })
-        .select('id')
-        .single();
-    return row['id'] as String;
-  }
-
-  @override
-  Future<Asset> addAsset({
-    required String name,
-    required AssetCategoryKind category,
-    String? categoryId,
-    String? typeName,
-    String? locationName,
-    String? brand,
-    String? model,
-    String? serialNo,
-    DateTime? purchaseDate,
-    double? purchasePrice,
-    String? store,
-    Map<String, String>? properties,
-  }) =>
-      _guard(() async {
+  Future<Asset> addAsset(AssetInput input) => guardBackend(() async {
         final familyId = await _family();
-        final loc = locationName?.trim();
+        final loc = input.locationName?.trim();
         final locationId = loc == null || loc.isEmpty ? null : await _locationIdFor(familyId, loc);
         // Prefer the real FK; built-in fallback/custom types have no DB row,
         // so they land on the generic group row + metadata.custom_type.
-        final catId = isDbCategoryId(categoryId) ? categoryId : await _genericCategoryId(category);
-        final row = await _client
-            .from('assets')
-            .insert({
-              'family_id': familyId,
-              'name': name.trim(),
-              'brand': brand,
-              'model': model,
-              'serial_no': serialNo,
-              'purchase_date': purchaseDate == null ? null : _dbDate(purchaseDate),
-              'purchase_price': purchasePrice,
-              'store': store,
-              'location_id': locationId,
-              'category_id': catId,
-              'created_by': _client.auth.currentUser?.id,
-              'metadata': {
-                if (catId == null) 'category': category.name,
-                if (!isDbCategoryId(categoryId) && typeName != null) 'custom_type': typeName,
-                if (properties != null && properties.isNotEmpty) 'properties': properties,
-              },
-            })
-            .select(_assetCols)
-            .single();
-        return _asset(row);
+        final hasDbCat = isDbCategoryId(input.categoryId);
+        final catId = hasDbCat ? input.categoryId : await _genericCategoryId(input.category);
+        final row = await _remote.insertAsset({
+          'family_id': familyId,
+          'name': input.name.trim(),
+          ..._assetValues(input),
+          'location_id': locationId,
+          'category_id': catId,
+          'created_by': _remote.currentUserId,
+          'metadata': {
+            if (catId == null) 'category': input.category.name,
+            if (!hasDbCat && input.typeName != null) 'custom_type': input.typeName,
+            if (input.properties.isNotEmpty) 'properties': input.properties,
+          },
+        });
+        return CatalogMapper.asset(row);
       });
 
   @override
-  Future<Asset> updateAsset(
-    String id, {
-    String? name,
-    AssetCategoryKind? category,
-    String? categoryId,
-    String? typeName,
-    String? locationName,
-    String? brand,
-    String? model,
-    String? serialNo,
-    DateTime? purchaseDate,
-    double? purchasePrice,
-    String? store,
-    Map<String, String>? properties,
-  }) =>
-      _guard(() async {
-        String? locationId;
-        final loc = locationName?.trim();
-        if (loc != null && loc.isNotEmpty) {
-          locationId = await _locationIdFor(await _family(), loc);
-        }
+  Future<Asset> updateAsset(String id, AssetInput input) => guardBackend(() async {
+        final loc = input.locationName?.trim();
+        final locationId = loc == null || loc.isEmpty ? null : await _locationIdFor(await _family(), loc);
 
         // Merge custom_type/properties into the existing metadata; picking a
-        // real catalog type clears any earlier custom type.
-        final hasDbCat = isDbCategoryId(categoryId);
-        // Custom/fallback types re-anchor on the generic group row (keeps the
-        // kind group without a specific FK).
-        final genericId =
-            !hasDbCat && typeName != null && category != null ? await _genericCategoryId(category) : null;
-        final current = await _client.from('assets').select('metadata').eq('id', id).single();
+        // real catalog type clears any earlier custom type. Custom/fallback
+        // types re-anchor on the generic group row.
+        final hasDbCat = isDbCategoryId(input.categoryId);
+        final genericId = !hasDbCat && input.typeName != null ? await _genericCategoryId(input.category) : null;
+        final current = await _remote.assetRow(id, 'metadata');
         final meta = {...((current['metadata'] as Map?)?.cast<String, dynamic>() ?? const {})};
         if (hasDbCat) {
           meta.remove('custom_type');
-        } else if (typeName != null) {
-          meta['custom_type'] = typeName;
-          if (genericId == null && category != null) meta['category'] = category.name;
+        } else if (input.typeName != null) {
+          meta['custom_type'] = input.typeName;
+          if (genericId == null) meta['category'] = input.category.name;
         }
-        if (properties != null) {
-          properties.isEmpty ? meta.remove('properties') : meta['properties'] = properties;
-        }
+        input.properties.isEmpty ? meta.remove('properties') : meta['properties'] = input.properties;
 
-        final row = await _client
-            .from('assets')
-            .update({
-              if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
-              if (hasDbCat) 'category_id': categoryId else if (typeName != null) 'category_id': genericId,
-              'location_id': ?locationId,
-              'brand': brand,
-              'model': model,
-              'serial_no': serialNo,
-              'purchase_date': purchaseDate == null ? null : _dbDate(purchaseDate),
-              'purchase_price': purchasePrice,
-              'store': store,
-              'metadata': meta,
-            })
-            .eq('id', id)
-            .select(_assetCols)
-            .single();
-        return _asset(row);
+        final row = await _remote.updateAsset(id, {
+          if (input.name.trim().isNotEmpty) 'name': input.name.trim(),
+          if (hasDbCat) 'category_id': input.categoryId else if (input.typeName != null) 'category_id': genericId,
+          'location_id': ?locationId,
+          ..._assetValues(input),
+          'metadata': meta,
+        });
+        return CatalogMapper.asset(row);
       });
 
+  /// Services and document rows cascade via FKs; storage files are left as
+  /// orphans (cleaned up by a future maintenance job).
   @override
-  Future<void> deleteAsset(String id) => _guard(() async {
-        // asset_dates and document rows cascade via FKs; storage files are
-        // left as orphans (cleaned up by a future maintenance job).
-        await _client.from('assets').delete().eq('id', id);
-      });
-
-  @override
-  Future<Reminder> addReminder({
-    required String assetId,
-    required ReminderKind kind,
-    required String label,
-    required DateTime dueDate,
-    Recurrence recurrence = Recurrence.none,
-    List<int>? notifyOffsets,
-    String? provider,
-    String? policyNo,
-    double? cost,
-    String? notes,
-  }) =>
-      _guard(() async {
-        final row = await _client
-            .from('asset_dates')
-            .insert({
-              'asset_id': assetId,
-              'label': label.trim().isEmpty ? kind.label : label.trim(),
-              'kind': kind.name,
-              'due_date': _dbDate(dueDate),
-              'recurrence': _recToDb(recurrence),
-              'notify_offsets': ?notifyOffsets,
-              'provider': provider,
-              'policy_no': policyNo,
-              'cost': cost,
-              'notes': notes,
-            })
-            .select(_dateCols)
-            .single();
-        return _reminder(row, assetName: '');
-      });
-
-  @override
-  Future<Reminder> updateReminder(
-    String id, {
-    required ReminderKind kind,
-    required String label,
-    required DateTime dueDate,
-    required Recurrence recurrence,
-    required List<int> notifyOffsets,
-    String? provider,
-    String? policyNo,
-    double? cost,
-    String? notes,
-  }) =>
-      _guard(() async {
-        final row = await _client
-            .from('asset_dates')
-            .update({
-              'label': label.trim().isEmpty ? kind.label : label.trim(),
-              'kind': kind.name,
-              'due_date': _dbDate(dueDate),
-              'recurrence': _recToDb(recurrence),
-              'notify_offsets': notifyOffsets,
-              'provider': provider,
-              'policy_no': policyNo,
-              'cost': cost,
-              'notes': notes,
-            })
-            .eq('id', id)
-            .select(_dateCols)
-            .single();
-        return _reminder(row, assetName: '');
-      });
-
-  @override
-  Future<void> deleteReminder(String id) => _guard(() async {
-        // Tombstone (deleted_at) so local-first sync can propagate the delete.
-        await _client
-            .from('asset_dates')
-            .update({'deleted_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id);
-      });
-
-  @override
-  Future<void> completeReminder(String reminderId) =>
-      _guard(() => _client.rpc('complete_asset_date', params: {'p_id': reminderId}));
-
-  static const _bucket = 'docsbuddy-files';
+  Future<void> deleteAsset(String id) => guardBackend(() => _remote.deleteAsset(id));
 
   @override
   Future<Asset> setAssetImage(
@@ -425,69 +196,60 @@ class SupabaseCatalogRepository implements CatalogRepository {
     required String fileName,
     required String mimeType,
   }) =>
-      _guard(() async {
-        final row = await _client.from('assets').select('family_id, image_url').eq('id', assetId).single();
-        final fam = row['family_id'] as String;
-        final old = row['image_url'] as String?;
+      guardBackend(() async {
+        final row = await _remote.assetRow(assetId, 'family_id, image_url');
+        final path = _photoPath(row['family_id'] as String, 'assets', assetId, fileName);
+        late Json updated;
+        await _replacePhoto(
+          path: path,
+          previous: row['image_url'] as String?,
+          bytes: bytes,
+          mimeType: mimeType,
+          savePath: () async => updated = await _remote.updateAsset(assetId, {'image_url': path}),
+        );
+        return CatalogMapper.asset(updated);
+      });
 
-        final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-        final path = '$fam/assets/$assetId/photo/${DateTime.now().millisecondsSinceEpoch}_$safe';
-        try {
-          await _client.storage.from(_bucket).uploadBinary(
-                path,
-                bytes,
-                fileOptions: FileOptions(contentType: mimeType, upsert: false),
-              );
-        } on StorageException catch (e) {
-          throw Exception(e.message);
-        }
+  // ── services ──
 
-        final updated = await _client
-            .from('assets')
-            .update({'image_url': path})
-            .eq('id', assetId)
-            .select(_assetCols)
-            .single();
-
-        // Best-effort cleanup of the replaced photo (bucket paths only).
-        if (old != null && !old.startsWith('http')) {
-          try {
-            await _client.storage.from(_bucket).remove([old]);
-          } on StorageException {
-            /* leave the orphan */
-          }
-        }
-        return _asset(updated);
+  @override
+  Future<Reminder> addReminder(String assetId, ReminderInput input) => guardBackend(() async {
+        final row = await _remote.insertAssetDate({'asset_id': assetId, ..._dateValues(input)});
+        return CatalogMapper.reminder(row, assetName: '');
       });
 
   @override
-  Future<String?> resolveImageUrl(String? imageRef) async {
-    if (imageRef == null || imageRef.isEmpty) return null;
-    if (imageRef.startsWith('http')) return imageRef;
-    try {
-      return await _client.storage.from(_bucket).createSignedUrl(imageRef, 3600);
-    } catch (_) {
-      return null; // missing object / offline → UI falls back to the icon
-    }
-  }
+  Future<Reminder> updateReminder(String id, ReminderInput input) => guardBackend(() async {
+        final row = await _remote.updateAssetDate(id, _dateValues(input));
+        return CatalogMapper.reminder(row, assetName: '');
+      });
+
+  /// Tombstone (deleted_at) so local-first sync can propagate the delete.
+  @override
+  Future<void> deleteReminder(String id) => guardBackend(
+      () => _remote.updateAssetDate(id, {'deleted_at': _now().toUtc().toIso8601String()}));
 
   @override
-  Future<Location> createLocation(String name) => _guard(() async {
-        final familyId = await _family();
-        final id = await _locationIdFor(familyId, name.trim());
+  Future<void> completeReminder(String reminderId) => guardBackend(() => _remote.completeAssetDate(reminderId));
+
+  // ── locations ──
+
+  @override
+  Future<Location> createLocation(String name) => guardBackend(() async {
+        final id = await _locationIdFor(await _family(), name.trim());
         return Location(id: id, name: name.trim());
       });
 
   @override
-  Future<void> updateLocation(String id, {String? name}) => _guard(() async {
+  Future<void> updateLocation(String id, {String? name}) => guardBackend(() async {
         if (name == null || name.trim().isEmpty) return;
-        await _client.from('locations').update({'name': name.trim()}).eq('id', id);
+        await _remote.updateLocation(id, {'name': name.trim()});
       });
 
   @override
-  Future<void> reorderLocations(List<String> orderedIds) => _guard(() async {
+  Future<void> reorderLocations(List<String> orderedIds) => guardBackend(() async {
         for (var i = 0; i < orderedIds.length; i++) {
-          await _client.from('locations').update({'sort_order': i}).eq('id', orderedIds[i]);
+          await _remote.updateLocation(orderedIds[i], {'sort_order': i});
         }
       });
 
@@ -498,31 +260,15 @@ class SupabaseCatalogRepository implements CatalogRepository {
     required String fileName,
     required String mimeType,
   }) =>
-      _guard(() async {
-        final row =
-            await _client.from('locations').select('family_id, image_url').eq('id', locationId).single();
-        final fam = row['family_id'] as String;
-        final old = row['image_url'] as String?;
-
-        final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-        final path = '$fam/locations/$locationId/photo/${DateTime.now().millisecondsSinceEpoch}_$safe';
-        try {
-          await _client.storage.from(_bucket).uploadBinary(
-                path,
-                bytes,
-                fileOptions: FileOptions(contentType: mimeType, upsert: false),
-              );
-        } on StorageException catch (e) {
-          throw Exception(e.message);
-        }
-        await _client.from('locations').update({'image_url': path}).eq('id', locationId);
-
-        if (old != null && !old.startsWith('http')) {
-          try {
-            await _client.storage.from(_bucket).remove([old]);
-          } on StorageException {
-            /* leave the orphan */
-          }
-        }
+      guardBackend(() async {
+        final row = await _remote.locationRow(locationId, 'family_id, image_url');
+        final path = _photoPath(row['family_id'] as String, 'locations', locationId, fileName);
+        await _replacePhoto(
+          path: path,
+          previous: row['image_url'] as String?,
+          bytes: bytes,
+          mimeType: mimeType,
+          savePath: () => _remote.updateLocation(locationId, {'image_url': path}),
+        );
       });
 }

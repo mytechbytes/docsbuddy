@@ -1,9 +1,10 @@
 import 'dart:typed_data';
 
+import 'catalog_inputs.dart';
 import 'catalog_models.dart';
 
-/// Assets, locations and services/reminders. Backend-agnostic, mirroring the
-/// Postgres schema so a Supabase implementation can slot in later.
+/// Assets, locations and services/reminders. Backend-agnostic; every method
+/// throws an `AppFailure` on error.
 abstract interface class CatalogRepository {
   Future<List<Reminder>> upcomingReminders({int withinDays = 365});
   Future<List<Asset>> assets();
@@ -15,72 +16,18 @@ abstract interface class CatalogRepository {
   /// their default services). Empty when the backend isn't seeded yet.
   Future<List<AssetCategory>> categories();
 
-  /// [categoryId] may be a real catalog FK or a built-in `cat_*` fallback id
-  /// (treated as no-FK). [typeName] carries the display name for fallback or
-  /// custom ("Others") types; [properties] are the type-specific extras.
-  Future<Asset> addAsset({
-    required String name,
-    required AssetCategoryKind category,
-    String? categoryId,
-    String? typeName,
-    String? locationName,
-    String? brand,
-    String? model,
-    String? serialNo,
-    DateTime? purchaseDate,
-    double? purchasePrice,
-    String? store,
-    Map<String, String>? properties,
-  });
+  Future<Asset> addAsset(AssetInput input);
 
-  /// Updates an asset's editable fields (null = leave unchanged; the location
-  /// is find-or-created by name like on create). A non-null [typeName] with a
-  /// non-DB [categoryId] switches the asset to a custom/fallback type.
-  Future<Asset> updateAsset(
-    String id, {
-    String? name,
-    AssetCategoryKind? category,
-    String? categoryId,
-    String? typeName,
-    String? locationName,
-    String? brand,
-    String? model,
-    String? serialNo,
-    DateTime? purchaseDate,
-    double? purchasePrice,
-    String? store,
-    Map<String, String>? properties,
-  });
+  /// Rewrites an asset's editable fields; the location is find-or-created by
+  /// name like on create.
+  Future<Asset> updateAsset(String id, AssetInput input);
 
   /// Deletes the asset — its services and document metadata cascade.
   Future<void> deleteAsset(String id);
 
-  Future<Reminder> addReminder({
-    required String assetId,
-    required ReminderKind kind,
-    required String label,
-    required DateTime dueDate,
-    Recurrence recurrence,
-    List<int>? notifyOffsets,
-    String? provider,
-    String? policyNo,
-    double? cost,
-    String? notes,
-  });
+  Future<Reminder> addReminder(String assetId, ReminderInput input);
 
-  /// Rewrites a service's editable fields.
-  Future<Reminder> updateReminder(
-    String id, {
-    required ReminderKind kind,
-    required String label,
-    required DateTime dueDate,
-    required Recurrence recurrence,
-    required List<int> notifyOffsets,
-    String? provider,
-    String? policyNo,
-    double? cost,
-    String? notes,
-  });
+  Future<Reminder> updateReminder(String id, ReminderInput input);
 
   /// Removes a service (tombstoned on the real backend for sync).
   Future<void> deleteReminder(String id);
@@ -95,8 +42,7 @@ abstract interface class CatalogRepository {
   /// Persists a new room ordering (`locations.sort_order` by list index).
   Future<void> reorderLocations(List<String> orderedIds);
 
-  /// Uploads/replaces the room's photo and stores its reference on
-  /// `locations.image_url`.
+  /// Uploads/replaces the room's photo and stores its reference.
   Future<void> setLocationImage(
     String locationId, {
     required Uint8List bytes,
@@ -104,8 +50,7 @@ abstract interface class CatalogRepository {
     required String mimeType,
   });
 
-  /// Uploads/replaces the asset's photo and stores its reference on
-  /// `assets.image_url`; returns the updated asset.
+  /// Uploads/replaces the asset's photo; returns the updated asset.
   Future<Asset> setAssetImage(
     String assetId, {
     required Uint8List bytes,

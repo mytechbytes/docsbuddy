@@ -3,32 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/notifications/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
 import '../../../core/widgets/db_logo.dart';
+import '../../../core/widgets/feedback.dart';
 import '../../catalog/application/catalog_providers.dart';
-import '../../catalog/application/reminder_filters.dart';
-import '../../catalog/data/catalog_models.dart';
+import '../../catalog/domain/catalog_models.dart';
+import '../../catalog/domain/reminder_filters.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../profile/application/profile_providers.dart';
-import '../../settings/application/settings_providers.dart';
+import '../application/dashboard_controller.dart';
 
-class DashboardTab extends ConsumerStatefulWidget {
+class DashboardTab extends ConsumerWidget {
   const DashboardTab({super.key});
 
-  @override
-  ConsumerState<DashboardTab> createState() => _DashboardTabState();
-}
-
-class _DashboardTabState extends ConsumerState<DashboardTab> {
-  /// Kind filter for the Upcoming list (empty = everything).
-  Set<ReminderKind> _kinds = {};
-
-  /// Group the Upcoming list by asset (design 01) instead of a flat list.
-  bool _groupByAsset = false;
-
-  Future<void> _openFilter() async {
-    final selected = {..._kinds};
+  Future<void> _openFilter(BuildContext context, WidgetRef ref) async {
+    final selected = {...ref.read(dashboardControllerProvider).kinds};
     final applied = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: AppColors.paper,
@@ -91,26 +80,13 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
         ),
       ),
     );
-    if (applied == true) setState(() => _kinds = selected);
+    if (applied == true) ref.read(dashboardControllerProvider.notifier).setKinds(selected);
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Re-arm local notifications whenever the reminder set changes,
-    // honouring the user's quiet hours.
-    ref.listen(upcomingRemindersProvider, (_, next) {
-      next.whenData((list) {
-        final prefs = ref.read(notificationPrefsProvider).valueOrNull;
-        ref.read(notificationServiceProvider).rescheduleFor(
-              list,
-              quietStart: prefs?.quietStart,
-              quietEnd: prefs?.quietEnd,
-            );
-      });
-    });
-    final reminders = ref.watch(upcomingRemindersProvider);
-    final assetCount = ref.watch(assetsProvider).valueOrNull?.length ?? 0;
-    final overdue = reminders.valueOrNull?.where((r) => r.daysLeft < 0).isNotEmpty ?? false;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashboard = ref.watch(dashboardViewProvider);
+    final overdue = ref.watch(hasOverdueProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -134,20 +110,19 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(upcomingRemindersProvider);
-          ref.invalidate(assetsProvider);
+          ref.read(catalogRefresherProvider).all();
+          await ref.read(dashboardViewProvider.future);
         },
-        child: reminders.when(
+        child: dashboard.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('$e')),
-          data: (list) {
-            // Soonest expiration first, always.
-            final visible = filterByKinds(list, _kinds)
-              ..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+          error: (e, _) => Center(child: Text(failureMessage(e))),
+          data: (view) {
+            final filter = view.filter;
+            final visible = view.visible;
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
               children: [
-                _StatGrid(reminders: list, assetCount: assetCount),
+                _StatGrid(counts: view.counts, assetCount: view.assetCount),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -157,38 +132,38 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                     ),
                     PopupMenuButton<bool>(
                       tooltip: 'Group by',
-                      onSelected: (v) => setState(() => _groupByAsset = v),
+                      onSelected: (v) => ref.read(dashboardControllerProvider.notifier).setGroupByAsset(v),
                       itemBuilder: (_) => [
                         CheckedPopupMenuItem(
-                            value: false, checked: !_groupByAsset, child: const Text('Group by: None')),
+                            value: false, checked: !filter.groupByAsset, child: const Text('Group by: None')),
                         CheckedPopupMenuItem(
-                            value: true, checked: _groupByAsset, child: const Text('Group by: Asset')),
+                            value: true, checked: filter.groupByAsset, child: const Text('Group by: Asset')),
                       ],
                       child: Container(
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: _groupByAsset ? AppColors.ink : AppColors.paper,
+                          color: filter.groupByAsset ? AppColors.ink : AppColors.paper,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: AppColors.line),
                         ),
                         child: Icon(Icons.layers_outlined,
-                            size: 17, color: _groupByAsset ? Colors.white : AppColors.ink2),
+                            size: 17, color: filter.groupByAsset ? Colors.white : AppColors.ink2),
                       ),
                     ),
                     const SizedBox(width: 8),
                     InkWell(
                       borderRadius: BorderRadius.circular(10),
-                      onTap: _openFilter,
+                      onTap: () => _openFilter(context, ref),
                       child: Container(
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: _kinds.isEmpty ? AppColors.paper : AppColors.ink,
+                          color: filter.kinds.isEmpty ? AppColors.paper : AppColors.ink,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: AppColors.line),
                         ),
-                        child: Icon(Icons.tune, size: 17, color: _kinds.isEmpty ? AppColors.ink2 : Colors.white),
+                        child: Icon(Icons.tune, size: 17, color: filter.kinds.isEmpty ? AppColors.ink2 : Colors.white),
                       ),
                     ),
                   ],
@@ -199,13 +174,13 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                     padding: const EdgeInsets.symmetric(vertical: 40),
                     child: Center(
                         child: Text(
-                            _kinds.isEmpty
+                            filter.kinds.isEmpty
                                 ? 'No reminders yet. Add an asset to get started.'
                                 : 'Nothing matches the selected types.',
                             style: const TextStyle(color: AppColors.muted))),
                   )
-                else if (_groupByAsset)
-                  for (final group in _groupedByAsset(visible)) _AssetGroupCard(reminders: group)
+                else if (filter.groupByAsset)
+                  for (final group in view.groups) _AssetGroupCard(reminders: group, asset: view.assetsById[group.first.assetId])
                 else
                   for (final r in visible) _ReminderTile(reminder: r),
               ],
@@ -259,7 +234,7 @@ class _ProfileAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileProvider).valueOrNull;
+    final profile = ref.watch(profileProvider).value;
     return Padding(
       padding: const EdgeInsets.only(left: 8),
       child: InkWell(
@@ -292,13 +267,13 @@ class _ProfileAvatar extends ConsumerWidget {
 /// (asset_dates rows) and deep-links to its filtered list — plus a
 /// full-width total-appliances card.
 class _StatGrid extends StatelessWidget {
-  const _StatGrid({required this.reminders, required this.assetCount});
-  final List<Reminder> reminders;
+  const _StatGrid({required this.counts, required this.assetCount});
+  final Map<ReminderFilter, int> counts;
   final int assetCount;
 
   @override
   Widget build(BuildContext context) {
-    int count(ReminderFilter f) => filterReminders(reminders, f).length;
+    int count(ReminderFilter f) => counts[f] ?? 0;
     return Column(
       children: [
         Row(
@@ -472,30 +447,16 @@ class _ReminderTile extends StatelessWidget {
   }
 }
 
-/// Buckets the (already daysLeft-sorted) reminders by asset, keeping groups
-/// ordered by their soonest expiration.
-List<List<Reminder>> _groupedByAsset(List<Reminder> sorted) {
-  final byAsset = <String, List<Reminder>>{};
-  for (final r in sorted) {
-    byAsset.putIfAbsent(r.assetId, () => []).add(r);
-  }
-  return byAsset.values.toList();
-}
-
 /// Design 01 grouped card: asset header (photo, name, soonest pill) with the
 /// asset's expirations listed inside.
-class _AssetGroupCard extends ConsumerWidget {
-  const _AssetGroupCard({required this.reminders});
+class _AssetGroupCard extends StatelessWidget {
+  const _AssetGroupCard({required this.reminders, required this.asset});
   final List<Reminder> reminders;
+  final Asset? asset;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final first = reminders.first;
-    final asset = ref
-        .watch(assetsProvider)
-        .valueOrNull
-        ?.where((a) => a.id == first.assetId)
-        .firstOrNull;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(

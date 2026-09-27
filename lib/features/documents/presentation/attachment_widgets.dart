@@ -4,41 +4,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../core/media/media_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../core/media/picked_media.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/feedback.dart';
 import '../application/document_providers.dart';
-import '../data/document_models.dart';
-
-const _imageExts = {'jpg', 'jpeg', 'png', 'webp', 'heic', 'gif', 'bmp'};
-
-bool isImageName(String name) {
-  final dot = name.lastIndexOf('.');
-  return dot >= 0 && _imageExts.contains(name.substring(dot + 1).toLowerCase());
-}
-
-bool isImageMime(String mime) => mime.startsWith('image/');
+import '../domain/document_models.dart';
 
 /// Icon for a non-image attachment by file extension / MIME type; the
 /// generic "unknown file" icon when the type isn't recognised.
-IconData fileTypeIcon(String name, [String? mime]) {
-  final dot = name.lastIndexOf('.');
-  final ext = dot < 0 ? '' : name.substring(dot + 1).toLowerCase();
-  return switch (ext) {
-    'pdf' => Icons.picture_as_pdf_outlined,
-    'doc' || 'docx' || 'rtf' || 'odt' => Icons.description_outlined,
-    'xls' || 'xlsx' || 'csv' || 'ods' => Icons.table_chart_outlined,
-    'ppt' || 'pptx' => Icons.slideshow_outlined,
-    'txt' || 'md' => Icons.notes_outlined,
-    'zip' || 'rar' || '7z' || 'gz' => Icons.folder_zip_outlined,
-    'mp3' || 'wav' || 'm4a' || 'aac' || 'ogg' => Icons.audiotrack_outlined,
-    'mp4' || 'mov' || 'mkv' || 'avi' || 'webm' => Icons.videocam_outlined,
-    _ => switch (mime?.split('/').firstOrNull) {
-        'audio' => Icons.audiotrack_outlined,
-        'video' => Icons.videocam_outlined,
-        'text' => Icons.notes_outlined,
-        _ => Icons.insert_drive_file_outlined, // unknown type
-      },
-  };
+IconData fileTypeIcon(String name, [String? mime]) => switch (fileExtension(name)) {
+      'pdf' => Icons.picture_as_pdf_outlined,
+      'doc' || 'docx' || 'rtf' || 'odt' => Icons.description_outlined,
+      'xls' || 'xlsx' || 'csv' || 'ods' => Icons.table_chart_outlined,
+      'ppt' || 'pptx' => Icons.slideshow_outlined,
+      'txt' || 'md' => Icons.notes_outlined,
+      'zip' || 'rar' || '7z' || 'gz' => Icons.folder_zip_outlined,
+      'mp3' || 'wav' || 'm4a' || 'aac' || 'ogg' => Icons.audiotrack_outlined,
+      'mp4' || 'mov' || 'mkv' || 'avi' || 'webm' => Icons.videocam_outlined,
+      _ => switch (mime?.split('/').firstOrNull) {
+          'audio' => Icons.audiotrack_outlined,
+          'video' => Icons.videocam_outlined,
+          'text' => Icons.notes_outlined,
+          _ => Icons.insert_drive_file_outlined, // unknown type
+        },
+    };
+
+extension DocKindStyle on DocKind {
+  IconData get icon => switch (this) {
+        DocKind.invoice => Icons.receipt_long_outlined,
+        DocKind.warranty => Icons.verified_outlined,
+        DocKind.insurance => Icons.shield_outlined,
+        DocKind.manual => Icons.menu_book_outlined,
+        DocKind.photo => Icons.image_outlined,
+        DocKind.other => Icons.description_outlined,
+      };
 }
 
 /// Shares raw bytes as a file via the platform share sheet.
@@ -49,18 +50,23 @@ Future<void> shareBytes(Uint8List bytes, {required String name, required String 
   ));
 }
 
-/// Downloads a stored document and opens the share sheet; snacks on failure.
-Future<void> shareDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
-  final bytes = await ref.read(documentRepositoryProvider).download(doc);
-  if (bytes == null) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Connect Supabase to share files.'), backgroundColor: AppColors.red));
-    }
-    return;
-  }
-  await shareBytes(bytes, name: doc.title, mime: doc.mimeType);
-}
+/// Downloads a stored document and opens the share sheet.
+Future<void> shareDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) => runAction(context, () async {
+      final bytes = await ref.read(assetDocumentsControllerProvider(doc.assetId)).download(doc);
+      await shareBytes(bytes, name: doc.title, mime: doc.mimeType);
+    });
+
+/// Opens a stored document: images in the in-app viewer, everything else in
+/// the platform viewer for its type.
+Future<void> openDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) => runAction(context, () async {
+      final url = await ref.read(assetDocumentsControllerProvider(doc.assetId)).viewUrl(doc);
+      if (!context.mounted) return;
+      if (doc.isImage) {
+        ImageViewerPage.open(context, title: doc.title, url: url, onShare: () => shareDocument(context, ref, doc));
+      } else {
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      }
+    });
 
 /// Full-page image viewer: pinch-zoom / pan / double-tap zoom on a dark
 /// canvas, with the file name in the bar. Works from a URL (stored
@@ -177,9 +183,9 @@ class DocumentThumb extends ConsumerWidget {
       child: Icon(fileTypeIcon(doc.title, doc.mimeType),
           color: AppColors.ink2, size: size.isFinite ? size * 0.5 : 30),
     );
-    if (!isImageMime(doc.mimeType) && !isImageName(doc.title)) return iconBox;
+    if (!doc.isImage) return iconBox;
 
-    final url = ref.watch(documentUrlProvider(doc)).valueOrNull;
+    final url = ref.watch(documentUrlProvider(doc)).value;
     if (url == null) return iconBox;
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
@@ -216,7 +222,7 @@ class PickedMediaGrid extends StatelessWidget {
 
   Widget _tile(BuildContext context, int i) {
     final f = files[i];
-    final image = isImageName(f.name);
+    final image = isImageFileName(f.name);
     return SizedBox(
       width: 86,
       child: Column(
@@ -272,31 +278,13 @@ class PickedMediaGrid extends StatelessWidget {
 }
 
 /// Grid of stored documents: image thumbnails or file-type icons, title +
-/// size, and a ⋮ menu (View / Share / optional Delete). Images open the
-/// in-app viewer with share; other types call [onOpen] (platform viewer).
+/// size, and a ⋮ menu (View / Share / optional Delete).
 class DocumentGrid extends ConsumerWidget {
-  const DocumentGrid({super.key, required this.docs, required this.onOpen, this.onDelete});
+  const DocumentGrid({super.key, required this.assetId, required this.docs, this.canDelete = false});
 
+  final String assetId;
   final List<DocumentMeta> docs;
-
-  /// Opens a non-image document (e.g. external viewer via signed URL).
-  final void Function(DocumentMeta doc) onOpen;
-  final void Function(DocumentMeta doc)? onDelete;
-
-  void _view(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
-    if (isImageMime(doc.mimeType) || isImageName(doc.title)) {
-      final url = await ref.read(documentUrlProvider(doc).future);
-      if (!context.mounted) return;
-      if (url == null) {
-        onOpen(doc); // falls back to the caller's no-storage handling
-        return;
-      }
-      ImageViewerPage.open(context,
-          title: doc.title, url: url, onShare: () => shareDocument(context, ref, doc));
-    } else {
-      onOpen(doc);
-    }
-  }
+  final bool canDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -311,9 +299,11 @@ class DocumentGrid extends ConsumerWidget {
           itemCount: docs.length,
           itemBuilder: (context, i) => _DocCard(
             doc: docs[i],
-            onTap: () => _view(context, ref, docs[i]),
+            onTap: () => openDocument(context, ref, docs[i]),
             onShare: () => shareDocument(context, ref, docs[i]),
-            onDelete: onDelete == null ? null : () => onDelete!(docs[i]),
+            onDelete: canDelete
+                ? () => runAction(context, () => ref.read(assetDocumentsControllerProvider(assetId)).delete(docs[i]))
+                : null,
           ),
         );
       },
@@ -358,7 +348,7 @@ class _DocCard extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                        Text('${doc.kind.label} · ${doc.prettySize}',
+                        Text('${doc.kind.label} · ${formatBytes(doc.sizeBytes)}',
                             style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
                       ],
                     ),

@@ -1,115 +1,78 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/data/file_storage.dart';
+import '../../../core/data/supabase_guard.dart';
+import '../../../core/error/app_failure.dart';
+import '../domain/family_models.dart';
+import '../domain/family_repository.dart';
+import 'family_remote_data_source.dart';
 
-import 'family_models.dart';
-import 'family_repository.dart';
+/// Pure row → model conversion.
+abstract final class FamilyMapper {
+  static Family family(Json r) =>
+      Family(id: r['id'] as String, name: r['name'] as String, ownerId: r['owner_id'] as String);
 
-/// Real backend implementation. `create_family` / `create_invite` are
-/// SECURITY DEFINER RPCs (see supabase/migrations/0002_family_rpcs.sql) because
-/// the first owner insert would otherwise be blocked by the membership RLS
-/// policy; `accept_invite` already exists in 0001.
-class SupabaseFamilyRepository implements FamilyRepository {
-  SupabaseFamilyRepository(this._client);
-
-  final SupabaseClient _client;
-
-  Future<T> _guard<T>(Future<T> Function() run) async {
-    try {
-      return await run();
-    } on PostgrestException catch (e) {
-      throw FamilyFailure(e.message);
-    } on AuthException catch (e) {
-      throw FamilyFailure(e.message);
-    } catch (e) {
-      final s = e.toString();
-      if (s.contains('SocketException') || s.contains('Failed host lookup') || s.contains('ClientException') || s.contains('Connection')) {
-        throw const FamilyFailure('Can’t reach the server. Check your internet connection.');
-      }
-      throw const FamilyFailure('Something went wrong. Please try again.');
-    }
+  static FamilyMember member(Json r) {
+    final user = (r['users'] as Map?)?.cast<String, dynamic>();
+    return FamilyMember(
+      userId: r['user_id'] as String,
+      displayName: (user?['display_name'] as String?) ?? 'Member',
+      role: FamilyRole.fromName(r['role'] as String?),
+      phone: user?['phone'] as String?,
+      avatarUrl: user?['avatar_url'] as String?,
+    );
   }
 
-  @override
-  String? get currentUserId => _client.auth.currentUser?.id;
+  static FamilyInvite invite(Json r) => FamilyInvite(
+        code: r['code'] as String,
+        role: FamilyRole.fromName(r['role'] as String?),
+        expiresAt: DateTime.parse(r['expires_at'] as String),
+      );
+}
 
-  Family _family(Map<String, dynamic> row) =>
-      Family(id: row['id'] as String, name: row['name'] as String, ownerId: row['owner_id'] as String);
+class RemoteFamilyRepository implements FamilyRepository {
+  RemoteFamilyRepository(this._remote);
+
+  final FamilyRemoteDataSource _remote;
 
   @override
-  Future<Family?> currentFamily() => _guard(() async {
-        final rows = await _client.from('families').select('id, name, owner_id').limit(1);
-        if (rows.isEmpty) return null;
-        return _family(rows.first);
+  String? get currentUserId => _remote.currentUserId;
+
+  @override
+  Future<Family?> currentFamily() => guardBackend(() async {
+        final row = await _remote.firstFamily();
+        return row == null ? null : FamilyMapper.family(row);
       });
 
   @override
-  Future<List<FamilyMember>> members(String familyId) => _guard(() async {
-        // Co-member profile fields are readable thanks to the
-        // "family members read profiles" policy (0008).
-        final rows = await _client
-            .from('family_members')
-            .select('user_id, role, users(display_name, phone, avatar_url)')
-            .eq('family_id', familyId);
-        return rows.map((r) {
-          final user = r['users'] as Map<String, dynamic>?;
-          return FamilyMember(
-            userId: r['user_id'] as String,
-            displayName: (user?['display_name'] as String?) ?? 'Member',
-            role: FamilyRole.fromName(r['role'] as String?),
-            phone: user?['phone'] as String?,
-            avatarUrl: user?['avatar_url'] as String?,
-          );
-        }).toList();
+  Future<List<FamilyMember>> members(String familyId) =>
+      guardBackend(() async => (await _remote.members(familyId)).map(FamilyMapper.member).toList());
+
+  @override
+  Future<void> updateMemberRole({required String familyId, required String userId, required FamilyRole role}) =>
+      guardBackend(() => _remote.updateMember(familyId, userId, {'role': role.name}));
+
+  @override
+  Future<void> removeMember({required String familyId, required String userId}) =>
+      guardBackend(() => _remote.deleteMember(familyId, userId));
+
+  @override
+  Future<Family> createFamily(String name) =>
+      guardBackend(() async => FamilyMapper.family(await _remote.createFamily(name)));
+
+  @override
+  Future<FamilyInvite> createInvite({required String familyId, required FamilyRole role}) =>
+      guardBackend(() async => FamilyMapper.invite(await _remote.createInvite(familyId, role.name)));
+
+  @override
+  Future<Family> acceptInvite(String code) => guardBackend(() async {
+        await _remote.acceptInvite(code);
+        final row = await _remote.firstFamily();
+        if (row == null) throw const ServerFailure('Could not load the joined family.');
+        return FamilyMapper.family(row);
       });
 
   @override
-  Future<void> updateMemberRole({
-    required String familyId,
-    required String userId,
-    required FamilyRole role,
-  }) =>
-      _guard(() async {
-        await _client
-            .from('family_members')
-            .update({'role': role.name})
-            .eq('family_id', familyId)
-            .eq('user_id', userId);
-      });
-
-  @override
-  Future<void> removeMember({required String familyId, required String userId}) => _guard(() async {
-        await _client.from('family_members').delete().eq('family_id', familyId).eq('user_id', userId);
-      });
-
-  @override
-  Future<Family> createFamily(String name) => _guard(() async {
-        final row = await _client.rpc('create_family', params: {'p_name': name}) as Map<String, dynamic>;
-        return _family(row);
-      });
-
-  @override
-  Future<FamilyInvite> createInvite({required String familyId, required FamilyRole role}) => _guard(() async {
-        final row = await _client.rpc('create_invite', params: {
-          'p_family_id': familyId,
-          'p_role': role.name,
-        }) as Map<String, dynamic>;
-        return FamilyInvite(
-          code: row['code'] as String,
-          role: FamilyRole.fromName(row['role'] as String?),
-          expiresAt: DateTime.parse(row['expires_at'] as String),
-        );
-      });
-
-  @override
-  Future<Family> acceptInvite(String code) => _guard(() async {
-        await _client.rpc('accept_invite', params: {'p_code': code});
-        final family = await currentFamily();
-        if (family == null) throw const FamilyFailure('Could not load the joined family.');
-        return family;
-      });
-
-  @override
-  Future<void> leaveFamily(String familyId) => _guard(() async {
-        final uid = _client.auth.currentUser?.id;
-        await _client.from('family_members').delete().eq('family_id', familyId).eq('user_id', uid!);
+  Future<void> leaveFamily(String familyId) => guardBackend(() async {
+        final uid = _remote.currentUserId ?? (throw const AuthFailure('Not signed in.'));
+        await _remote.deleteMember(familyId, uid);
       });
 }

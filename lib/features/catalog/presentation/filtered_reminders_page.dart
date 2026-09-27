@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
+import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
-import '../application/reminder_filters.dart';
-import '../data/catalog_models.dart';
+import '../domain/reminder_filters.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// Deep-link target of the dashboard stat cards' "View ›" — the reminder
 /// subset a card counts (e.g. Expired → everything overdue).
@@ -17,7 +18,7 @@ class FilteredRemindersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reminders = ref.watch(upcomingRemindersProvider);
+    final reminders = ref.watch(filteredRemindersProvider(filter));
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -28,9 +29,8 @@ class FilteredRemindersPage extends ConsumerWidget {
       ),
       body: reminders.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (list) {
-          final filtered = filterReminders(list, filter);
+        error: (e, _) => Center(child: Text(failureMessage(e))),
+        data: (filtered) {
           if (filtered.isEmpty) {
             return const Center(child: Text('Nothing here right now.', style: TextStyle(color: AppColors.muted)));
           }

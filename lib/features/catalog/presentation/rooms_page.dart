@@ -5,10 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
-import '../../../core/widgets/catalog_widgets.dart';
 import '../../../core/widgets/db_logo.dart';
-import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../../../core/widgets/feedback.dart';
+import '../application/rooms_controller.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// Design screen 02 — Rooms: "Add a new room" composer + photo cards with
 /// registered-asset counts, backed by `public.locations`.
@@ -23,8 +24,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
   final _newRoom = TextEditingController();
   bool _adding = false;
 
-  /// Optimistic ordering shown while a reorder persists.
-  List<Location>? _pendingOrder;
+  RoomsController get _rooms => ref.read(locationsProvider.notifier);
 
   @override
   void dispose() {
@@ -33,53 +33,21 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
   }
 
   Future<void> _addRoom() async {
-    final name = _newRoom.text.trim();
-    if (name.isEmpty) return;
+    if (_newRoom.text.trim().isEmpty) return;
     setState(() => _adding = true);
-    try {
-      await ref.read(catalogRepositoryProvider).createLocation(name);
-      _newRoom.clear();
-      ref.invalidate(locationsProvider);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not add room: $e'), backgroundColor: AppColors.red));
-      }
-    } finally {
-      if (mounted) setState(() => _adding = false);
-    }
+    final ok = await runAction(context, () => _rooms.create(_newRoom.text));
+    if (ok) _newRoom.clear();
+    if (mounted) setState(() => _adding = false);
   }
 
   /// FAB flow: name + optional photo (camera / gallery / files) in one sheet.
-  Future<void> _openAddRoomSheet() async {
-    final created = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.paper,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
-      builder: (context) => const _AddRoomSheet(),
-    );
-    if (created == true) ref.invalidate(locationsProvider);
-  }
-
-  Future<void> _reorder(List<Location> current, int oldIndex, int newIndex) async {
-    // onReorderItem already adjusts newIndex for the removed item.
-    final next = [...current];
-    final moved = next.removeAt(oldIndex);
-    next.insert(newIndex, moved);
-    setState(() => _pendingOrder = next);
-    try {
-      await ref.read(catalogRepositoryProvider).reorderLocations([for (final l in next) l.id]);
-      ref.invalidate(locationsProvider);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not reorder: $e'), backgroundColor: AppColors.red));
-      }
-    } finally {
-      if (mounted) setState(() => _pendingOrder = null);
-    }
-  }
+  Future<void> _openAddRoomSheet() => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: AppColors.paper,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
+        builder: (context) => const _AddRoomSheet(),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -101,9 +69,8 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
       ),
       body: locations.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (loaded) {
-          final list = _pendingOrder ?? loaded;
+        error: (e, _) => Center(child: Text(failureMessage(e))),
+        data: (list) {
           return Column(
             children: [
               Padding(
@@ -114,10 +81,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                 // Pull-to-refresh works for both the list and the empty state
                 // (e.g. right after joining a family, to pull its rooms in).
                 child: RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(locationsProvider);
-                    ref.invalidate(assetsProvider);
-                  },
+                  onRefresh: _rooms.refresh,
                   child: list.isEmpty
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -132,7 +96,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                       : ReorderableListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
                           itemCount: list.length,
-                          onReorderItem: (oldIndex, newIndex) => _reorder(list, oldIndex, newIndex),
+                          onReorderItem: (oldIndex, newIndex) => runAction(context, () => _rooms.reorder(oldIndex, newIndex)),
                           itemBuilder: (context, i) =>
                               _RoomCard(key: ValueKey(list[i].id), location: list[i]),
                         ),
@@ -172,29 +136,10 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
   }
 
   Future<void> _create() async {
-    final name = _name.text.trim();
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Please name the room.'), backgroundColor: AppColors.red));
-      return;
-    }
     setState(() => _busy = true);
-    try {
-      final repo = ref.read(catalogRepositoryProvider);
-      final room = await repo.createLocation(name);
-      final photo = _photo;
-      if (photo != null) {
-        await repo.setLocationImage(room.id,
-            bytes: photo.bytes, fileName: photo.name, mimeType: photo.imageMime);
-      }
-      if (mounted) Navigator.of(context).pop(true);
-    } catch (e) {
-      if (mounted) {
-        setState(() => _busy = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not add room: $e'), backgroundColor: AppColors.red));
-      }
-    }
+    final ok = await runAction(context, () => ref.read(locationsProvider.notifier).create(_name.text, photo: _photo));
+    if (!mounted) return;
+    ok ? Navigator.of(context).pop() : setState(() => _busy = false);
   }
 
   @override

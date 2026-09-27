@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'document_models.dart';
 
 /// Documents attached to assets — or to a specific service on an asset when
-/// [DocumentMeta.assetDateId] is set. Bytes live in object storage; metadata
-/// in the `documents` table. Downloads use short-lived signed URLs.
+/// [DocumentMeta.assetDateId] is set. Every method throws an `AppFailure` on
+/// error.
 abstract interface class DocumentRepository {
   Future<List<DocumentMeta>> forAsset(String assetId);
 
@@ -20,12 +20,12 @@ abstract interface class DocumentRepository {
     String? assetDateId,
   });
 
-  /// A short-lived URL to view/download the file, or null if unavailable
-  /// (e.g. the local fake backend has no real storage).
-  Future<String?> viewUrl(DocumentMeta doc);
+  /// A short-lived URL to view the file; throws `UnavailableFailure` when
+  /// there is no file storage (the offline build).
+  Future<String> viewUrl(DocumentMeta doc);
 
-  /// The raw file bytes (for sharing), or null if unavailable.
-  Future<Uint8List?> download(DocumentMeta doc);
+  /// The raw file bytes (for sharing); `UnavailableFailure` offline.
+  Future<Uint8List> download(DocumentMeta doc);
 
   Future<void> delete(DocumentMeta doc);
 }

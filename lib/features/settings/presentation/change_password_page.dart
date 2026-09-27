@@ -4,10 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
-import '../../auth/application/auth_providers.dart';
-import '../../auth/application/password_strength.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../profile/application/profile_providers.dart';
+import '../../../core/widgets/feedback.dart';
+import '../../auth/domain/password_policy.dart';
+import '../application/change_password_controller.dart';
 
 /// Design screen 16 — Change password: current/new/confirm with a strength
 /// meter. The current password is verified by re-authenticating first.
@@ -23,7 +22,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   final _fresh = TextEditingController();
   final _confirm = TextEditingController();
   String? _error;
-  bool _busy = false;
   int _score = 0;
   String _label = '';
 
@@ -37,41 +35,15 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
 
   Future<void> _submit() async {
     setState(() => _error = null);
-    if (_fresh.text.length < 8) {
-      setState(() => _error = 'New password must be at least 8 characters.');
-      return;
-    }
-    if (_fresh.text != _confirm.text) {
-      setState(() => _error = 'Passwords don\'t match.');
-      return;
-    }
-    setState(() => _busy = true);
-    final auth = ref.read(authRepositoryProvider);
     try {
-      // Verify the current password by re-authenticating.
-      final email = ref.read(profileProvider).valueOrNull?.email;
-      if (email != null && email.isNotEmpty && _current.text.isNotEmpty) {
-        try {
-          await auth.signInWithPassword(email: email, password: _current.text);
-        } on AuthFailure {
-          setState(() {
-            _busy = false;
-            _error = 'Current password is incorrect.';
-          });
-          return;
-        }
-      }
-      await auth.updatePassword(_fresh.text);
+      await ref
+          .read(changePasswordControllerProvider.notifier)
+          .submit(current: _current.text, fresh: _fresh.text, confirmation: _confirm.text);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password updated.'), backgroundColor: AppColors.green));
+      context.showSuccess('Password updated.');
       Navigator.of(context).pop();
-    } on AuthFailure catch (e) {
-      setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = '$e');
-    } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _error = failureMessage(e));
     }
   }
 
@@ -121,7 +93,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
               obscure: true,
               errorText: _error),
           const SizedBox(height: 22),
-          PrimaryButton(label: 'Update Password', isLoading: _busy, onPressed: _submit),
+          PrimaryButton(label: 'Update Password', isLoading: ref.watch(changePasswordControllerProvider).isLoading, onPressed: _submit),
           const SizedBox(height: 10),
           GhostButton(label: 'Cancel', onPressed: () => Navigator.of(context).pop()),
         ],

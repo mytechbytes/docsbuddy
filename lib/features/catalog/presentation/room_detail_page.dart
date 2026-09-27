@@ -5,9 +5,11 @@ import 'package:intl/intl.dart';
 
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
+import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../application/rooms_controller.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// Design screen 03 — Room detail: hero photo (tap to change), editable name,
 /// summary line, and the appliances registered in the room.
@@ -17,9 +19,7 @@ class RoomDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locations = ref.watch(locationsProvider);
-    final assets = ref.watch(assetsProvider).valueOrNull ?? const <Asset>[];
-    final reminders = ref.watch(upcomingRemindersProvider).valueOrNull ?? const <Reminder>[];
+    final detail = ref.watch(roomDetailProvider(locationId));
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -28,24 +28,19 @@ class RoomDetailPage extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.ink),
       ),
-      body: locations.when(
+      body: detail.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (list) {
-          final room = list.where((l) => l.id == locationId).firstOrNull;
-          if (room == null) {
+        error: (e, _) => Center(child: Text(failureMessage(e))),
+        data: (d) {
+          if (d == null) {
             return const Center(child: Text('Room not found.', style: TextStyle(color: AppColors.muted)));
           }
-          final inRoom = assets
-              .where((a) =>
-                  a.locationId == room.id ||
-                  (a.locationName ?? '').toLowerCase() == room.name.toLowerCase())
-              .toList();
+          final room = d.room;
+          final inRoom = d.appliances;
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(locationsProvider);
-              ref.invalidate(assetsProvider);
-              ref.invalidate(upcomingRemindersProvider);
+              ref.read(catalogRefresherProvider).all();
+              await ref.read(roomDetailProvider(locationId).future);
             },
             child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -94,7 +89,7 @@ class RoomDetailPage extends ConsumerWidget {
                   text: 'The heart of your home, managing ',
                   children: [
                     TextSpan(
-                        text: '${inRoom.length} appliance${inRoom.length == 1 ? '' : 's'}',
+                        text: plural(inRoom.length, 'appliance'),
                         style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
                     const TextSpan(text: '.'),
                   ],
@@ -112,8 +107,7 @@ class RoomDetailPage extends ConsumerWidget {
                       child: Text('Nothing registered here yet.', style: TextStyle(color: AppColors.muted))),
                 )
               else
-                for (final a in inRoom)
-                  _ApplianceGroupCard(asset: a, reminders: _remindersFor(a.id, reminders)),
+                for (final a in inRoom) _ApplianceGroupCard(asset: a.asset, reminders: a.reminders),
             ],
           ),
           );
@@ -122,18 +116,13 @@ class RoomDetailPage extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.chipBlue,
         onPressed: () {
-          final room = ref.read(locationsProvider).valueOrNull?.where((l) => l.id == locationId).firstOrNull;
+          final room = ref.read(roomDetailProvider(locationId)).value?.room;
           context.push('/appliance-picker?location=${Uri.encodeComponent(room?.name ?? '')}');
         },
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Add here', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
     );
-  }
-
-  static List<Reminder> _remindersFor(String assetId, List<Reminder> reminders) {
-    return reminders.where((r) => r.assetId == assetId).toList()
-      ..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref, Location room) async {
@@ -153,29 +142,14 @@ class RoomDetailPage extends ConsumerWidget {
       ),
     );
     controller.dispose();
-    if (name == null || name.isEmpty || name == room.name) return;
-    await ref.read(catalogRepositoryProvider).updateLocation(room.id, name: name);
-    ref.invalidate(locationsProvider);
-    ref.invalidate(assetsProvider);
+    if (name == null || !context.mounted) return;
+    await runAction(context, () => ref.read(locationsProvider.notifier).rename(room, name));
   }
 
   Future<void> _changePhoto(BuildContext context, WidgetRef ref, Location room) async {
     final f = await pickImage(context);
-    if (f == null) return;
-    try {
-      await ref.read(catalogRepositoryProvider).setLocationImage(
-            room.id,
-            bytes: f.bytes,
-            fileName: f.name,
-            mimeType: f.imageMime,
-          );
-      ref.invalidate(locationsProvider);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Photo upload failed: $e'), backgroundColor: AppColors.red));
-      }
-    }
+    if (f == null || !context.mounted) return;
+    await runAction(context, () => ref.read(locationsProvider.notifier).setPhoto(room, f));
   }
 }
 

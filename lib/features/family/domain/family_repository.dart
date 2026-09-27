@@ -1,20 +1,9 @@
 import 'family_models.dart';
 
-/// Thrown on a recoverable family-operation error; [message] is user-safe.
-class FamilyFailure implements Exception {
-  const FamilyFailure(this.message);
-  final String message;
-
-  @override
-  String toString() => 'FamilyFailure: $message';
-}
-
-/// Backend-agnostic family/sharing contract. Method shapes mirror the Postgres
-/// schema + RPCs (`create_family`, `accept_invite`) so the Supabase
-/// implementation is a thin pass-through.
+/// Backend-agnostic family/sharing contract. Every method throws an
+/// `AppFailure` on error.
 abstract interface class FamilyRepository {
-  /// The signed-in user's id — lets the UI decide which management actions
-  /// to show (you can't manage yourself or the owner).
+  /// The signed-in user's id — decides which management actions to show.
   String? get currentUserId;
 
   /// The caller's active family, or null if they aren't in one yet.
@@ -22,13 +11,8 @@ abstract interface class FamilyRepository {
 
   Future<List<FamilyMember>> members(String familyId);
 
-  /// Changes a member's role. Backend RLS restricts this to admin+; the
-  /// owner's role can't be changed.
-  Future<void> updateMemberRole({
-    required String familyId,
-    required String userId,
-    required FamilyRole role,
-  });
+  /// Changes a member's role (admin+ only; the owner's role can't change).
+  Future<void> updateMemberRole({required String familyId, required String userId, required FamilyRole role});
 
   /// Removes a member from the family (admin+ only; not the owner).
   Future<void> removeMember({required String familyId, required String userId});

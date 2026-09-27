@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/feedback.dart';
 import '../application/auth_controller.dart';
+import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
@@ -32,29 +34,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     super.dispose();
   }
 
-  bool get _hasLength => _password.text.length >= 8;
-  bool get _hasUpper => RegExp(r'[A-Z]').hasMatch(_password.text);
-  bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_password.text);
-  bool get _hasSpecial => RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(_password.text);
-
   Future<void> _submit() async {
-    if (!(_hasLength && _hasUpper && _hasNumber)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please meet the password requirements.'), backgroundColor: AppColors.red),
-      );
-      return;
-    }
-    if (_password.text != _confirm.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match.'), backgroundColor: AppColors.red),
-      );
-      return;
-    }
-    final ok = await ref.read(authControllerProvider.notifier).updatePassword(_password.text);
+    final ok = await ref.read(authControllerProvider.notifier).resetPassword(_password.text, _confirm.text);
     if (ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password updated. Please sign in.'), backgroundColor: AppColors.green),
-      );
+      context.showSuccess('Password updated. Please sign in.');
       context.go('/sign-in');
     }
   }
@@ -63,6 +46,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   Widget build(BuildContext context) {
     listenAuthErrors(ref, context);
     final loading = ref.watch(authControllerProvider).isLoading;
+    final checks = checkPassword(_password.text);
 
     return AuthScaffold(
       showLogo: false,
@@ -78,10 +62,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
         const SizedBox(height: 16),
         _RequirementsCard(
           rules: [
-            (label: 'At least 8 characters', ok: _hasLength),
-            (label: 'One uppercase letter', ok: _hasUpper),
-            (label: 'One number', ok: _hasNumber),
-            (label: r'One special character (!@#$…)', ok: _hasSpecial),
+            (label: 'At least 8 characters', ok: checks.length),
+            (label: 'One uppercase letter', ok: checks.upper),
+            (label: 'One number', ok: checks.number),
+            (label: r'One special character (!@#$…)', ok: checks.special),
           ],
         ),
         const SizedBox(height: 18),

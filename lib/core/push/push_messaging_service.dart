@@ -1,11 +1,8 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../config/env.dart';
-import '../../features/catalog/application/catalog_providers.dart';
 
 /// Background isolate handler — must be a top-level function. In the local-first
 /// model these are silent data pushes; the real sync happens when the app next
@@ -13,54 +10,62 @@ import '../../features/catalog/application/catalog_providers.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
-/// FCM is used only for **silent data pushes** that wake the app to refresh when
-/// another family member changes something (see docs/push-setup.md). All calls
-/// are guarded so platforms without Firebase config (iOS without a plist,
-/// desktop, tests) degrade to a no-op instead of crashing.
-class FcmService {
-  FcmService(this._ref);
-  final Ref _ref;
-  bool _started = false;
+/// Transport-only wrapper over FCM **silent data pushes** (docs/push-setup.md).
+/// It knows nothing about the backend or features: callers register the
+/// token themselves and react to [remoteChanges].
+abstract interface class PushMessagingService {
+  /// Initialises Firebase and asks for permission. Returns false when push
+  /// isn't available here (no Firebase config, desktop, tests).
+  Future<bool> start();
 
-  Future<void> init() async {
-    if (_started) return;
-    try {
-      await Firebase.initializeApp();
-      _started = true;
+  Future<String?> token();
 
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-      await FirebaseMessaging.instance.requestPermission();
+  Stream<String> get tokenRefreshes;
 
-      await registerToken();
-      FirebaseMessaging.instance.onTokenRefresh.listen((_) => registerToken());
-
-      // Foreground data push → refresh the catalog (a family member changed something).
-      FirebaseMessaging.onMessage.listen((_) {
-        _ref.invalidate(upcomingRemindersProvider);
-        _ref.invalidate(assetsProvider);
-      });
-    } catch (_) {/* Firebase not configured on this platform */}
-  }
-
-  /// Upserts this device's token into Supabase `user_devices` (when signed in).
-  Future<void> registerToken() async {
-    try {
-      if (!Env.hasSupabase) return;
-      final client = Supabase.instance.client;
-      final user = client.auth.currentUser;
-      if (user == null) return;
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token == null) return;
-      await client.from('user_devices').upsert(
-        {
-          'user_id': user.id,
-          'fcm_token': token,
-          'platform': defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android',
-        },
-        onConflict: 'user_id,fcm_token',
-      );
-    } catch (_) {/* no-op */}
-  }
+  /// Fires when another device changed shared data (foreground data push).
+  Stream<void> get remoteChanges;
 }
 
-final fcmServiceProvider = Provider<FcmService>((ref) => FcmService(ref));
+class FirebasePushMessagingService implements PushMessagingService {
+  bool _started = false;
+
+  // Broadcast so listeners can subscribe before [start] runs.
+  final _changes = StreamController<void>.broadcast();
+  final _tokens = StreamController<String>.broadcast();
+
+  @override
+  Future<bool> start() async {
+    if (_started) return true;
+    try {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      await FirebaseMessaging.instance.requestPermission();
+      FirebaseMessaging.onMessage.listen((_) => _changes.add(null));
+      FirebaseMessaging.instance.onTokenRefresh.listen(_tokens.add);
+      return _started = true;
+    } catch (_) {
+      return false; // Firebase not configured on this platform
+    }
+  }
+
+  @override
+  Future<String?> token() async {
+    if (!_started) return null;
+    try {
+      return await FirebaseMessaging.instance.getToken();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Stream<String> get tokenRefreshes => _tokens.stream;
+
+  @override
+  Stream<void> get remoteChanges => _changes.stream;
+}
+
+/// Bound at the composition root (`bootstrap/dependencies.dart`).
+final pushMessagingServiceProvider = Provider<PushMessagingService>(
+  (ref) => throw UnimplementedError('pushMessagingServiceProvider must be overridden'),
+);

@@ -1,18 +1,27 @@
-import 'package:flutter/services.dart';
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:local_auth/local_auth.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/config/env.dart';
-import '../../onboarding/application/onboarding_controller.dart' show sharedPreferencesProvider;
-import '../data/security_repository.dart';
+import '../../../core/error/app_failure.dart';
+import '../../../core/providers/core_providers.dart';
+import '../domain/security_models.dart';
+import '../domain/security_repository.dart';
 
-final securityRepositoryProvider = Provider<SecurityRepository>((ref) {
-  if (Env.hasSupabase) {
-    return SupabaseSecurityRepository(Supabase.instance.client);
-  }
-  return FakeSecurityRepository();
-});
+// ── Bindings (overridden at the composition root) ──
+
+final securityRepositoryProvider = Provider<SecurityRepository>(
+  (ref) => throw UnimplementedError('securityRepositoryProvider must be overridden'),
+);
+
+final biometricAuthenticatorProvider = Provider<BiometricAuthenticator>(
+  (ref) => throw UnimplementedError('biometricAuthenticatorProvider must be overridden'),
+);
+
+final securityPrefsStoreProvider = Provider<SecurityPrefsStore>(
+  (ref) => throw UnimplementedError('securityPrefsStoreProvider must be overridden'),
+);
+
+// ── Queries ──
 
 final securityStatusProvider = FutureProvider<SecurityStatus>((ref) {
   return ref.watch(securityRepositoryProvider).status();
@@ -23,97 +32,118 @@ final mfaChallengeRequiredProvider = FutureProvider<bool>((ref) {
   return ref.watch(securityRepositoryProvider).needsMfaChallenge();
 });
 
-/// Thin `local_auth` wrapper that degrades to "unavailable" on platforms
-/// without biometrics (desktop, tests) instead of throwing.
-class BiometricService {
-  final LocalAuthentication _auth = LocalAuthentication();
-
-  Future<bool> get isAvailable async {
-    try {
-      return await _auth.isDeviceSupported() || await _auth.canCheckBiometrics;
-    } on PlatformException {
-      return false;
-    } on MissingPluginException {
-      return false;
-    }
-  }
-
-  Future<List<BiometricType>> types() async {
-    try {
-      return await _auth.getAvailableBiometrics();
-    } on PlatformException {
-      return const [];
-    } on MissingPluginException {
-      return const [];
-    }
-  }
-
-  /// Biometric prompt with device-credential (PIN/pattern) fallback.
-  Future<bool> authenticate(String reason) async {
-    try {
-      return await _auth.authenticate(
-        localizedReason: reason,
-        biometricOnly: false,
-        persistAcrossBackgrounding: true,
-      );
-    } on PlatformException {
-      return false;
-    } on MissingPluginException {
-      return false;
-    }
-  }
-}
-
-final biometricServiceProvider = Provider<BiometricService>((ref) => BiometricService());
-
 final biometricsAvailableProvider = FutureProvider<bool>((ref) {
-  return ref.watch(biometricServiceProvider).isAvailable;
+  return ref.watch(biometricAuthenticatorProvider).isAvailable();
 });
 
-/// Device-local security switches (SharedPreferences — per device by design).
-class SecurityPrefs {
-  const SecurityPrefs({this.biometricUnlock = false, this.appLock = false, this.autoLockMinutes = 1});
-  final bool biometricUnlock;
-  final bool appLock;
-  final int autoLockMinutes;
+final biometricKindsProvider = FutureProvider<List<BiometricKind>>((ref) {
+  return ref.watch(biometricAuthenticatorProvider).kinds();
+});
 
-  SecurityPrefs copyWith({bool? biometricUnlock, bool? appLock, int? autoLockMinutes}) => SecurityPrefs(
-        biometricUnlock: biometricUnlock ?? this.biometricUnlock,
-        appLock: appLock ?? this.appLock,
-        autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
-      );
-}
+// ── Device-local switches ──
 
 class SecurityPrefsController extends Notifier<SecurityPrefs> {
-  static const _kBiometric = 'security_biometric_unlock';
-  static const _kAppLock = 'security_app_lock';
-  static const _kAutoLock = 'security_auto_lock_minutes';
+  SecurityPrefsStore get _store => ref.read(securityPrefsStoreProvider);
 
   @override
-  SecurityPrefs build() {
-    final p = ref.watch(sharedPreferencesProvider);
-    return SecurityPrefs(
-      biometricUnlock: p.getBool(_kBiometric) ?? false,
-      appLock: p.getBool(_kAppLock) ?? false,
-      autoLockMinutes: p.getInt(_kAutoLock) ?? 1,
-    );
+  SecurityPrefs build() => ref.watch(securityPrefsStoreProvider).load();
+
+  Future<void> _save(SecurityPrefs next) async {
+    await _store.save(next);
+    state = next;
   }
 
-  Future<void> setBiometricUnlock(bool value) async {
-    await ref.read(sharedPreferencesProvider).setBool(_kBiometric, value);
-    state = state.copyWith(biometricUnlock: value);
+  /// Turning biometric unlock on requires a successful biometric check
+  /// first; returns false (and changes nothing) when it's declined.
+  Future<bool> setBiometricUnlock(bool enabled) async {
+    if (enabled) {
+      final ok = await ref.read(biometricAuthenticatorProvider).authenticate('Confirm to enable biometric unlock');
+      if (!ok) return false;
+    }
+    await _save(state.copyWith(biometricUnlock: enabled));
+    return true;
   }
 
-  Future<void> setAppLock(bool value) async {
-    await ref.read(sharedPreferencesProvider).setBool(_kAppLock, value);
-    state = state.copyWith(appLock: value);
+  Future<void> setAppLock(bool enabled) => _save(state.copyWith(appLock: enabled));
+
+  Future<void> setAutoLockMinutes(int minutes) => _save(state.copyWith(autoLockMinutes: minutes));
+}
+
+final securityPrefsProvider = NotifierProvider<SecurityPrefsController, SecurityPrefs>(SecurityPrefsController.new);
+
+// ── Account security actions ──
+
+/// TOTP and session actions from the Security screen. Methods throw
+/// [AppFailure]; the 2FA status is refreshed after changes.
+class SecurityActions {
+  SecurityActions(this._ref);
+  final Ref _ref;
+
+  SecurityRepository get _repo => _ref.read(securityRepositoryProvider);
+
+  Future<TotpEnrollment> startTotpEnrollment() => _repo.enrollTotp();
+
+  Future<void> confirmTotp(TotpEnrollment enrollment, String code) async {
+    await _repo.verifyTotp(factorId: enrollment.factorId, code: code);
+    _ref.invalidate(securityStatusProvider);
   }
 
-  Future<void> setAutoLockMinutes(int minutes) async {
-    await ref.read(sharedPreferencesProvider).setInt(_kAutoLock, minutes);
-    state = state.copyWith(autoLockMinutes: minutes);
+  /// Call when the enrollment sheet closes (verified or not).
+  void enrollmentFinished() => _ref.invalidate(securityStatusProvider);
+
+  Future<void> disableTotp() async {
+    final factorId = _ref.read(securityStatusProvider).value?.totpFactorId;
+    if (factorId == null) return;
+    try {
+      await _repo.disableTotp(factorId);
+    } finally {
+      _ref.invalidate(securityStatusProvider);
+    }
+  }
+
+  Future<SessionInfo> currentSession() => _repo.currentSession();
+
+  Future<void> signOutOtherDevices() => _repo.signOutOtherDevices();
+
+  /// AAL2 step-up for the current session.
+  Future<void> verifyMfaChallenge(String code) async {
+    await _repo.verifyMfaChallenge(code);
+    _ref.invalidate(mfaChallengeRequiredProvider);
   }
 }
 
-final securityPrefsProvider =
-    NotifierProvider<SecurityPrefsController, SecurityPrefs>(SecurityPrefsController.new);
+final securityActionsProvider = Provider<SecurityActions>((ref) => SecurityActions(ref));
+
+// ── App lock ──
+
+/// Whether the signed-in shell is locked. Starts locked when app lock is on
+/// (a fresh launch); re-locks after the app was away longer than the
+/// auto-lock window. The shell forwards lifecycle events.
+class AppLockController extends Notifier<bool> {
+  DateTime? _pausedAt;
+
+  @override
+  bool build() => ref.read(securityPrefsProvider).appLock;
+
+  void appPaused() {
+    if (!ref.read(securityPrefsProvider).appLock) return;
+    _pausedAt ??= ref.read(clockProvider)();
+  }
+
+  void appResumed() {
+    final prefs = ref.read(securityPrefsProvider);
+    final pausedAt = _pausedAt;
+    _pausedAt = null;
+    if (!prefs.appLock || pausedAt == null) return;
+    if (shouldAutoLock(pausedAt: pausedAt, resumedAt: ref.read(clockProvider)(), autoLockMinutes: prefs.autoLockMinutes)) {
+      state = true;
+    }
+  }
+
+  /// Runs the biometric prompt; unlocks on success.
+  Future<void> unlock() async {
+    if (await ref.read(biometricAuthenticatorProvider).authenticate('Unlock DocsBuddy')) state = false;
+  }
+}
+
+final appLockProvider = NotifierProvider<AppLockController, bool>(AppLockController.new);

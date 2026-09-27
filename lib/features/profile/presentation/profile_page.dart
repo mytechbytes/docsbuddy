@@ -3,16 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/media/media_picker.dart';
+import '../../../core/error/app_failure.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
-import '../../../core/widgets/catalog_widgets.dart';
+import '../../../core/widgets/feedback.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../family/application/family_controller.dart';
-import '../../family/data/family_models.dart';
-import '../application/phone_validation.dart';
+import '../../family/domain/family_models.dart';
 import '../application/profile_providers.dart';
-import '../data/profile_repository.dart';
+import '../domain/profile.dart';
 
 /// Design screen 14 — Profile: avatar (tap to change), identity + Verified
 /// badge, stats row, family card with invite, and account actions.
@@ -33,7 +34,7 @@ class ProfilePage extends ConsumerWidget {
       ),
       body: profile.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => Center(child: Text(failureMessage(e))),
         data: (p) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
@@ -106,27 +107,15 @@ class ProfilePage extends ConsumerWidget {
 
   Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
     final f = await pickImage(context);
-    if (f == null) return;
-    try {
-      await ref.read(profileRepositoryProvider).setAvatar(
-            bytes: f.bytes,
-            fileName: f.name,
-            mimeType: f.imageMime,
-          );
-      ref.invalidate(profileProvider);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Avatar upload failed: $e'), backgroundColor: AppColors.red));
-      }
-    }
+    if (f == null || !context.mounted) return;
+    await runAction(context, () => ref.read(profileProvider.notifier).setAvatar(f));
   }
 
   Future<void> _editInfo(BuildContext context, WidgetRef ref, Profile p) async {
     final name = TextEditingController(text: p.displayName);
     final phone = TextEditingController(text: p.phone ?? '');
     String? phoneError;
-    final saved = await showModalBottomSheet<bool>(
+    await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.paper,
@@ -156,14 +145,17 @@ class ProfilePage extends ConsumerWidget {
                   const SizedBox(height: 18),
                   PrimaryButton(
                     label: 'Save',
-                    onPressed: () {
-                      // Empty clears the number; otherwise it must be E.164.
-                      if (phone.text.trim().isNotEmpty && normalizePhone(phone.text) == null) {
-                        setSheetState(() =>
-                            phoneError = 'Use the international format, e.g. +91 9812345678.');
-                        return;
+                    onPressed: () async {
+                      try {
+                        await ref
+                            .read(profileProvider.notifier)
+                            .updateInfo(displayName: name.text, phone: phone.text);
+                        if (context.mounted) Navigator.of(context).pop(true);
+                      } on ValidationFailure catch (e) {
+                        setSheetState(() => phoneError = e.message);
+                      } catch (e) {
+                        if (context.mounted) context.showFailure(e);
                       }
-                      Navigator.of(context).pop(true);
                     },
                   ),
                 ],
@@ -173,12 +165,6 @@ class ProfilePage extends ConsumerWidget {
         ),
       ),
     );
-    if (saved == true) {
-      await ref
-          .read(profileRepositoryProvider)
-          .update(displayName: name.text, phone: normalizePhone(phone.text) ?? '');
-      ref.invalidate(profileProvider);
-    }
     name.dispose();
     phone.dispose();
   }
@@ -238,7 +224,7 @@ class _StatsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(profileStatsProvider).valueOrNull;
+    final stats = ref.watch(profileStatsProvider).value;
     Widget cell(String value, String label) => Expanded(
           child: Column(
             children: [
@@ -254,9 +240,9 @@ class _StatsRow extends ConsumerWidget {
           color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
       child: Row(
         children: [
-          cell('${stats?.$1 ?? '—'}', 'Assets'),
-          cell('${stats?.$2 ?? '—'}', 'Reminders'),
-          cell('${stats?.$3 ?? '—'}', 'Documents'),
+          cell('${stats?.assets ?? '—'}', 'Assets'),
+          cell('${stats?.reminders ?? '—'}', 'Reminders'),
+          cell('${stats?.documents ?? '—'}', 'Documents'),
         ],
       ),
     );
@@ -268,7 +254,7 @@ class _FamilyCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final view = ref.watch(familyControllerProvider).valueOrNull;
+    final view = ref.watch(familyControllerProvider).value;
     final family = view?.family;
     final members = view?.members ?? const <FamilyMember>[];
     if (family == null) return const SizedBox.shrink();
@@ -286,7 +272,7 @@ class _FamilyCard extends ConsumerWidget {
                 Text(family.name,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
                 const SizedBox(height: 2),
-                Text('${members.length} member${members.length == 1 ? '' : 's'}',
+                Text(plural(members.length, 'member'),
                     style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                 const SizedBox(height: 8),
                 SizedBox(

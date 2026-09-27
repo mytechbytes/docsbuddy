@@ -1,25 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Family;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/error/app_failure.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
-import '../../../core/widgets/catalog_widgets.dart';
-import '../../catalog/application/catalog_providers.dart';
-import '../data/family_models.dart';
-import '../data/family_repository.dart';
+import '../../../core/widgets/feedback.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../application/family_controller.dart';
+import '../domain/family_models.dart';
 
 class FamilyPage extends ConsumerWidget {
   const FamilyPage({super.key});
 
-  void _error(BuildContext context, Object e) {
-    final msg = e is FamilyFailure ? e.message : 'Something went wrong.';
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(msg), backgroundColor: AppColors.red));
-  }
+  FamilyController _family(WidgetRef ref) => ref.read(familyControllerProvider.notifier);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,8 +32,8 @@ class FamilyPage extends ConsumerWidget {
         onRefresh: () => ref.read(familyControllerProvider.notifier).refresh(),
         child: state.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => _ErrorState(message: '$e', onRetry: () => ref.read(familyControllerProvider.notifier).refresh()),
-          data: (view) => view.family == null
+          error: (e, _) => _ErrorState(message: failureMessage(e), onRetry: () => _family(ref).refresh()),
+          data: (view) => !view.hasFamily
               ? ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
@@ -49,9 +44,7 @@ class FamilyPage extends ConsumerWidget {
                   ],
                 )
               : _FamilyView(
-                  family: view.family!,
-                  members: view.members,
-                  myUserId: ref.read(familyRepositoryProvider).currentUserId,
+                  view: view,
                   onInvite: () => _inviteSheet(context, ref),
                   onLeave: () => _leave(context, ref),
                   onChangeRole: (m) => _changeRole(context, ref, m),
@@ -79,21 +72,8 @@ class FamilyPage extends ConsumerWidget {
         ],
       ),
     );
-    if (name == null || name.trim().isEmpty) return;
-    try {
-      await ref.read(familyControllerProvider.notifier).createFamily(name);
-      _refreshCatalogScope(ref);
-    } catch (e) {
-      if (context.mounted) _error(context, e);
-    }
-  }
-
-  /// Joining/creating/leaving a family changes what the catalog can see —
-  /// rebuild the repository (drops its cached family id) so rooms, assets
-  /// and reminders refetch under the new membership.
-  void _refreshCatalogScope(WidgetRef ref) {
-    ref.invalidate(catalogRepositoryProvider);
-    refreshCatalog(ref);
+    if (name == null || name.trim().isEmpty || !context.mounted) return;
+    await runAction(context, () => _family(ref).createFamily(name));
   }
 
   Future<void> _joinDialog(BuildContext context, WidgetRef ref) async {
@@ -114,34 +94,24 @@ class FamilyPage extends ConsumerWidget {
         ],
       ),
     );
-    if (code == null || code.trim().isEmpty) return;
-    try {
-      await ref.read(familyControllerProvider.notifier).acceptInvite(code.trim().toUpperCase());
-      _refreshCatalogScope(ref);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Joined! Family rooms, assets and reminders are syncing.'),
-            backgroundColor: AppColors.green));
-      }
-    } catch (e) {
-      if (context.mounted) _error(context, e);
-    }
+    if (code == null || code.trim().isEmpty || !context.mounted) return;
+    await runAction(
+      context,
+      () => _family(ref).acceptInvite(code),
+      success: 'Joined! Family rooms, assets and reminders are syncing.',
+    );
   }
 
   Future<void> _inviteSheet(BuildContext context, WidgetRef ref) async {
-    var role = FamilyRole.member;
-    try {
-      final invite = await ref.read(familyControllerProvider.notifier).invite(role);
-      if (!context.mounted) return;
-      await showModalBottomSheet<void>(
-        context: context,
-        backgroundColor: AppColors.paper,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-        builder: (ctx) => _InviteSheet(invite: invite),
-      );
-    } catch (e) {
-      if (context.mounted) _error(context, e);
-    }
+    FamilyInvite? invite;
+    await runAction(context, () async => invite = await _family(ref).invite());
+    if (invite == null || !context.mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.paper,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _InviteSheet(invite: invite!),
+    );
   }
 
   Future<void> _changeRole(BuildContext context, WidgetRef ref, FamilyMember member) async {
@@ -159,7 +129,7 @@ class FamilyPage extends ConsumerWidget {
               child: Text('Change role — ${member.displayName}',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
             ),
-            for (final r in const [FamilyRole.admin, FamilyRole.member, FamilyRole.viewer])
+            for (final r in FamilyRole.assignable)
               ListTile(
                 title: Text(r.label, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
                 subtitle: Text(
@@ -177,12 +147,8 @@ class FamilyPage extends ConsumerWidget {
         ),
       ),
     );
-    if (role == null || role == member.role) return;
-    try {
-      await ref.read(familyControllerProvider.notifier).changeRole(member, role);
-    } catch (e) {
-      if (context.mounted) _error(context, e);
-    }
+    if (role == null || !context.mounted) return;
+    await runAction(context, () => _family(ref).changeRole(member, role));
   }
 
   Future<void> _removeMember(BuildContext context, WidgetRef ref, FamilyMember member) async {
@@ -201,12 +167,8 @@ class FamilyPage extends ConsumerWidget {
         ],
       ),
     );
-    if (confirm != true) return;
-    try {
-      await ref.read(familyControllerProvider.notifier).removeMember(member);
-    } catch (e) {
-      if (context.mounted) _error(context, e);
-    }
+    if (confirm != true || !context.mounted) return;
+    await runAction(context, () => _family(ref).removeMember(member));
   }
 
   Future<void> _leave(BuildContext context, WidgetRef ref) async {
@@ -225,13 +187,8 @@ class FamilyPage extends ConsumerWidget {
         ],
       ),
     );
-    if (confirm != true) return;
-    try {
-      await ref.read(familyControllerProvider.notifier).leave();
-      _refreshCatalogScope(ref);
-    } catch (e) {
-      if (context.mounted) _error(context, e);
-    }
+    if (confirm != true || !context.mounted) return;
+    await runAction(context, () => _family(ref).leave());
   }
 }
 
@@ -275,31 +232,22 @@ class _EmptyState extends StatelessWidget {
 
 class _FamilyView extends StatelessWidget {
   const _FamilyView({
-    required this.family,
-    required this.members,
-    required this.myUserId,
+    required this.view,
     required this.onInvite,
     required this.onLeave,
     required this.onChangeRole,
     required this.onRemove,
   });
-  final Family family;
-  final List<FamilyMember> members;
-  final String? myUserId;
+  final FamilyView view;
   final VoidCallback onInvite;
   final VoidCallback onLeave;
   final ValueChanged<FamilyMember> onChangeRole;
   final ValueChanged<FamilyMember> onRemove;
 
-  /// Admin+ can manage other, non-owner members.
-  bool _canManage(FamilyMember target) {
-    final me = members.where((m) => m.userId == myUserId).firstOrNull;
-    final iAmAdmin = me != null && (me.role == FamilyRole.owner || me.role == FamilyRole.admin);
-    return iAmAdmin && target.userId != myUserId && target.role != FamilyRole.owner;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final family = view.family!;
+    final members = view.members;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       children: [
@@ -324,7 +272,7 @@ class _FamilyView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(family.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                    Text('${members.length} member${members.length == 1 ? '' : 's'}', style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                    Text(plural(members.length, 'member'), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
                   ],
                 ),
               ),
@@ -339,7 +287,7 @@ class _FamilyView extends StatelessWidget {
         for (final m in members)
           _MemberTile(
             member: m,
-            canManage: _canManage(m),
+            canManage: view.canManage(m),
             onChangeRole: () => onChangeRole(m),
             onRemove: () => onRemove(m),
           ),
@@ -369,17 +317,13 @@ class _MemberTile extends StatelessWidget {
 
   Future<void> _launch(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Could not open that app.'), backgroundColor: AppColors.red));
-    }
+    if (!ok && context.mounted) context.showFailure(const UnavailableFailure('Could not open that app.'));
   }
 
   @override
   Widget build(BuildContext context) {
     final phone = member.phone;
-    // wa.me wants digits only (E.164 without the +).
-    final waDigits = phone?.replaceAll(RegExp(r'[^0-9]'), '');
+    final waDigits = member.whatsappNumber;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),

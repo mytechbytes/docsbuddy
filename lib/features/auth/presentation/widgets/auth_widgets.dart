@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/feedback.dart';
 import '../../../../core/widgets/db_logo.dart';
 import '../../application/auth_controller.dart';
 
@@ -10,9 +11,7 @@ import '../../application/auth_controller.dart';
 void listenAuthErrors(WidgetRef ref, BuildContext context) {
   ref.listen<AsyncValue<void>>(authControllerProvider, (prev, next) {
     if (next is AsyncError) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('${next.error}'), backgroundColor: AppColors.red));
+      context.showFailure(next.error);
     }
   });
 }

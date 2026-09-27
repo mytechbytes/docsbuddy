@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
+import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// The bell's inbox: what needs attention now (overdue) and what's inside a
 /// notify window (a reminder whose days-left has crossed one of its own
@@ -15,13 +16,9 @@ import '../data/catalog_models.dart';
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
 
-  /// True when [r] is inside one of its notify offsets (or due today).
-  static bool inAlertWindow(Reminder r) =>
-      r.daysLeft >= 0 && (r.daysLeft == 0 || r.notifyOffsets.any((o) => r.daysLeft <= o));
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reminders = ref.watch(upcomingRemindersProvider);
+    final inbox = ref.watch(notificationInboxProvider);
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -30,12 +27,12 @@ class NotificationsPage extends ConsumerWidget {
         iconTheme: const IconThemeData(color: AppColors.ink),
         title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
       ),
-      body: reminders.when(
+      body: inbox.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (list) {
-          final overdue = list.where((r) => r.daysLeft < 0).toList();
-          final alerts = list.where(inAlertWindow).toList();
+        error: (e, _) => Center(child: Text(failureMessage(e))),
+        data: (box) {
+          final overdue = box.overdue;
+          final alerts = box.comingUp;
           if (overdue.isEmpty && alerts.isEmpty) {
             return const Center(
                 child: Text("You're all caught up 🎉", style: TextStyle(color: AppColors.muted)));

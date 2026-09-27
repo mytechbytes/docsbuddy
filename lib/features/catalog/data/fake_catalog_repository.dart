@@ -1,15 +1,20 @@
 import 'dart:typed_data';
 
-import '../application/common_categories.dart';
-import 'catalog_models.dart';
-import 'catalog_repository.dart';
+import '../../../core/error/app_failure.dart';
+import '../domain/catalog_inputs.dart';
+import '../domain/catalog_models.dart';
+import '../domain/catalog_repository.dart';
+import '../domain/common_categories.dart';
 
 /// In-memory catalog with seed data so the dashboard/assets screens have content
 /// out of the box (local dev, tests, the offline build).
 class FakeCatalogRepository implements CatalogRepository {
-  FakeCatalogRepository() {
+  /// [latency] simulates the network so screens show their loading states.
+  FakeCatalogRepository({this.latency = const Duration(milliseconds: 350)}) {
     _seed();
   }
+
+  final Duration latency;
 
   final _assets = <Asset>[];
   final _reminders = <Reminder>[];
@@ -18,7 +23,7 @@ class FakeCatalogRepository implements CatalogRepository {
 
   String _id(String p) => '${p}_${_seq++}';
   DateTime _inDays(int d) => DateTime.now().add(Duration(days: d));
-  Future<void> _delay() => Future<void>.delayed(const Duration(milliseconds: 350));
+  Future<void> _delay() => Future<void>.delayed(latency);
 
   void _seed() {
     final bike = Asset(
@@ -101,6 +106,19 @@ class FakeCatalogRepository implements CatalogRepository {
   /// Mirrors the 0005 seed so the picker works offline.
   static const _categories = commonAssetCategories;
 
+  int _indexOf<T>(List<T> list, bool Function(T) test, String what) {
+    final i = list.indexWhere(test);
+    if (i < 0) throw ServerFailure('$what not found.');
+    return i;
+  }
+
+  void _ensureLocation(String? name) {
+    final loc = name?.trim();
+    if (loc != null && loc.isNotEmpty && !_locations.any((l) => l.name.toLowerCase() == loc.toLowerCase())) {
+      _locations.add(Location(id: _id('l'), name: loc, kind: 'room'));
+    }
+  }
+
   @override
   Future<List<AssetCategory>> categories() async {
     await _delay();
@@ -122,128 +140,73 @@ class FakeCatalogRepository implements CatalogRepository {
   @override
   Future<Asset> asset(String id) async {
     await _delay();
-    return _assets.firstWhere((a) => a.id == id);
+    return _assets[_indexOf(_assets, (a) => a.id == id, 'Asset')];
   }
 
   @override
   Future<List<Reminder>> remindersFor(String assetId) async {
     await _delay();
-    return (_sorted.where((r) => r.assetId == assetId)).toList();
+    return _sorted.where((r) => r.assetId == assetId).toList();
   }
 
   @override
   Future<List<Location>> locations() async {
     await _delay();
     int count(String name) => _assets.where((a) => (a.locationName ?? '').toLowerCase() == name.toLowerCase()).length;
-    return [
-      for (final l in _locations)
-        Location(id: l.id, name: l.name, assetCount: count(l.name), kind: l.kind, imageUrl: l.imageUrl, parentId: l.parentId),
-    ];
+    return [for (final l in _locations) l.copyWith(assetCount: count(l.name))];
   }
 
   @override
-  Future<Asset> addAsset({
-    required String name,
-    required AssetCategoryKind category,
-    String? categoryId,
-    String? typeName,
-    String? locationName,
-    String? brand,
-    String? model,
-    String? serialNo,
-    DateTime? purchaseDate,
-    double? purchasePrice,
-    String? store,
-    Map<String, String>? properties,
-  }) async {
+  Future<Asset> addAsset(AssetInput input) async {
     await _delay();
-    final loc = locationName?.trim();
-    if (loc != null && loc.isNotEmpty && !_locations.any((l) => l.name.toLowerCase() == loc.toLowerCase())) {
-      _locations.add(Location(id: _id('l'), name: loc, kind: 'room'));
-    }
-    final cat = _categories.where((c) => c.id == categoryId).firstOrNull;
+    _ensureLocation(input.locationName);
+    final cat = _categories.where((c) => c.id == input.categoryId).firstOrNull;
+    final loc = input.locationName?.trim();
     final a = Asset(
       id: _id('a'),
-      name: name.trim(),
-      category: cat?.kindGroup ?? category,
-      categoryId: categoryId,
-      categoryName: cat?.name ?? typeName,
+      name: input.name.trim(),
+      category: cat?.kindGroup ?? input.category,
+      categoryId: input.categoryId,
+      categoryName: cat?.name ?? input.typeName,
       locationName: loc == null || loc.isEmpty ? null : loc,
-      brand: brand,
-      model: model,
-      serialNo: serialNo,
-      purchaseDate: purchaseDate,
-      purchasePrice: purchasePrice,
-      store: store,
-      properties: properties ?? const {},
+      brand: input.brand,
+      model: input.model,
+      serialNo: input.serialNo,
+      purchaseDate: input.purchaseDate,
+      purchasePrice: input.purchasePrice,
+      store: input.store,
+      properties: input.properties,
     );
     _assets.add(a);
     return a;
   }
 
   @override
-  Future<Asset> updateAsset(
-    String id, {
-    String? name,
-    AssetCategoryKind? category,
-    String? categoryId,
-    String? typeName,
-    String? locationName,
-    String? brand,
-    String? model,
-    String? serialNo,
-    DateTime? purchaseDate,
-    double? purchasePrice,
-    String? store,
-    Map<String, String>? properties,
-  }) async {
+  Future<Asset> updateAsset(String id, AssetInput input) async {
     await _delay();
-    final i = _assets.indexWhere((a) => a.id == id);
-    if (i < 0) throw Exception('Asset not found.');
+    final i = _indexOf(_assets, (a) => a.id == id, 'Asset');
     final a = _assets[i];
-    final loc = locationName?.trim();
-    if (loc != null && loc.isNotEmpty && !_locations.any((l) => l.name.toLowerCase() == loc.toLowerCase())) {
-      _locations.add(Location(id: _id('l'), name: loc, kind: 'room'));
-    }
-    final cat = _categories.where((c) => c.id == categoryId).firstOrNull;
-    final updated = Asset(
-      id: a.id,
-      name: name?.trim().isNotEmpty == true ? name!.trim() : a.name,
-      category: cat?.kindGroup ?? category ?? a.category,
-      categoryId: categoryId ?? a.categoryId,
-      categoryName: cat?.name ?? typeName ?? a.categoryName,
-      locationName: loc?.isNotEmpty == true ? loc : a.locationName,
-      locationId: a.locationId,
-      brand: brand,
-      model: model,
-      serialNo: serialNo,
-      purchaseDate: purchaseDate,
-      purchasePrice: purchasePrice,
-      store: store,
-      imageUrl: a.imageUrl,
-      properties: properties ?? a.properties,
+    _ensureLocation(input.locationName);
+    final cat = _categories.where((c) => c.id == input.categoryId).firstOrNull;
+    final loc = input.locationName?.trim();
+    final updated = a.copyWith(
+      name: input.name.trim().isNotEmpty ? input.name.trim() : a.name,
+      category: cat?.kindGroup ?? input.category,
+      categoryId: input.categoryId ?? a.categoryId,
+      categoryName: cat?.name ?? input.typeName ?? a.categoryName,
+      locationName: loc != null && loc.isNotEmpty ? loc : a.locationName,
+      brand: input.brand,
+      model: input.model,
+      serialNo: input.serialNo,
+      purchaseDate: input.purchaseDate,
+      purchasePrice: input.purchasePrice,
+      store: input.store,
+      properties: input.properties,
     );
     _assets[i] = updated;
     // Keep reminder rows' asset name in sync.
     for (var j = 0; j < _reminders.length; j++) {
-      final r = _reminders[j];
-      if (r.assetId == id && r.assetName != updated.name) {
-        _reminders[j] = Reminder(
-          id: r.id,
-          assetId: r.assetId,
-          assetName: updated.name,
-          kind: r.kind,
-          label: r.label,
-          dueDate: r.dueDate,
-          recurrence: r.recurrence,
-          notifyOffsets: r.notifyOffsets,
-          provider: r.provider,
-          policyNo: r.policyNo,
-          cost: r.cost,
-          notes: r.notes,
-          assetImageUrl: r.assetImageUrl,
-        );
-      }
+      if (_reminders[j].assetId == id) _reminders[j] = _reminders[j].copyWith(assetName: updated.name);
     }
     return updated;
   }
@@ -256,69 +219,41 @@ class FakeCatalogRepository implements CatalogRepository {
   }
 
   @override
-  Future<Reminder> addReminder({
-    required String assetId,
-    required ReminderKind kind,
-    required String label,
-    required DateTime dueDate,
-    Recurrence recurrence = Recurrence.none,
-    List<int>? notifyOffsets,
-    String? provider,
-    String? policyNo,
-    double? cost,
-    String? notes,
-  }) async {
+  Future<Reminder> addReminder(String assetId, ReminderInput input) async {
     await _delay();
-    final asset = _assets.firstWhere((a) => a.id == assetId);
+    final asset = _assets[_indexOf(_assets, (a) => a.id == assetId, 'Asset')];
     final r = Reminder(
       id: _id('r'),
       assetId: assetId,
       assetName: asset.name,
-      kind: kind,
-      label: label.trim(),
-      dueDate: dueDate,
-      recurrence: recurrence,
-      notifyOffsets: notifyOffsets ?? const [30, 7, 1],
-      provider: provider,
-      policyNo: policyNo,
-      cost: cost,
-      notes: notes,
+      kind: input.kind,
+      label: input.label.trim().isEmpty ? input.kind.label : input.label.trim(),
+      dueDate: input.dueDate,
+      recurrence: input.recurrence,
+      notifyOffsets: input.notifyOffsets ?? const [30, 7, 1],
+      provider: input.provider,
+      policyNo: input.policyNo,
+      cost: input.cost,
+      notes: input.notes,
     );
     _reminders.add(r);
     return r;
   }
 
   @override
-  Future<Reminder> updateReminder(
-    String id, {
-    required ReminderKind kind,
-    required String label,
-    required DateTime dueDate,
-    required Recurrence recurrence,
-    required List<int> notifyOffsets,
-    String? provider,
-    String? policyNo,
-    double? cost,
-    String? notes,
-  }) async {
+  Future<Reminder> updateReminder(String id, ReminderInput input) async {
     await _delay();
-    final i = _reminders.indexWhere((r) => r.id == id);
-    if (i < 0) throw Exception('Reminder not found.');
-    final old = _reminders[i];
-    final updated = Reminder(
-      id: old.id,
-      assetId: old.assetId,
-      assetName: old.assetName,
-      kind: kind,
-      label: label.trim().isEmpty ? kind.label : label.trim(),
-      dueDate: dueDate,
-      recurrence: recurrence,
-      notifyOffsets: notifyOffsets,
-      provider: provider,
-      policyNo: policyNo,
-      cost: cost,
-      notes: notes,
-      assetImageUrl: old.assetImageUrl,
+    final i = _indexOf(_reminders, (r) => r.id == id, 'Reminder');
+    final updated = _reminders[i].copyWith(
+      kind: input.kind,
+      label: input.label.trim().isEmpty ? input.kind.label : input.label.trim(),
+      dueDate: input.dueDate,
+      recurrence: input.recurrence,
+      notifyOffsets: input.notifyOffsets ?? _reminders[i].notifyOffsets,
+      provider: input.provider,
+      policyNo: input.policyNo,
+      cost: input.cost,
+      notes: input.notes,
     );
     _reminders[i] = updated;
     return updated;
@@ -330,38 +265,20 @@ class FakeCatalogRepository implements CatalogRepository {
     _reminders.removeWhere((r) => r.id == id);
   }
 
+  /// Mirrors complete_asset_date(): recurring services roll forward.
   @override
   Future<void> completeReminder(String reminderId) async {
     await _delay();
     final i = _reminders.indexWhere((r) => r.id == reminderId);
     if (i < 0) return;
     final r = _reminders.removeAt(i);
-    // Mirror complete_asset_date(): recurring services roll forward.
-    final months = switch (r.recurrence) {
-      Recurrence.monthly => 1,
-      Recurrence.quarterly => 3,
-      Recurrence.halfYearly => 6,
-      Recurrence.yearly => 12,
-      Recurrence.none => 0,
-    };
+    final months = r.recurrence.stepMonths;
     if (months > 0) {
-      _reminders.add(Reminder(
-        id: r.id,
-        assetId: r.assetId,
-        assetName: r.assetName,
-        kind: r.kind,
-        label: r.label,
-        dueDate: DateTime(r.dueDate.year, r.dueDate.month + months, r.dueDate.day),
-        recurrence: r.recurrence,
-        notifyOffsets: r.notifyOffsets,
-        provider: r.provider,
-        policyNo: r.policyNo,
-        cost: r.cost,
-        notes: r.notes,
-      ));
+      _reminders.add(r.copyWith(dueDate: DateTime(r.dueDate.year, r.dueDate.month + months, r.dueDate.day)));
     }
   }
 
+  /// No real storage locally — record a marker ref; the UI shows the fallback.
   @override
   Future<Asset> setAssetImage(
     String assetId, {
@@ -370,26 +287,8 @@ class FakeCatalogRepository implements CatalogRepository {
     required String mimeType,
   }) async {
     await _delay();
-    final i = _assets.indexWhere((a) => a.id == assetId);
-    if (i < 0) throw Exception('Asset not found.');
-    final a = _assets[i];
-    // No real storage locally — record a marker ref; the UI shows the fallback.
-    final updated = Asset(
-      id: a.id,
-      name: a.name,
-      category: a.category,
-      locationName: a.locationName,
-      locationId: a.locationId,
-      brand: a.brand,
-      model: a.model,
-      serialNo: a.serialNo,
-      purchaseDate: a.purchaseDate,
-      purchasePrice: a.purchasePrice,
-      store: a.store,
-      imageUrl: 'local/$assetId/$fileName',
-    );
-    _assets[i] = updated;
-    return updated;
+    final i = _indexOf(_assets, (a) => a.id == assetId, 'Asset');
+    return _assets[i] = _assets[i].copyWith(imageUrl: 'local/$assetId/$fileName');
   }
 
   @override
@@ -415,29 +314,11 @@ class FakeCatalogRepository implements CatalogRepository {
     final i = _locations.indexWhere((l) => l.id == id);
     if (i < 0 || name == null || name.trim().isEmpty) return;
     final old = _locations[i];
-    final renamed = Location(
-        id: old.id, name: name.trim(), assetCount: old.assetCount, kind: old.kind, imageUrl: old.imageUrl, parentId: old.parentId);
-    _locations[i] = renamed;
+    final renamed = _locations[i] = old.copyWith(name: name.trim());
     // Keep assets pointing at the room by name in this in-memory impl.
     for (var j = 0; j < _assets.length; j++) {
-      final a = _assets[j];
-      if ((a.locationName ?? '').toLowerCase() == old.name.toLowerCase()) {
-        _assets[j] = Asset(
-          id: a.id,
-          name: a.name,
-          category: a.category,
-          categoryId: a.categoryId,
-          categoryName: a.categoryName,
-          locationName: renamed.name,
-          locationId: a.locationId,
-          brand: a.brand,
-          model: a.model,
-          serialNo: a.serialNo,
-          purchaseDate: a.purchaseDate,
-          purchasePrice: a.purchasePrice,
-          store: a.store,
-          imageUrl: a.imageUrl,
-        );
+      if ((_assets[j].locationName ?? '').toLowerCase() == old.name.toLowerCase()) {
+        _assets[j] = _assets[j].copyWith(locationName: renamed.name);
       }
     }
   }
@@ -445,11 +326,12 @@ class FakeCatalogRepository implements CatalogRepository {
   @override
   Future<void> reorderLocations(List<String> orderedIds) async {
     await _delay();
-    _locations.sort((a, b) {
-      final ia = orderedIds.indexOf(a.id);
-      final ib = orderedIds.indexOf(b.id);
-      return (ia < 0 ? orderedIds.length : ia).compareTo(ib < 0 ? orderedIds.length : ib);
-    });
+    int rank(Location l) {
+      final i = orderedIds.indexOf(l.id);
+      return i < 0 ? orderedIds.length : i;
+    }
+
+    _locations.sort((a, b) => rank(a).compareTo(rank(b)));
   }
 
   @override
@@ -460,15 +342,7 @@ class FakeCatalogRepository implements CatalogRepository {
     required String mimeType,
   }) async {
     await _delay();
-    final i = _locations.indexWhere((l) => l.id == locationId);
-    if (i < 0) throw Exception('Room not found.');
-    final old = _locations[i];
-    _locations[i] = Location(
-        id: old.id,
-        name: old.name,
-        assetCount: old.assetCount,
-        kind: old.kind,
-        imageUrl: 'local/$locationId/$fileName',
-        parentId: old.parentId);
+    final i = _indexOf(_locations, (l) => l.id == locationId, 'Room');
+    _locations[i] = _locations[i].copyWith(imageUrl: 'local/$locationId/$fileName');
   }
 }

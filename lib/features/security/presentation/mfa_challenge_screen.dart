@@ -6,14 +6,14 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/db_logo.dart';
+import '../../../core/widgets/feedback.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/security_providers.dart';
 
 /// AAL2 step-up gate: shown when the account has a verified authenticator
 /// but the current session hasn't passed the TOTP check yet.
 class MfaChallengeScreen extends ConsumerStatefulWidget {
-  const MfaChallengeScreen({super.key, required this.onVerified});
-  final VoidCallback onVerified;
+  const MfaChallengeScreen({super.key});
 
   @override
   ConsumerState<MfaChallengeScreen> createState() => _MfaChallengeScreenState();
@@ -36,10 +36,9 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
       _error = null;
     });
     try {
-      await ref.read(securityRepositoryProvider).verifyMfaChallenge(_code.text);
-      widget.onVerified();
+      await ref.read(securityActionsProvider).verifyMfaChallenge(_code.text);
     } catch (e) {
-      setState(() => _error = '$e'.replaceFirst('Exception: ', ''));
+      if (mounted) setState(() => _error = failureMessage(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

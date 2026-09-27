@@ -1,84 +1,59 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/data/supabase_guard.dart';
+import '../domain/auth_repository.dart';
+import 'auth_remote_data_source.dart';
 
-import '../../../core/config/env.dart';
-import 'auth_repository.dart';
-
-/// Real backend implementation, active when SUPABASE_URL + SUPABASE_ANON_KEY
-/// are provided (see `core/config/env.dart`). A thin pass-through to GoTrue.
+/// Auth over GoTrue. The data source is a thin SDK wrapper; this class owns
+/// input normalisation and error translation (`guardBackend` maps GoTrue's
+/// `AuthException` to a user-safe `AuthFailure`).
 ///
 /// NOTE: OAuth (Google/Apple) additionally requires the providers to be enabled
 /// in the Supabase dashboard and a deep-link redirect configured per platform;
 /// the recovery-code flow assumes email OTP is enabled.
-class SupabaseAuthRepository implements AuthRepository {
-  SupabaseAuthRepository(this._client);
+class RemoteAuthRepository implements AuthRepository {
+  RemoteAuthRepository(this._remote, {required this.redirectUrl});
 
-  final SupabaseClient _client;
+  final AuthRemoteDataSource _remote;
 
-  GoTrueClient get _auth => _client.auth;
-
-  Future<T> _guard<T>(Future<T> Function() run) async {
-    try {
-      return await run();
-    } on AuthException catch (e) {
-      throw AuthFailure(e.message);
-    } catch (e) {
-      if (_isNetworkError(e)) {
-        throw const AuthFailure('Can’t reach the server. Check your internet connection.');
-      }
-      throw const AuthFailure('Something went wrong. Please try again.');
-    }
-  }
-
-  static bool _isNetworkError(Object e) {
-    final s = e.toString();
-    return s.contains('SocketException') ||
-        s.contains('Failed host lookup') ||
-        s.contains('ClientException') ||
-        s.contains('Connection');
-  }
+  /// Where confirm-email / OAuth flows return to (the app's deep link).
+  final String redirectUrl;
 
   @override
-  Stream<bool> authStateChanges() =>
-      _auth.onAuthStateChange.map((state) => state.session != null);
+  Stream<bool> authStateChanges() => _remote.sessionChanges();
 
   @override
-  bool get isSignedIn => _auth.currentSession != null;
+  bool get isSignedIn => _remote.hasSession;
 
   @override
   Future<void> signInWithPassword({required String email, required String password}) =>
-      _guard(() => _auth.signInWithPassword(email: email, password: password));
+      guardBackend(() => _remote.signInWithPassword(email.trim(), password));
 
   @override
   Future<void> signUp({required String name, required String email, required String password}) =>
-      _guard(() => _auth.signUp(
-            email: email,
+      guardBackend(() => _remote.signUp(
+            email: email.trim(),
             password: password,
-            data: {'full_name': name},
+            fullName: name.trim(),
             // Sends the confirm-email link back into the app instead of the
             // project's Site URL (which defaults to http://localhost:3000).
-            emailRedirectTo: Env.authRedirectUrl,
+            redirectTo: redirectUrl,
           ));
 
   @override
-  Future<void> signInWithGoogle() =>
-      _guard(() => _auth.signInWithOAuth(OAuthProvider.google, redirectTo: Env.authRedirectUrl));
+  Future<void> signInWithGoogle() => guardBackend(() => _remote.signInWithOAuth(OAuthProviderKind.google, redirectUrl));
 
   @override
-  Future<void> signInWithApple() =>
-      _guard(() => _auth.signInWithOAuth(OAuthProvider.apple, redirectTo: Env.authRedirectUrl));
+  Future<void> signInWithApple() => guardBackend(() => _remote.signInWithOAuth(OAuthProviderKind.apple, redirectUrl));
 
   @override
-  Future<void> sendPasswordResetCode(String email) =>
-      _guard(() => _auth.signInWithOtp(email: email));
+  Future<void> sendPasswordResetCode(String email) => guardBackend(() => _remote.sendEmailOtp(email.trim()));
 
   @override
   Future<void> verifyResetCode({required String email, required String token}) =>
-      _guard(() => _auth.verifyOTP(email: email, token: token, type: OtpType.email));
+      guardBackend(() => _remote.verifyEmailOtp(email.trim(), token.trim()));
 
   @override
-  Future<void> updatePassword(String newPassword) =>
-      _guard(() => _auth.updateUser(UserAttributes(password: newPassword)));
+  Future<void> updatePassword(String newPassword) => guardBackend(() => _remote.updatePassword(newPassword));
 
   @override
-  Future<void> signOut() => _guard(() => _auth.signOut());
+  Future<void> signOut() => guardBackend(_remote.signOut);
 }

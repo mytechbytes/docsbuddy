@@ -1,7 +1,8 @@
 import 'dart:math';
 
-import 'family_models.dart';
-import 'family_repository.dart';
+import '../../../core/error/app_failure.dart';
+import '../domain/family_models.dart';
+import '../domain/family_repository.dart';
 
 /// In-memory family store for local dev / tests / the CI APK. Starts with no
 /// family so the empty state shows; mutations update an internal model.
@@ -34,19 +35,17 @@ class FakeFamilyRepository implements FamilyRepository {
   }) async {
     await _delay();
     final i = _members.indexWhere((m) => m.userId == userId);
-    if (i < 0) throw const FamilyFailure('Member not found.');
-    if (_members[i].role == FamilyRole.owner) throw const FamilyFailure("The owner's role can't be changed.");
-    final m = _members[i];
-    _members[i] =
-        FamilyMember(userId: m.userId, displayName: m.displayName, role: role, phone: m.phone, avatarUrl: m.avatarUrl);
+    if (i < 0) throw const ValidationFailure('Member not found.');
+    if (_members[i].role == FamilyRole.owner) throw const ValidationFailure("The owner's role can't be changed.");
+    _members[i] = _members[i].copyWith(role: role);
   }
 
   @override
   Future<void> removeMember({required String familyId, required String userId}) async {
     await _delay();
     final target = _members.where((m) => m.userId == userId).firstOrNull;
-    if (target == null) throw const FamilyFailure('Member not found.');
-    if (target.role == FamilyRole.owner) throw const FamilyFailure("The owner can't be removed.");
+    if (target == null) throw const ValidationFailure('Member not found.');
+    if (target.role == FamilyRole.owner) throw const ValidationFailure("The owner can't be removed.");
     _members.removeWhere((m) => m.userId == userId);
   }
 
@@ -59,7 +58,7 @@ class FakeFamilyRepository implements FamilyRepository {
   @override
   Future<Family> createFamily(String name) async {
     await _delay();
-    if (name.trim().isEmpty) throw const FamilyFailure('Please enter a family name.');
+    if (name.trim().isEmpty) throw const ValidationFailure('Please enter a family name.');
     final family = Family(id: 'fam_${_rng.nextInt(99999)}', name: name.trim(), ownerId: 'me');
     _family = family;
     _members
@@ -77,7 +76,7 @@ class FakeFamilyRepository implements FamilyRepository {
   @override
   Future<Family> acceptInvite(String code) async {
     await _delay();
-    if (code.trim().length < 6) throw const FamilyFailure('Enter a valid invite code.');
+    if (code.trim().length < 6) throw const ValidationFailure('Enter a valid invite code.');
     // Demo behaviour: joining lands you in a shared family with an existing owner.
     _family ??= const Family(id: 'fam_shared', name: 'Shared Home', ownerId: 'owner');
     if (_members.isEmpty) {

@@ -8,8 +8,7 @@ import '../application/security_providers.dart';
 /// Full-screen gate shown while the app is locked — the biometric
 /// quick-unlock surface (design screens 09/17).
 class LockScreen extends ConsumerStatefulWidget {
-  const LockScreen({super.key, required this.onUnlocked});
-  final VoidCallback onUnlocked;
+  const LockScreen({super.key});
 
   @override
   ConsumerState<LockScreen> createState() => _LockScreenState();
@@ -28,10 +27,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   Future<void> _unlock() async {
     if (_busy) return;
     setState(() => _busy = true);
-    final ok = await ref.read(biometricServiceProvider).authenticate('Unlock DocsBuddy');
-    if (!mounted) return;
-    setState(() => _busy = false);
-    if (ok) widget.onUnlocked();
+    await ref.read(appLockProvider.notifier).unlock();
+    if (mounted) setState(() => _busy = false);
   }
 
   @override

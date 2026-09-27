@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
 import '../../documents/application/document_providers.dart';
-import '../../documents/data/document_models.dart';
+import '../../documents/domain/document_models.dart';
 import '../../documents/presentation/attachment_widgets.dart';
-import '../data/catalog_models.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// What the caller wants done after the sheet closes.
 enum ServiceAction { edit, complete, delete }
@@ -32,9 +31,8 @@ class ServiceDetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final docs = (ref.watch(assetDocumentsProvider(reminder.assetId)).valueOrNull ?? const <DocumentMeta>[])
-        .where((d) => d.assetDateId == reminder.id)
-        .toList();
+    final docs = ref.watch(serviceDocumentsProvider((assetId: reminder.assetId, reminderId: reminder.id))).value ??
+        const <DocumentMeta>[];
     final money = NumberFormat('#,##0.##');
 
     return SafeArea(
@@ -73,7 +71,7 @@ class ServiceDetailSheet extends ConsumerWidget {
                 icon: Icons.event_outlined,
                 label: 'Due',
                 value:
-                    '${DateFormat('d MMM yyyy').format(reminder.dueDate)} · ${reminder.recurrence == Recurrence.none ? 'One-off' : reminder.recurrence.label}'),
+                    '${DateFormat('d MMM yyyy').format(reminder.dueDate)} · ${reminder.isOneOff ? 'One-off' : reminder.recurrence.label}'),
             _DetailRow(icon: Icons.notifications_none, label: 'Reminds', value: reminder.offsetsLabel),
             if (reminder.provider != null)
               _DetailRow(icon: Icons.storefront_outlined, label: 'Provider', value: reminder.provider!),
@@ -88,7 +86,7 @@ class ServiceDetailSheet extends ConsumerWidget {
               const Text('DOCUMENTS FOR THIS SERVICE',
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
               const SizedBox(height: 8),
-              DocumentGrid(docs: docs, onOpen: (d) => _openExternal(context, ref, d)),
+              DocumentGrid(assetId: reminder.assetId, docs: docs),
             ],
             const SizedBox(height: 18),
             Row(
@@ -153,15 +151,4 @@ class _DetailRow extends StatelessWidget {
       ),
     );
   }
-}
-
-Future<void> _openExternal(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
-  final url = await ref.read(documentRepositoryProvider).viewUrl(doc);
-  if (!context.mounted) return;
-  if (url == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connect Supabase to open files.'), backgroundColor: AppColors.red));
-    return;
-  }
-  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 }

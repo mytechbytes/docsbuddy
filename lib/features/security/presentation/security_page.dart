@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../core/widgets/feedback.dart';
+import '../../../core/widgets/formatters.dart';
 import '../application/security_providers.dart';
-import '../data/security_repository.dart';
+import '../domain/security_models.dart';
 
 /// Design screen 17 — Security: biometric login, TOTP 2FA (QR + copy key),
 /// recovery codes, app lock with auto-lock, and session control.
@@ -20,7 +21,7 @@ class SecurityPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(securityStatusProvider);
     final prefs = ref.watch(securityPrefsProvider);
-    final bioAvailable = ref.watch(biometricsAvailableProvider).valueOrNull ?? false;
+    final bioAvailable = ref.watch(biometricsAvailableProvider).value ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -42,18 +43,10 @@ class SecurityPage extends ConsumerWidget {
               subtitle: bioAvailable ? null : 'No biometrics available on this device',
               value: prefs.biometricUnlock && bioAvailable,
               onChanged: bioAvailable
-                  ? (v) async {
-                      if (v) {
-                        final ok = await ref
-                            .read(biometricServiceProvider)
-                            .authenticate('Confirm to enable biometric unlock');
-                        if (!ok) return;
-                      }
-                      await ref.read(securityPrefsProvider.notifier).setBiometricUnlock(v);
-                    }
+                  ? (v) => ref.read(securityPrefsProvider.notifier).setBiometricUnlock(v)
                   : null,
             ),
-            _BiometricTypesRow(),
+            const _BiometricTypesRow(),
           ]),
           const _SectionLabel('Two-factor authentication'),
           status.when(
@@ -61,7 +54,9 @@ class SecurityPage extends ConsumerWidget {
               Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
             ]),
             error: (e, _) => _Card(children: [
-              Padding(padding: const EdgeInsets.all(16), child: Text('$e', style: const TextStyle(color: AppColors.muted))),
+              Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(failureMessage(e), style: const TextStyle(color: AppColors.muted))),
             ]),
             data: (s) => _Card(children: [
               _ToggleRow(
@@ -71,7 +66,7 @@ class SecurityPage extends ConsumerWidget {
                     ? 'Authenticator app${s.enrolledAt == null ? '' : ' · since ${DateFormat('d MMM yyyy').format(s.enrolledAt!)}'}'
                     : 'Use Google Authenticator, Authy, 1Password, etc.',
                 value: s.totpEnabled,
-                onChanged: (v) => v ? _enroll(context, ref) : _disable(context, ref, s.totpFactorId!),
+                onChanged: (v) => v ? _enroll(context, ref) : _disable(context, ref),
               ),
             ]),
           ),
@@ -104,29 +99,21 @@ class SecurityPage extends ConsumerWidget {
   }
 
   Future<void> _enroll(BuildContext context, WidgetRef ref) async {
-    final repo = ref.read(securityRepositoryProvider);
-    final TotpEnrollment enrollment;
-    try {
-      enrollment = await repo.enrollTotp();
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not start enrollment: $e'), backgroundColor: AppColors.red));
-      }
-      return;
-    }
-    if (!context.mounted) return;
+    final actions = ref.read(securityActionsProvider);
+    TotpEnrollment? enrollment;
+    await runAction(context, () async => enrollment = await actions.startTotpEnrollment());
+    if (enrollment == null || !context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.paper,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => _EnrollSheet(enrollment: enrollment),
+      builder: (_) => _EnrollSheet(enrollment: enrollment!),
     );
-    ref.invalidate(securityStatusProvider);
+    actions.enrollmentFinished();
   }
 
-  Future<void> _disable(BuildContext context, WidgetRef ref, String factorId) async {
+  Future<void> _disable(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -141,16 +128,8 @@ class SecurityPage extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed != true) return;
-    try {
-      await ref.read(securityRepositoryProvider).disableTotp(factorId);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not disable: $e'), backgroundColor: AppColors.red));
-      }
-    }
-    ref.invalidate(securityStatusProvider);
+    if (confirmed != true || !context.mounted) return;
+    await runAction(context, () => ref.read(securityActionsProvider).disableTotp());
   }
 
   Future<void> _pickAutoLock(BuildContext context, WidgetRef ref, int current) async {
@@ -162,9 +141,9 @@ class SecurityPage extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (final m in const [1, 5, 15])
+            for (final m in autoLockOptions)
               ListTile(
-                title: Text('$m minute${m == 1 ? '' : 's'}',
+                title: Text(plural(m, 'minute'),
                     style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
                 trailing: m == current ? const Icon(Icons.check, color: AppColors.green) : null,
                 onTap: () => Navigator.of(context).pop(m),
@@ -177,7 +156,7 @@ class SecurityPage extends ConsumerWidget {
   }
 
   Future<void> _sessions(BuildContext context, WidgetRef ref) async {
-    final session = await ref.read(securityRepositoryProvider).currentSession();
+    final session = await ref.read(securityActionsProvider).currentSession();
     if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -216,19 +195,12 @@ class SecurityPage extends ConsumerWidget {
               PrimaryButton(
                 label: 'Sign out other devices',
                 onPressed: () async {
-                  try {
-                    await ref.read(securityRepositoryProvider).signOutOtherDevices();
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Other devices signed out.'), backgroundColor: AppColors.green));
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.red));
-                    }
-                  }
+                  final ok = await runAction(
+                    context,
+                    () => ref.read(securityActionsProvider).signOutOtherDevices(),
+                    success: 'Other devices signed out.',
+                  );
+                  if (ok && context.mounted) Navigator.of(context).pop();
                 },
               ),
             ],
@@ -265,12 +237,10 @@ class _EnrollSheetState extends ConsumerState<_EnrollSheet> {
       _error = null;
     });
     try {
-      await ref
-          .read(securityRepositoryProvider)
-          .verifyTotp(factorId: widget.enrollment.factorId, code: _code.text);
+      await ref.read(securityActionsProvider).confirmTotp(widget.enrollment, _code.text);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      setState(() => _error = '$e'.replaceFirst('Exception: ', ''));
+      if (mounted) setState(() => _error = failureMessage(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -342,27 +312,19 @@ class _EnrollSheetState extends ConsumerState<_EnrollSheet> {
 }
 
 class _BiometricTypesRow extends ConsumerWidget {
+  const _BiometricTypesRow();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<List<BiometricType>>(
-      future: ref.read(biometricServiceProvider).types(),
-      builder: (context, snap) {
-        final types = snap.data ?? const <BiometricType>[];
-        if (types.isEmpty) return const SizedBox.shrink();
-        final labels = [
-          if (types.contains(BiometricType.face)) 'Face ID',
-          if (types.contains(BiometricType.fingerprint)) 'Fingerprint',
-          if (types.contains(BiometricType.strong) || types.contains(BiometricType.weak)) 'Device biometrics',
-        ];
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Available: ${labels.toSet().join(' · ')}',
-                style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-          ),
-        );
-      },
+    final kinds = ref.watch(biometricKindsProvider).value ?? const <BiometricKind>[];
+    if (kinds.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text('Available: ${kinds.map((k) => k.label).join(' · ')}',
+            style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+      ),
     );
   }
 }

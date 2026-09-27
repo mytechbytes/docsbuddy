@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/config/env.dart';
-import '../../../core/notifications/notification_service.dart';
+import '../../../core/error/app_failure.dart';
+import '../../../core/providers/core_providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/feedback.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../../core/widgets/formatters.dart';
 import '../../family/application/family_controller.dart';
 import '../../onboarding/application/onboarding_controller.dart';
 import '../../profile/application/profile_providers.dart';
 import '../../security/application/security_providers.dart';
 import '../application/settings_providers.dart';
-import '../data/notification_prefs_repository.dart';
+import '../domain/notification_prefs.dart';
 
 /// Design screen 15 — Settings: Account / Notifications / Family sections
 /// (notification toggles + default offsets are backed by
@@ -22,17 +24,12 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final loading = ref.watch(authControllerProvider).isLoading;
-    final profile = ref.watch(profileProvider).valueOrNull;
-    final prefs = ref.watch(notificationPrefsProvider).valueOrNull;
-    final members = ref.watch(familyControllerProvider).valueOrNull?.members ?? const [];
+    final profile = ref.watch(profileProvider).value;
+    final prefs = ref.watch(notificationPrefsProvider).value ?? const NotificationPrefs();
+    final members = ref.watch(familyControllerProvider).value?.members ?? const [];
 
-    Future<void> setChannel(String channel, bool enabled) async {
-      final current = prefs ?? const NotificationPrefs();
-      final channels = {...current.channels};
-      enabled ? channels.add(channel) : channels.remove(channel);
-      await ref.read(notificationPrefsRepositoryProvider).update(current.copyWith(channels: channels.toList()));
-      ref.invalidate(notificationPrefsProvider);
-    }
+    void setChannel(NotificationChannel channel, bool enabled) =>
+        runAction(context, () => ref.read(notificationPrefsProvider.notifier).setChannel(channel, enabled));
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -69,7 +66,7 @@ class SettingsPage extends ConsumerWidget {
               title: 'Security & 2FA',
               onTap: () => context.push('/security'),
               trailing: Text(
-                ref.watch(securityStatusProvider).valueOrNull?.totpEnabled == true ? 'On' : 'Off',
+                ref.watch(securityStatusProvider).value?.totpEnabled == true ? 'On' : 'Off',
                 style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
@@ -79,36 +76,36 @@ class SettingsPage extends ConsumerWidget {
             _ToggleRow(
               icon: Icons.notifications_active_outlined,
               title: 'Push notifications',
-              value: prefs?.hasChannel('push') ?? true,
-              onChanged: (v) => setChannel('push', v),
+              value: prefs.has(NotificationChannel.push),
+              onChanged: (v) => setChannel(NotificationChannel.push, v),
             ),
             _ToggleRow(
               icon: Icons.mail_outline,
               title: 'Email reminders',
-              value: prefs?.hasChannel('email') ?? false,
-              onChanged: (v) => setChannel('email', v),
+              value: prefs.has(NotificationChannel.email),
+              onChanged: (v) => setChannel(NotificationChannel.email, v),
             ),
             _ToggleRow(
               icon: Icons.chat_outlined,
               title: 'WhatsApp reminders',
-              value: prefs?.hasChannel('whatsapp') ?? false,
-              onChanged: (v) => setChannel('whatsapp', v),
+              value: prefs.has(NotificationChannel.whatsapp),
+              onChanged: (v) => setChannel(NotificationChannel.whatsapp, v),
             ),
             _Row(
               icon: Icons.update_outlined,
               title: 'Default offsets',
-              onTap: () => _editOffsets(context, ref, prefs ?? const NotificationPrefs()),
+              onTap: () => _editOffsets(context, ref, prefs),
               trailing: Text(
-                '${(prefs?.defaultOffsets ?? const [30, 7, 1]).join(' · ')}d',
+                '${prefs.defaultOffsets.join(' · ')}d',
                 style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
             _Row(
               icon: Icons.bedtime_outlined,
               title: 'Quiet hours',
-              onTap: () => _editQuietHours(context, ref, prefs ?? const NotificationPrefs()),
+              onTap: () => _editQuietHours(context, ref, prefs),
               trailing: Text(
-                '${prefs?.quietStart ?? '22:00'} – ${prefs?.quietEnd ?? '07:00'}',
+                '${prefs.quietStart} – ${prefs.quietEnd}',
                 style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
@@ -119,7 +116,7 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.groups_outlined,
               title: 'Manage family',
               onTap: () => context.push('/family-manage'),
-              trailing: Text('${members.length} member${members.length == 1 ? '' : 's'}',
+              trailing: Text(plural(members.length, 'member'),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
           ]),
@@ -128,22 +125,18 @@ class SettingsPage extends ConsumerWidget {
             _Row(
               icon: Icons.cloud_outlined,
               title: 'Backend',
-              trailing: Text(Env.hasSupabase ? 'Supabase' : 'Local (fake)',
+              trailing: Text(ref.watch(backendLabelProvider),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
             _Row(
               icon: Icons.notification_add_outlined,
               title: 'Send test notification',
               onTap: () async {
-                final svc = ref.read(notificationServiceProvider);
-                final ok = await svc.requestPermission();
-                await svc.showTest();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(ok ? 'Sent a test notification.' : 'Notifications are blocked in system settings.'),
-                    backgroundColor: ok ? AppColors.green : AppColors.red,
-                  ));
-                }
+                final ok = await ref.read(sendTestNotificationProvider)();
+                if (!context.mounted) return;
+                ok
+                    ? context.showSuccess('Sent a test notification.')
+                    : context.showFailure(const UnavailableFailure('Notifications are blocked in system settings.'));
               },
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
@@ -184,7 +177,7 @@ class SettingsPage extends ConsumerWidget {
 
   /// Multi-select chips over the supported days-before-due offsets.
   Future<void> _editOffsets(BuildContext context, WidgetRef ref, NotificationPrefs prefs) async {
-    const options = [60, 30, 14, 7, 3, 1];
+    const options = notifyOffsetOptions;
     final selected = {...prefs.defaultOffsets};
     final saved = await showModalBottomSheet<bool>(
       context: context,
@@ -241,10 +234,8 @@ class SettingsPage extends ConsumerWidget {
         ),
       ),
     );
-    if (saved == true) {
-      final offsets = selected.toList()..sort((a, b) => b.compareTo(a));
-      await ref.read(notificationPrefsRepositoryProvider).update(prefs.copyWith(defaultOffsets: offsets));
-      ref.invalidate(notificationPrefsProvider);
+    if (saved == true && context.mounted) {
+      await runAction(context, () => ref.read(notificationPrefsProvider.notifier).setDefaultOffsets(selected));
     }
   }
 }
@@ -252,32 +243,31 @@ class SettingsPage extends ConsumerWidget {
 /// Start/end time pickers for the do-not-disturb window; alerts landing
 /// inside it are shifted to the window's end.
 Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPrefs prefs) async {
-  TimeOfDay parse(String hhmm, TimeOfDay fallback) {
-    final parts = hhmm.split(':');
-    final h = int.tryParse(parts[0]);
-    final m = parts.length > 1 ? int.tryParse(parts[1]) : null;
-    return h == null || m == null ? fallback : TimeOfDay(hour: h, minute: m);
+  TimeOfDay toTimeOfDay(String hhmm, ClockTime fallback) {
+    final t = parseClockTime(hhmm, fallback);
+    return TimeOfDay(hour: t.hour, minute: t.minute);
   }
-
-  String fmt(TimeOfDay t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
   final start = await showTimePicker(
     context: context,
     helpText: 'Quiet hours start',
-    initialTime: parse(prefs.quietStart, const TimeOfDay(hour: 22, minute: 0)),
+    initialTime: toTimeOfDay(prefs.quietStart, (hour: 22, minute: 0)),
   );
   if (start == null || !context.mounted) return;
   final end = await showTimePicker(
     context: context,
     helpText: 'Quiet hours end',
-    initialTime: parse(prefs.quietEnd, const TimeOfDay(hour: 7, minute: 0)),
+    initialTime: toTimeOfDay(prefs.quietEnd, (hour: 7, minute: 0)),
   );
-  if (end == null) return;
+  if (end == null || !context.mounted) return;
 
-  await ref
-      .read(notificationPrefsRepositoryProvider)
-      .update(prefs.copyWith(quietStart: fmt(start), quietEnd: fmt(end)));
-  ref.invalidate(notificationPrefsProvider);
+  await runAction(
+    context,
+    () => ref.read(notificationPrefsProvider.notifier).setQuietHours(
+          (hour: start.hour, minute: start.minute),
+          (hour: end.hour, minute: end.minute),
+        ),
+  );
 }
 
 class _SectionLabel extends StatelessWidget {
