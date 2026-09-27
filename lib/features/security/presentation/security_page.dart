@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/formatters.dart';
 import '../application/security_providers.dart';
 import '../domain/security_models.dart';
+import 'widgets/security_widgets.dart';
+import '../../../core/widgets/settings_list.dart';
 
 /// Design screen 17 — Security: biometric login, TOTP 2FA (QR + copy key),
 /// recovery codes, app lock with auto-lock, and session control.
@@ -35,9 +34,9 @@ class SecurityPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          const _SectionLabel('Biometric login'),
-          _Card(children: [
-            _ToggleRow(
+          const SectionLabel('Biometric login'),
+          SettingsCard(children: [
+            SettingsToggleRow(
               icon: Icons.fingerprint,
               title: 'Unlock with biometrics',
               subtitle: bioAvailable ? null : 'No biometrics available on this device',
@@ -46,20 +45,20 @@ class SecurityPage extends ConsumerWidget {
                   ? (v) => ref.read(securityPrefsProvider.notifier).setBiometricUnlock(v)
                   : null,
             ),
-            const _BiometricTypesRow(),
+            const BiometricTypesRow(),
           ]),
-          const _SectionLabel('Two-factor authentication'),
+          const SectionLabel('Two-factor authentication'),
           status.when(
-            loading: () => const _Card(children: [
+            loading: () => const SettingsCard(children: [
               Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
             ]),
-            error: (e, _) => _Card(children: [
+            error: (e, _) => SettingsCard(children: [
               Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(failureMessage(e), style: const TextStyle(color: AppColors.muted))),
             ]),
-            data: (s) => _Card(children: [
-              _ToggleRow(
+            data: (s) => SettingsCard(children: [
+              SettingsToggleRow(
                 icon: Icons.shield_outlined,
                 title: s.totpEnabled ? '2FA is enabled' : 'Enable 2FA',
                 subtitle: s.totpEnabled
@@ -70,23 +69,23 @@ class SecurityPage extends ConsumerWidget {
               ),
             ]),
           ),
-          const _SectionLabel('More'),
-          _Card(children: [
-            _ToggleRow(
+          const SectionLabel('More'),
+          SettingsCard(children: [
+            SettingsToggleRow(
               icon: Icons.lock_outline,
               title: 'App lock',
               subtitle: 'Require unlock when reopening the app',
               value: prefs.appLock,
               onChanged: (v) => ref.read(securityPrefsProvider.notifier).setAppLock(v),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.timer_outlined,
               title: 'Auto-lock after',
               onTap: () => _pickAutoLock(context, ref, prefs.autoLockMinutes),
               trailing: Text('${prefs.autoLockMinutes} min',
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.devices_outlined,
               title: 'Active sessions',
               onTap: () => _sessions(context, ref),
@@ -108,7 +107,7 @@ class SecurityPage extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: AppColors.paper,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => _EnrollSheet(enrollment: enrollment!),
+      builder: (_) => TotpEnrollSheet(enrollment: enrollment!),
     );
     actions.enrollmentFinished();
   }
@@ -207,191 +206,6 @@ class SecurityPage extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// QR + secret + code verification for a pending TOTP enrollment.
-class _EnrollSheet extends ConsumerStatefulWidget {
-  const _EnrollSheet({required this.enrollment});
-  final TotpEnrollment enrollment;
-
-  @override
-  ConsumerState<_EnrollSheet> createState() => _EnrollSheetState();
-}
-
-class _EnrollSheetState extends ConsumerState<_EnrollSheet> {
-  final _code = TextEditingController();
-  String? _error;
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _code.dispose();
-    super.dispose();
-  }
-
-  Future<void> _verify() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      await ref.read(securityActionsProvider).confirmTotp(widget.enrollment, _code.text);
-      if (mounted) Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) setState(() => _error = failureMessage(e));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Set up authenticator app',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
-              const SizedBox(height: 4),
-              const Text('Scan the QR with Google Authenticator, Authy, 1Password, etc., then enter the 6-digit code.',
-                  style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
-              const SizedBox(height: 16),
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.line)),
-                  child: QrImageView(data: widget.enrollment.uri, size: 160),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(widget.enrollment.secret,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink, letterSpacing: 1)),
-                  ),
-                  TextButton.icon(
-                    onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: widget.enrollment.secret));
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Key copied.'), backgroundColor: AppColors.green));
-                      }
-                    },
-                    icon: const Icon(Icons.copy, size: 14),
-                    label: const Text('Copy key', style: TextStyle(fontWeight: FontWeight.w700)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              AppTextField(
-                label: '6-digit code',
-                controller: _code,
-                icon: Icons.pin_outlined,
-                keyboardType: TextInputType.number,
-                errorText: _error,
-              ),
-              const SizedBox(height: 16),
-              PrimaryButton(label: 'Verify & enable', isLoading: _busy, onPressed: _verify),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BiometricTypesRow extends ConsumerWidget {
-  const _BiometricTypesRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final kinds = ref.watch(biometricKindsProvider).value ?? const <BiometricKind>[];
-    if (kinds.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text('Available: ${kinds.map((k) => k.label).join(' · ')}',
-            style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 14, 4, 8),
-      child: Text(text.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  const _Card({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row({required this.icon, required this.title, this.trailing, this.onTap});
-  final IconData icon;
-  final String title;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: AppColors.ink),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
-      trailing: trailing,
-    );
-  }
-}
-
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({required this.icon, required this.title, this.subtitle, required this.value, this.onChanged});
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.ink),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-      trailing: Switch(value: value, onChanged: onChanged, activeTrackColor: AppColors.green),
     );
   }
 }

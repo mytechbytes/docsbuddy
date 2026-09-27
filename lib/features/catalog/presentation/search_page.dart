@@ -8,6 +8,7 @@ import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/widgets/settings_list.dart';
 
 /// Search across assets (name/brand/model/serial) and services (label,
 /// provider, policy no.) — wires the dashboard's search icon.
@@ -66,11 +67,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
                   children: [
                     if (assetHits.isNotEmpty) ...[
-                      const _SectionLabel('Assets'),
+                      const SectionLabel('Assets'),
                       for (final a in assetHits) _AssetHit(asset: a),
                     ],
                     if (reminderHits.isNotEmpty) ...[
-                      const _SectionLabel('Reminders'),
+                      const SectionLabel('Reminders'),
                       for (final r in reminderHits) _ReminderHit(reminder: r),
                     ],
                   ],
@@ -79,19 +80,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-      child: Text(text.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
-    );
-  }
-}
 
 class _AssetHit extends StatelessWidget {
   const _AssetHit({required this.asset});

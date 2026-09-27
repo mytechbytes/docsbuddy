@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
+import '../application/reminder_providers.dart';
+import '../../../core/widgets/settings_list.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../catalog/domain/catalog_models.dart';
 import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
-import '../application/reminder_providers.dart';
 
 /// The bell's inbox: what needs attention now (overdue) and what's inside a
 /// notify window (a reminder whose days-left has crossed one of its own
@@ -42,31 +43,17 @@ class NotificationsPage extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             children: [
               if (overdue.isNotEmpty) ...[
-                const _SectionLabel('Overdue'),
+                const SectionLabel('Overdue'),
                 for (final r in overdue) _AlertRow(reminder: r),
               ],
               if (alerts.isNotEmpty) ...[
-                const _SectionLabel('Coming up'),
+                const SectionLabel('Coming up'),
                 for (final r in alerts) _AlertRow(reminder: r),
               ],
             ],
           );
         },
       ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-      child: Text(text.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
     );
   }
 }

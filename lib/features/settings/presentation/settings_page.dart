@@ -15,6 +15,7 @@ import '../../security/application/security_providers.dart';
 import '../application/settings_providers.dart';
 import '../domain/notification_prefs.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/widgets/settings_list.dart';
 
 /// Design screen 15 — Settings: Account / Notifications / Family sections
 /// (notification toggles + default offsets are backed by
@@ -42,27 +43,27 @@ class SettingsPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          const _SectionLabel('Account'),
-          _Card(children: [
-            _Row(
+          const SectionLabel('Account'),
+          SettingsCard(children: [
+            SettingsRow(
               icon: Icons.person_outline,
               title: 'Personal information',
               onTap: () => context.push(AppRoutes.profile),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.mail_outline,
               title: 'Email',
               trailing: Text(profile?.email ?? '—',
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.lock_outline,
               title: 'Change password',
               onTap: () => context.push(AppRoutes.changePassword),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.shield_outlined,
               title: 'Security & 2FA',
               onTap: () => context.push(AppRoutes.security),
@@ -72,27 +73,27 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
           ]),
-          const _SectionLabel('Notifications'),
-          _Card(children: [
-            _ToggleRow(
+          const SectionLabel('Notifications'),
+          SettingsCard(children: [
+            SettingsToggleRow(
               icon: Icons.notifications_active_outlined,
               title: 'Push notifications',
               value: prefs.has(NotificationChannel.push),
               onChanged: (v) => setChannel(NotificationChannel.push, v),
             ),
-            _ToggleRow(
+            SettingsToggleRow(
               icon: Icons.mail_outline,
               title: 'Email reminders',
               value: prefs.has(NotificationChannel.email),
               onChanged: (v) => setChannel(NotificationChannel.email, v),
             ),
-            _ToggleRow(
+            SettingsToggleRow(
               icon: Icons.chat_outlined,
               title: 'WhatsApp reminders',
               value: prefs.has(NotificationChannel.whatsapp),
               onChanged: (v) => setChannel(NotificationChannel.whatsapp, v),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.update_outlined,
               title: 'Default offsets',
               onTap: () => _editOffsets(context, ref, prefs),
@@ -101,7 +102,7 @@ class SettingsPage extends ConsumerWidget {
                 style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.bedtime_outlined,
               title: 'Quiet hours',
               onTap: () => _editQuietHours(context, ref, prefs),
@@ -111,9 +112,9 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
           ]),
-          const _SectionLabel('Family'),
-          _Card(children: [
-            _Row(
+          const SectionLabel('Family'),
+          SettingsCard(children: [
+            SettingsRow(
               icon: Icons.groups_outlined,
               title: 'Manage family',
               onTap: () => context.push(AppRoutes.familyManage),
@@ -121,15 +122,15 @@ class SettingsPage extends ConsumerWidget {
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
           ]),
-          const _SectionLabel('App'),
-          _Card(children: [
-            _Row(
+          const SectionLabel('App'),
+          SettingsCard(children: [
+            SettingsRow(
               icon: Icons.cloud_outlined,
               title: 'Backend',
               trailing: Text(ref.watch(backendLabelProvider),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.notification_add_outlined,
               title: 'Send test notification',
               onTap: () async {
@@ -141,13 +142,13 @@ class SettingsPage extends ConsumerWidget {
               },
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.checklist_outlined,
               title: "What's pending",
               onTap: () => context.push(AppRoutes.roadmap),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.replay_outlined,
               title: 'Replay onboarding',
               onTap: () async {
@@ -158,8 +159,8 @@ class SettingsPage extends ConsumerWidget {
             ),
           ]),
           const SizedBox(height: 16),
-          _Card(children: [
-            _Row(
+          SettingsCard(children: [
+            SettingsRow(
               icon: Icons.logout,
               title: 'Sign out',
               danger: true,
@@ -269,68 +270,4 @@ Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPr
           (hour: end.hour, minute: end.minute),
         ),
   );
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 14, 4, 8),
-      child: Text(text.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  const _Card({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row({required this.icon, required this.title, this.trailing, this.onTap, this.danger = false});
-  final IconData icon;
-  final String title;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-  final bool danger;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = danger ? AppColors.red : AppColors.ink;
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
-      trailing: trailing,
-    );
-  }
-}
-
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({required this.icon, required this.title, required this.value, required this.onChanged});
-  final IconData icon;
-  final String title;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.ink),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
-      trailing: Switch(value: value, onChanged: onChanged, activeTrackColor: AppColors.green),
-    );
-  }
 }

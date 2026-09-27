@@ -15,6 +15,7 @@ import '../../catalog/domain/catalog_inputs.dart';
 import '../../catalog/domain/catalog_models.dart';
 import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../application/reminder_editor_controller.dart';
+import 'widgets/reminder_kind_tile.dart';
 
 /// Design screen 08 — Add Reminder as a 4-step flow:
 ///   1. Reminder type
@@ -195,7 +196,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         childAspectRatio: 0.92,
         children: [
           for (final k in ReminderKind.values.where((k) => k != ReminderKind.other))
-            _TypeTile(
+            ReminderKindTile(
               kind: k,
               selected: _kind == k,
               onTap: () => setState(() {
@@ -372,43 +373,5 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
       ),
     ];
-  }
-}
-
-class _TypeTile extends StatelessWidget {
-  const _TypeTile({required this.kind, required this.selected, required this.onTap});
-  final ReminderKind kind;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.paper,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: selected ? AppColors.chipBlue : AppColors.line, width: selected ? 2 : 1),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(color: kind.bg, borderRadius: BorderRadius.circular(10)),
-              child: Icon(kind.icon, size: 18, color: kind.fg),
-            ),
-            const SizedBox(height: 6),
-            Text(kind.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
-          ],
-        ),
-      ),
-    );
   }
 }
