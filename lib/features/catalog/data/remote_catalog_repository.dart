@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../../core/data/file_storage.dart';
 import '../../../core/data/supabase/supabase_guard.dart';
+import '../../../core/logging/app_logger.dart';
 import '../../../core/providers/core_providers.dart';
 import '../domain/catalog_inputs.dart';
 import '../domain/catalog_models.dart';
@@ -20,10 +21,12 @@ import 'catalog_remote_data_source.dart';
 /// Everything is family-scoped; the caller's family is resolved (and a default
 /// "My Home" created) on first use. RLS scopes all reads/writes.
 class RemoteCatalogRepository implements CatalogRepository {
-  RemoteCatalogRepository(this._remote, this._files, {Clock clock = DateTime.now}) : _now = clock;
+  RemoteCatalogRepository(this._remote, this._files, {required this._logger, Clock clock = DateTime.now})
+      : _now = clock;
 
   final CatalogRemoteDataSource _remote;
   final FileStorage _files;
+  final AppLogger _logger;
   final Clock _now;
   String? _familyId;
 
@@ -62,7 +65,10 @@ class RemoteCatalogRepository implements CatalogRepository {
     if (isBucketPath(previous)) {
       try {
         await _files.remove(previous!);
-      } catch (_) {/* leave the orphan for a maintenance job */}
+      } catch (e) {
+        // Leave the orphan for a maintenance job.
+        _logger.warning('Could not delete replaced photo $previous', error: e);
+      }
     }
   }
 
@@ -122,8 +128,10 @@ class RemoteCatalogRepository implements CatalogRepository {
     if (!isBucketPath(imageRef)) return imageRef;
     try {
       return await _files.signedUrl(imageRef, expiresIn: const Duration(hours: 1));
-    } catch (_) {
-      return null; // missing object / offline → UI falls back to the icon
+    } catch (e) {
+      // Missing object / offline → the UI falls back to the icon.
+      _logger.warning('Could not sign image $imageRef', error: e);
+      return null;
     }
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging/app_logger.dart';
+
 import '../domain/asset_search.dart';
 import '../domain/catalog_models.dart';
 import '../domain/catalog_repository.dart';
@@ -39,7 +41,9 @@ final categoriesProvider = FutureProvider<List<AssetCategory>>((ref) async {
     final all = await ref.watch(catalogRepositoryProvider).categories();
     final specific = all.where((c) => !c.isGeneric).toList();
     if (specific.isNotEmpty) return specific;
-  } catch (_) {/* fall through to the built-ins */}
+  } catch (e, st) {
+    ref.read(appLoggerProvider).warning('Category catalog unavailable; using built-ins', error: e, stackTrace: st);
+  }
   return commonAssetCategories;
 });
 

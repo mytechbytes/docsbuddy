@@ -7,6 +7,8 @@ import 'package:docsbuddy/features/profile/data/remote_profile_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/test_app.dart';
+
 class _MockRemote extends Mock implements ProfileRemoteDataSource {}
 
 class _MockFiles extends Mock implements FileStorage {}
@@ -17,6 +19,7 @@ void main() {
   late _MockRemote remote;
   late _MockFiles files;
   late RemoteProfileRepository repo;
+  late RecordingLogger logger;
   final now = DateTime(2026, 1, 1);
 
   setUpAll(() => registerFallbackValue(Uint8List(0)));
@@ -24,7 +27,9 @@ void main() {
   setUp(() {
     remote = _MockRemote();
     files = _MockFiles();
-    repo = RemoteProfileRepository(remote, files, localTimezone: () async => 'Asia/Kolkata', clock: () => now);
+    logger = RecordingLogger();
+    repo = RemoteProfileRepository(remote, files,
+        localTimezone: () async => 'Asia/Kolkata', logger: logger, clock: () => now);
     when(() => remote.currentUserId).thenReturn('u1');
     when(() => remote.authEmail).thenReturn('anand@kumar.dev');
     when(() => remote.emailConfirmed).thenReturn(true);
@@ -66,6 +71,7 @@ void main() {
   test('timezone sync is best-effort', () async {
     when(() => remote.update('u1', any())).thenThrow(Exception('offline'));
     await repo.syncTimezone(); // no throw
+    expect(logger.warnings, ['Timezone sync failed']);
     verify(() => remote.update('u1', {'timezone': 'Asia/Kolkata'})).called(1);
   });
 

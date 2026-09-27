@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/config/env.dart';
+import '../core/logging/app_logger.dart';
 import '../core/notifications/notification_service.dart';
 import '../core/providers/core_providers.dart';
 import '../core/push/push_messaging_service.dart';
@@ -21,18 +22,26 @@ export 'backend_module.dart' show BackendModule, backendOverrides;
 
 /// Builds the backend selected by `--dart-define=BACKEND=...` (see [Env]).
 /// Adding a backend = one enum value + one case here + its module.
-Future<BackendModule> createBackend(BackendKind kind) async => switch (kind) {
-      BackendKind.supabase => await SupabaseBackend.initialize(),
+Future<BackendModule> createBackend(BackendKind kind, {required AppLogger logger}) async => switch (kind) {
+      BackendKind.supabase => await SupabaseBackend.initialize(logger: logger),
       BackendKind.fake => FakeBackend(),
     };
 
 /// Device and platform services — identical whichever backend is active.
-List<Override> platformOverrides(SharedPreferences prefs) => [
+List<Override> platformOverrides(
+  SharedPreferences prefs, {
+  required AppLogger logger,
+  required bool firebaseReady,
+}) =>
+    [
+      appLoggerProvider.overrideWithValue(logger),
       sharedPreferencesProvider.overrideWithValue(prefs),
       onboardingStoreProvider.overrideWith((ref) => SharedPrefsOnboardingStore(ref.watch(sharedPreferencesProvider))),
       securityPrefsStoreProvider
           .overrideWith((ref) => SharedPrefsSecurityPrefsStore(ref.watch(sharedPreferencesProvider))),
       biometricAuthenticatorProvider.overrideWith((ref) => LocalAuthBiometricAuthenticator()),
-      notificationServiceProvider.overrideWith((ref) => LocalNotificationService(FlutterLocalNotificationsPlugin())),
-      pushMessagingServiceProvider.overrideWith((ref) => FirebasePushMessagingService()),
+      notificationServiceProvider
+          .overrideWith((ref) => LocalNotificationService(FlutterLocalNotificationsPlugin(), logger: logger)),
+      pushMessagingServiceProvider
+          .overrideWith((ref) => FirebasePushMessagingService(firebaseReady: firebaseReady, logger: logger)),
     ];

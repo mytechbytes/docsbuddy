@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'bootstrap/backends/fake_backend.dart';
+import 'core/logging/app_logger.dart';
 import 'bootstrap/dependencies.dart';
 import 'features/auth/data/fake_auth_repository.dart';
 
@@ -25,7 +26,7 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
-        ...platformOverrides(prefs),
+        ...platformOverrides(prefs, logger: const DebugAppLogger(), firebaseReady: false),
         ...backendOverrides(FakeBackend(auth: _SignedInFakeAuth())),
       ],
       child: const DocsBuddyApp(),

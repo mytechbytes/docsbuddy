@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:docsbuddy/bootstrap/backends/fake_backend.dart';
 import 'package:docsbuddy/bootstrap/dependencies.dart';
+import 'package:docsbuddy/core/logging/app_logger.dart';
 import 'package:docsbuddy/core/notifications/local_alert.dart';
 import 'package:docsbuddy/core/notifications/notification_service.dart';
 import 'package:docsbuddy/core/providers/core_providers.dart';
@@ -23,6 +24,22 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // ── In-memory platform fakes ──
+
+/// Captures log calls so tests can assert best-effort failures are reported.
+class RecordingLogger implements AppLogger {
+  final warnings = <String>[];
+  final errors = <String>[];
+
+  @override
+  void info(String message) {}
+
+  @override
+  void warning(String message, {Object? error, StackTrace? stackTrace}) => warnings.add(message);
+
+  @override
+  void error(String message, {required Object error, StackTrace? stackTrace, bool fatal = false}) =>
+      errors.add(message);
+}
 
 class RecordingNotificationService implements NotificationService {
   final scheduled = <List<LocalAlert>>[];
@@ -112,6 +129,7 @@ List<Override> testOverrides({
   PushMessagingService? push,
   BiometricAuthenticator? biometrics,
   SecurityPrefsStore? securityPrefs,
+  AppLogger? logger,
   DateTime Function()? clock,
 }) =>
     [
@@ -124,6 +142,7 @@ List<Override> testOverrides({
         security: security,
         notificationPrefs: notificationPrefs,
       )),
+      appLoggerProvider.overrideWithValue(logger ?? RecordingLogger()),
       onboardingStoreProvider.overrideWithValue(onboarding ?? InMemoryOnboardingStore()),
       notificationServiceProvider.overrideWithValue(notifications ?? RecordingNotificationService()),
       pushMessagingServiceProvider.overrideWithValue(push ?? FakePushMessagingService()),

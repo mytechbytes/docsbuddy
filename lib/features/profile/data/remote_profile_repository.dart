@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import '../../../core/data/file_storage.dart';
 import '../../../core/data/supabase/supabase_guard.dart';
 import '../../../core/error/app_failure.dart';
+import '../../../core/logging/app_logger.dart';
 import '../../../core/providers/core_providers.dart';
 import '../domain/profile.dart';
 import 'profile_remote_data_source.dart';
@@ -27,6 +28,7 @@ class RemoteProfileRepository implements ProfileRepository {
     this._remote,
     this._files, {
     required this.localTimezone,
+    required this._logger,
     Clock clock = DateTime.now,
   }) : _now = clock;
 
@@ -34,6 +36,7 @@ class RemoteProfileRepository implements ProfileRepository {
   final FileStorage _files;
   /// The device's IANA timezone (injected so the repository stays testable).
   final Future<String> Function() localTimezone;
+  final AppLogger _logger;
   final Clock _now;
 
   String get _uid => _remote.currentUserId ?? (throw const AuthFailure('Not signed in.'));
@@ -68,7 +71,9 @@ class RemoteProfileRepository implements ProfileRepository {
         if (isBucketPath(old)) {
           try {
             await _files.remove(old!);
-          } catch (_) {/* leave the orphan */}
+          } catch (e) {
+            _logger.warning('Could not delete replaced avatar $old', error: e);
+          }
         }
         return _map(row);
       });
@@ -77,6 +82,8 @@ class RemoteProfileRepository implements ProfileRepository {
   Future<void> syncTimezone() async {
     try {
       await _remote.update(_uid, {'timezone': await localTimezone()});
-    } catch (_) {/* best-effort */}
+    } catch (e, st) {
+      _logger.warning('Timezone sync failed', error: e, stackTrace: st);
+    }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_failure.dart';
+import '../../../core/logging/app_logger.dart';
 import '../../../core/media/picked_media.dart';
 import '../../documents/application/document_providers.dart';
 import '../../documents/domain/document_models.dart';
@@ -52,6 +53,7 @@ class AssetEditorController extends _SubmitController {
         final repo = ref.read(catalogRepositoryProvider);
         final refresher = ref.read(catalogRefresherProvider);
         final documentsFor = ref.read(assetDocumentsControllerFactoryProvider);
+        final logger = ref.read(appLoggerProvider);
         final asset = editing == null ? await repo.addAsset(input) : await repo.updateAsset(editing.id, input);
 
         if (editing == null) {
@@ -60,14 +62,20 @@ class AssetEditorController extends _SubmitController {
             for (final s in seeds) {
               await repo.addReminder(asset.id, s);
             }
-          } catch (_) {/* asset saved; services can be added manually */}
+          } catch (e, st) {
+            // Asset saved; services can be added manually.
+            logger.warning('Seeding default services failed', error: e, stackTrace: st);
+          }
           if (invoices.isNotEmpty) await documentsFor(asset.id).upload(invoices, kind: DocKind.invoice);
         }
 
         if (photo != null) {
           try {
             await repo.setAssetImage(asset.id, bytes: photo.bytes, fileName: photo.name, mimeType: photo.imageMime);
-          } catch (_) {/* retry from the asset page */}
+          } catch (e, st) {
+            // Retry from the asset page.
+            logger.warning('Asset photo upload failed', error: e, stackTrace: st);
+          }
         }
 
         refresher.asset(asset.id);

@@ -5,6 +5,8 @@ import 'package:docsbuddy/features/security/data/security_remote_data_source.dar
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/test_app.dart';
+
 class _MockRemote extends Mock implements SecurityRemoteDataSource {}
 
 void main() {
@@ -13,7 +15,7 @@ void main() {
     late RemoteSecurityRepository repo;
     setUp(() {
       remote = _MockRemote();
-      repo = RemoteSecurityRepository(remote);
+      repo = RemoteSecurityRepository(remote, logger: RecordingLogger());
     });
 
     test('status uses the first verified factor', () async {
