@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../error/app_failure.dart';
+import '../../error/app_failure.dart';
 
 /// Runs a backend call and translates Supabase/transport exceptions into
 /// [AppFailure]s, so nothing SDK-specific leaks past the data layer.

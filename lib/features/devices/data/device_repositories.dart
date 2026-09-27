@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/data/supabase_guard.dart';
+import '../../../core/data/supabase/supabase_guard.dart';
 import '../domain/device_repository.dart';
 
 /// Upserts into `user_devices` (no-op when signed out).

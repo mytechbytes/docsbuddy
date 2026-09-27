@@ -1,5 +1,5 @@
 import '../../../core/data/file_storage.dart';
-import '../../../core/data/supabase_guard.dart';
+import '../../../core/data/supabase/supabase_guard.dart';
 import '../../../core/error/app_failure.dart';
 import '../domain/family_models.dart';
 import '../domain/family_repository.dart';

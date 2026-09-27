@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import '../../../core/data/file_storage.dart';
-import '../../../core/data/supabase_guard.dart';
+import '../../../core/data/supabase/supabase_guard.dart';
 import '../../../core/providers/core_providers.dart';
 import '../domain/document_models.dart';
 import '../domain/document_repository.dart';

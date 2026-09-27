@@ -1,4 +1,4 @@
-import '../../../core/data/supabase_guard.dart';
+import '../../../core/data/supabase/supabase_guard.dart';
 import '../../../core/error/app_failure.dart';
 import '../domain/security_models.dart';
 import '../domain/security_repository.dart';

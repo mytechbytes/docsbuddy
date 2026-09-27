@@ -1,4 +1,4 @@
-import '../../../core/data/supabase_guard.dart';
+import '../../../core/data/supabase/supabase_guard.dart';
 import '../domain/auth_repository.dart';
 import 'auth_remote_data_source.dart';
 

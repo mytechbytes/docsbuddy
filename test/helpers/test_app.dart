@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:docsbuddy/bootstrap/backends/fake_backend.dart';
 import 'package:docsbuddy/bootstrap/dependencies.dart';
 import 'package:docsbuddy/core/notifications/local_alert.dart';
 import 'package:docsbuddy/core/notifications/notification_service.dart';
@@ -114,7 +115,7 @@ List<Override> testOverrides({
   DateTime Function()? clock,
 }) =>
     [
-      ...fakeBackendOverrides(
+      ...backendOverrides(FakeBackend(
         auth: auth,
         catalog: catalog,
         documents: documents,
@@ -122,7 +123,7 @@ List<Override> testOverrides({
         profile: profile,
         security: security,
         notificationPrefs: notificationPrefs,
-      ),
+      )),
       onboardingStoreProvider.overrideWithValue(onboarding ?? InMemoryOnboardingStore()),
       notificationServiceProvider.overrideWithValue(notifications ?? RecordingNotificationService()),
       pushMessagingServiceProvider.overrideWithValue(push ?? FakePushMessagingService()),

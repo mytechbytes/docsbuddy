@@ -1,4 +1,4 @@
-import 'package:docsbuddy/core/data/supabase_guard.dart';
+import 'package:docsbuddy/core/data/supabase/supabase_guard.dart';
 import 'package:docsbuddy/core/error/app_failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
