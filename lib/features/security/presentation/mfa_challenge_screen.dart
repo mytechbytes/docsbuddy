@@ -9,6 +9,7 @@ import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/security_providers.dart';
+import '../../../routing/app_routes.dart';
 
 /// AAL2 step-up gate: shown when the account has a verified authenticator
 /// but the current session hasn't passed the TOTP check yet.
@@ -86,7 +87,7 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
             TextButton(
               onPressed: () async {
                 final ok = await ref.read(authControllerProvider.notifier).signOut();
-                if (ok && context.mounted) context.go('/sign-in');
+                if (ok && context.mounted) context.go(AppRoutes.signIn);
               },
               child: const Text('Sign out', style: TextStyle(color: AppColors.muted, fontWeight: FontWeight.w700)),
             ),

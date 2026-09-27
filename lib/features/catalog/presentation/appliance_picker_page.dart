@@ -7,6 +7,7 @@ import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 /// Design screen 05 — "Select Your Appliances": searchable list of the
 /// category catalog; picking one opens Add-asset pre-filled with that type
@@ -104,10 +105,6 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
   }
 }
 
-String _assetNewPath(String? locationName) =>
-    locationName == null || locationName.isEmpty
-        ? '/asset-new'
-        : '/asset-new?location=${Uri.encodeComponent(locationName)}';
 
 class _CategoryTile extends StatelessWidget {
   const _CategoryTile({required this.category, this.locationName});
@@ -118,7 +115,7 @@ class _CategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.pushReplacement(_assetNewPath(locationName), extra: category),
+      onTap: () => context.replaceWithNewAsset(preset: category, location: locationName),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
@@ -154,7 +151,7 @@ class _SomethingElseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.pushReplacement(_assetNewPath(locationName)),
+      onTap: () => context.replaceWithNewAsset(location: locationName),
       child: Container(
         margin: const EdgeInsets.only(top: 4),
         padding: const EdgeInsets.all(12),

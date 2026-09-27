@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 class OtpVerifyPage extends ConsumerStatefulWidget {
   const OtpVerifyPage({super.key, required this.email});
@@ -62,7 +63,7 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
 
   Future<void> _verify() async {
     final ok = await ref.read(authControllerProvider.notifier).verifyResetCode(widget.email, _controller.text);
-    if (ok && mounted) context.go('/reset-password');
+    if (ok && mounted) context.go(AppRoutes.resetPassword);
   }
 
   Future<void> _resend() async {

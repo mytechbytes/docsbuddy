@@ -14,6 +14,7 @@ import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'service_detail_sheet.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 class AssetDetailPage extends ConsumerWidget {
   const AssetDetailPage({super.key, required this.assetId});
@@ -36,7 +37,7 @@ class AssetDetailPage extends ConsumerWidget {
         title: const DbLogo(size: 18),
         actions: [
           IconButton(
-            onPressed: () => context.push('/notifications'),
+            onPressed: () => context.push(AppRoutes.notifications),
             icon: const Icon(Icons.notifications_none, color: AppColors.ink2, size: 22),
           ),
           const _Avatar(),
@@ -127,7 +128,7 @@ class AssetDetailPage extends ConsumerWidget {
   }
 
   Future<void> _addReminder(BuildContext context, WidgetRef ref, Asset asset) async {
-    await context.push('/asset/${asset.id}/add-reminder');
+    await context.pushAddReminder(asset.id);
   }
 
   Future<void> _openService(BuildContext context, WidgetRef ref, Reminder r) async {
@@ -140,7 +141,7 @@ class AssetDetailPage extends ConsumerWidget {
   Future<void> _handleServiceAction(BuildContext context, WidgetRef ref, Reminder r, ServiceAction action) async {
     switch (action) {
       case ServiceAction.edit:
-        await context.push('/asset/$assetId/add-reminder', extra: r);
+        await context.pushEditReminder(r);
       case ServiceAction.complete:
         await _complete(context, ref, r);
       case ServiceAction.delete:
@@ -156,7 +157,7 @@ class AssetDetailPage extends ConsumerWidget {
   }
 
   Future<void> _editAsset(BuildContext context, WidgetRef ref, Asset asset) async {
-    await context.push('/asset-edit', extra: asset);
+    await context.pushEditAsset(asset);
   }
 
   Future<void> _deleteAsset(BuildContext context, WidgetRef ref, Asset asset) async {
@@ -206,7 +207,7 @@ class _Avatar extends ConsumerWidget {
     final profile = ref.watch(profileProvider).value;
     return InkWell(
       customBorder: const CircleBorder(),
-      onTap: () => context.push('/profile'),
+      onTap: () => context.push(AppRoutes.profile),
       child: AssetThumb(
         imageRef: profile?.avatarUrl,
         size: 30,

@@ -28,14 +28,7 @@ import '../features/roadmap/presentation/roadmap_page.dart';
 import '../features/security/presentation/security_page.dart';
 import '../features/settings/presentation/change_password_page.dart';
 import '../features/shell/presentation/home_shell.dart';
-
-const _authRoutes = {
-  '/sign-in',
-  '/sign-up',
-  '/forgot-password',
-  '/verify-otp',
-  '/reset-password',
-};
+import 'app_routes.dart';
 
 /// App router with two guards:
 ///  1. first-launch onboarding (until completed on this device), then
@@ -47,71 +40,71 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: AppRoutes.dashboard,
     refreshListenable: refresh,
     redirect: (context, state) {
       final seenOnboarding = ref.read(onboardingControllerProvider);
       final signedIn = auth.isSignedIn;
       final loc = state.matchedLocation;
-      final atOnboarding = loc == '/onboarding';
-      final inAuth = _authRoutes.contains(loc);
+      final atOnboarding = loc == AppRoutes.onboarding;
+      final inAuth = AppRoutes.authRoutes.contains(loc);
 
-      if (!seenOnboarding) return atOnboarding ? null : '/onboarding';
-      if (!signedIn) return inAuth ? null : '/sign-in';
+      if (!seenOnboarding) return atOnboarding ? null : AppRoutes.onboarding;
+      if (!signedIn) return inAuth ? null : AppRoutes.signIn;
       // Signed in: keep out of onboarding/auth.
-      if (atOnboarding || inAuth) return '/dashboard';
+      if (atOnboarding || inAuth) return AppRoutes.dashboard;
       return null;
     },
     routes: [
-      GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
+      GoRoute(path: AppRoutes.onboarding, builder: (_, _) => const OnboardingPage()),
 
       // ── Auth ──
-      GoRoute(path: '/sign-in', builder: (_, _) => const SignInPage()),
-      GoRoute(path: '/sign-up', builder: (_, _) => const SignUpPage()),
-      GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordPage()),
+      GoRoute(path: AppRoutes.signIn, builder: (_, _) => const SignInPage()),
+      GoRoute(path: AppRoutes.signUp, builder: (_, _) => const SignUpPage()),
+      GoRoute(path: AppRoutes.forgotPassword, builder: (_, _) => const ForgotPasswordPage()),
       GoRoute(
-        path: '/verify-otp',
-        builder: (_, state) => OtpVerifyPage(email: state.uri.queryParameters['email'] ?? ''),
+        path: AppRoutes.verifyOtpPattern,
+        builder: (_, state) => OtpVerifyPage(email: state.uri.queryParameters[AppRoutes.emailQuery] ?? ''),
       ),
-      GoRoute(path: '/reset-password', builder: (_, _) => const ResetPasswordPage()),
+      GoRoute(path: AppRoutes.resetPassword, builder: (_, _) => const ResetPasswordPage()),
 
       // ── App ──
-      GoRoute(path: '/dashboard', builder: (_, _) => const HomeShell()),
+      GoRoute(path: AppRoutes.dashboard, builder: (_, _) => const HomeShell()),
       GoRoute(
-        path: '/appliance-picker',
-        builder: (_, state) => AppliancePickerPage(locationName: state.uri.queryParameters['location']),
+        path: AppRoutes.appliancePickerPattern,
+        builder: (_, state) => AppliancePickerPage(locationName: state.uri.queryParameters[AppRoutes.locationQuery]),
       ),
       GoRoute(
-        path: '/asset-new',
+        path: AppRoutes.assetNewPattern,
         builder: (_, state) => AddAssetPage(
           preset: state.extra as AssetCategory?,
-          initialLocation: state.uri.queryParameters['location'],
+          initialLocation: state.uri.queryParameters[AppRoutes.locationQuery],
         ),
       ),
-      GoRoute(path: '/asset/:id', builder: (_, state) => AssetDetailPage(assetId: state.pathParameters['id']!)),
+      GoRoute(path: AppRoutes.assetPattern, builder: (_, state) => AssetDetailPage(assetId: state.pathParameters[AppRoutes.idParam]!)),
       GoRoute(
-        path: '/asset-edit',
+        path: AppRoutes.assetEdit,
         builder: (_, state) => AddAssetPage(editing: state.extra as Asset?),
       ),
       GoRoute(
-        path: '/asset/:id/add-reminder',
+        path: AppRoutes.addReminderPattern,
         builder: (_, state) => AddReminderPage(
-          assetId: state.pathParameters['id']!,
+          assetId: state.pathParameters[AppRoutes.idParam]!,
           editing: state.extra as Reminder?,
         ),
       ),
-      GoRoute(path: '/room/:id', builder: (_, state) => RoomDetailPage(locationId: state.pathParameters['id']!)),
-      GoRoute(path: '/search', builder: (_, _) => const SearchPage()),
-      GoRoute(path: '/notifications', builder: (_, _) => const NotificationsPage()),
+      GoRoute(path: AppRoutes.roomPattern, builder: (_, state) => RoomDetailPage(locationId: state.pathParameters[AppRoutes.idParam]!)),
+      GoRoute(path: AppRoutes.search, builder: (_, _) => const SearchPage()),
+      GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(
-        path: '/reminders/:filter',
-        builder: (_, state) => FilteredRemindersPage(filter: ReminderFilter.fromName(state.pathParameters['filter'])),
+        path: AppRoutes.remindersPattern,
+        builder: (_, state) => FilteredRemindersPage(filter: ReminderFilter.fromName(state.pathParameters[AppRoutes.filterParam])),
       ),
-      GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
-      GoRoute(path: '/change-password', builder: (_, _) => const ChangePasswordPage()),
-      GoRoute(path: '/security', builder: (_, _) => const SecurityPage()),
-      GoRoute(path: '/family-manage', builder: (_, _) => const FamilyPage()),
-      GoRoute(path: '/roadmap', builder: (_, _) => const RoadmapPage()),
+      GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage()),
+      GoRoute(path: AppRoutes.changePassword, builder: (_, _) => const ChangePasswordPage()),
+      GoRoute(path: AppRoutes.security, builder: (_, _) => const SecurityPage()),
+      GoRoute(path: AppRoutes.familyManage, builder: (_, _) => const FamilyPage()),
+      GoRoute(path: AppRoutes.roadmap, builder: (_, _) => const RoadmapPage()),
     ],
   );
 });

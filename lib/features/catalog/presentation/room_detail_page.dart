@@ -10,6 +10,7 @@ import '../application/catalog_providers.dart';
 import '../application/rooms_controller.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 /// Design screen 03 — Room detail: hero photo (tap to change), editable name,
 /// summary line, and the appliances registered in the room.
@@ -117,7 +118,7 @@ class RoomDetailPage extends ConsumerWidget {
         backgroundColor: AppColors.chipBlue,
         onPressed: () {
           final room = ref.read(roomDetailProvider(locationId)).value?.room;
-          context.push('/appliance-picker?location=${Uri.encodeComponent(room?.name ?? '')}');
+          context.push(AppRoutes.appliancePicker(location: room?.name));
         },
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Add here', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
@@ -180,7 +181,7 @@ class _ApplianceGroupCard extends StatelessWidget {
         children: [
           InkWell(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            onTap: () => context.push('/asset/${asset.id}'),
+            onTap: () => context.push(AppRoutes.asset(asset.id)),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -233,7 +234,7 @@ class _ApplianceGroupCard extends StatelessWidget {
             const Divider(height: 1, color: AppColors.line),
             for (final r in reminders)
               InkWell(
-                onTap: () => context.push('/asset/${r.assetId}'),
+                onTap: () => context.push(AppRoutes.asset(r.assetId)),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(

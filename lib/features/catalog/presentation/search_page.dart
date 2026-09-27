@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 /// Search across assets (name/brand/model/serial) and services (label,
 /// provider, policy no.) — wires the dashboard's search icon.
@@ -100,7 +101,7 @@ class _AssetHit extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.push('/asset/${asset.id}'),
+      onTap: () => context.push(AppRoutes.asset(asset.id)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
@@ -148,7 +149,7 @@ class _ReminderHit extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.push('/asset/${reminder.assetId}'),
+      onTap: () => context.push(AppRoutes.asset(reminder.assetId)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),

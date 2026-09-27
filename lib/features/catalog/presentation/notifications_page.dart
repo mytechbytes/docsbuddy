@@ -8,6 +8,7 @@ import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 /// The bell's inbox: what needs attention now (overdue) and what's inside a
 /// notify window (a reminder whose days-left has crossed one of its own
@@ -84,7 +85,7 @@ class _AlertRow extends StatelessWidget {
             : 'Due in $d day${d == 1 ? '' : 's'} — ${DateFormat('d MMM').format(reminder.dueDate)}';
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.push('/asset/${reminder.assetId}'),
+      onTap: () => context.push(AppRoutes.asset(reminder.assetId)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),

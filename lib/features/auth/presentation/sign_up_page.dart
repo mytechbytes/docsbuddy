@@ -8,6 +8,7 @@ import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -40,17 +41,17 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     final ok = await ref
         .read(authControllerProvider.notifier)
         .signUp(_name.text, _email.text, _password.text, acceptedTerms: _agreed);
-    if (ok && mounted) context.go('/dashboard');
+    if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _google() async {
     final ok = await ref.read(authControllerProvider.notifier).google();
-    if (ok && mounted) context.go('/dashboard');
+    if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _apple() async {
     final ok = await ref.read(authControllerProvider.notifier).apple();
-    if (ok && mounted) context.go('/dashboard');
+    if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   @override
@@ -82,7 +83,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         const SizedBox(height: 10),
         SocialButton(provider: SocialProvider.apple, onPressed: _apple),
         const SizedBox(height: 22),
-        InlineLink(lead: 'Already have an account? ', action: 'Sign in', onTap: () => context.go('/sign-in')),
+        InlineLink(lead: 'Already have an account? ', action: 'Sign in', onTap: () => context.go(AppRoutes.signIn)),
       ],
     );
   }

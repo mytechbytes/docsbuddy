@@ -7,6 +7,7 @@ import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../application/onboarding_controller.dart';
 import 'widgets/onboarding_illustrations.dart';
+import '../../../routing/app_routes.dart';
 
 /// First-launch walkthrough — 4 swipeable slides (`Onboarding.jsx` in the
 /// design handoff). Shown only when onboarding has not been completed on this
@@ -65,7 +66,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   const DbLogo(),
                   if (_index < _slides.length - 1)
                     GestureDetector(
-                      onTap: () => _finish('/sign-in'),
+                      onTap: () => _finish(AppRoutes.signIn),
                       child: const Text('Skip', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.muted)),
                     )
                   else
@@ -83,11 +84,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   index: i,
                   total: _slides.length,
                   illustration: _illustrationFor(i),
-                  onPrimary: i < _slides.length - 1 ? _next : () => _finish('/sign-up'),
+                  onPrimary: i < _slides.length - 1 ? _next : () => _finish(AppRoutes.signUp),
                   primaryLabel: switch (i) { 0 => 'Get Started', 3 => 'Create Account', _ => 'Next' },
                   secondaryLabel: i == _slides.length - 1 ? 'I already have an account' : null,
-                  onSecondary: i == _slides.length - 1 ? () => _finish('/sign-in') : null,
-                  footer: i == 0 ? _SignInFooter(onTap: () => _finish('/sign-in')) : null,
+                  onSecondary: i == _slides.length - 1 ? () => _finish(AppRoutes.signIn) : null,
+                  footer: i == 0 ? _SignInFooter(onTap: () => _finish(AppRoutes.signIn)) : null,
                 ),
               ),
             ),

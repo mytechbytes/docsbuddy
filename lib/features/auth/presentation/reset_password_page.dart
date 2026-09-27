@@ -9,6 +9,7 @@ import '../../../core/widgets/feedback.dart';
 import '../application/auth_controller.dart';
 import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
   const ResetPasswordPage({super.key});
@@ -38,7 +39,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     final ok = await ref.read(authControllerProvider.notifier).resetPassword(_password.text, _confirm.text);
     if (ok && mounted) {
       context.showSuccess('Password updated. Please sign in.');
-      context.go('/sign-in');
+      context.go(AppRoutes.signIn);
     }
   }
 

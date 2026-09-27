@@ -14,6 +14,7 @@ import '../../family/application/family_controller.dart';
 import '../../family/domain/family_models.dart';
 import '../application/profile_providers.dart';
 import '../domain/profile.dart';
+import '../../../routing/app_routes.dart';
 
 /// Design screen 14 — Profile: avatar (tap to change), identity + Verified
 /// badge, stats row, family card with invite, and account actions.
@@ -78,7 +79,7 @@ class ProfilePage extends ConsumerWidget {
               _MenuRow(
                 icon: Icons.lock_outline,
                 title: 'Change password',
-                onTap: () => context.push('/change-password'),
+                onTap: () => context.push(AppRoutes.changePassword),
               ),
               _MenuRow(
                 icon: Icons.notifications_none,
@@ -95,7 +96,7 @@ class ProfilePage extends ConsumerWidget {
                 danger: true,
                 onTap: () async {
                   final ok = await ref.read(authControllerProvider.notifier).signOut();
-                  if (ok && context.mounted) context.go('/sign-in');
+                  if (ok && context.mounted) context.go(AppRoutes.signIn);
                 },
               ),
             ]),
@@ -310,7 +311,7 @@ class _FamilyCard extends ConsumerWidget {
             ),
           ),
           TextButton.icon(
-            onPressed: () => context.push('/family-manage'),
+            onPressed: () => context.push(AppRoutes.familyManage),
             icon: const Icon(Icons.person_add_alt_outlined, size: 16),
             label: const Text('Invite', style: TextStyle(fontWeight: FontWeight.w700)),
           ),

@@ -7,6 +7,7 @@ import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 class AssetsPage extends ConsumerStatefulWidget {
   const AssetsPage({super.key});
@@ -38,7 +39,7 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.ink,
-        onPressed: () => context.push('/appliance-picker'),
+        onPressed: () => context.push(AppRoutes.appliancePicker()),
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Add asset', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
@@ -101,7 +102,7 @@ class _AssetTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => context.push('/asset/${asset.id}'),
+      onTap: () => context.push(AppRoutes.asset(asset.id)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),

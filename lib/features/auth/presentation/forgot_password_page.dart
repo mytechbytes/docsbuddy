@@ -7,6 +7,7 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -26,7 +27,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
   Future<void> _submit() async {
     final ok = await ref.read(authControllerProvider.notifier).sendResetCode(_email.text);
-    if (ok && mounted) context.push('/verify-otp?email=${Uri.encodeComponent(_email.text.trim())}');
+    if (ok && mounted) context.push(AppRoutes.verifyOtp(_email.text.trim()));
   }
 
   @override
@@ -46,7 +47,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         const SizedBox(height: 16),
         PrimaryButton(label: 'Send Verification Code', isLoading: loading, onPressed: _submit),
         const SizedBox(height: 22),
-        InlineLink(lead: 'Remember it? ', action: 'Back to sign in', onTap: () => context.go('/sign-in')),
+        InlineLink(lead: 'Remember it? ', action: 'Back to sign in', onTap: () => context.go(AppRoutes.signIn)),
       ],
     );
   }

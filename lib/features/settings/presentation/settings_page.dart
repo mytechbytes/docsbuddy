@@ -14,6 +14,7 @@ import '../../profile/application/profile_providers.dart';
 import '../../security/application/security_providers.dart';
 import '../application/settings_providers.dart';
 import '../domain/notification_prefs.dart';
+import '../../../routing/app_routes.dart';
 
 /// Design screen 15 — Settings: Account / Notifications / Family sections
 /// (notification toggles + default offsets are backed by
@@ -46,7 +47,7 @@ class SettingsPage extends ConsumerWidget {
             _Row(
               icon: Icons.person_outline,
               title: 'Personal information',
-              onTap: () => context.push('/profile'),
+              onTap: () => context.push(AppRoutes.profile),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             _Row(
@@ -58,13 +59,13 @@ class SettingsPage extends ConsumerWidget {
             _Row(
               icon: Icons.lock_outline,
               title: 'Change password',
-              onTap: () => context.push('/change-password'),
+              onTap: () => context.push(AppRoutes.changePassword),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             _Row(
               icon: Icons.shield_outlined,
               title: 'Security & 2FA',
-              onTap: () => context.push('/security'),
+              onTap: () => context.push(AppRoutes.security),
               trailing: Text(
                 ref.watch(securityStatusProvider).value?.totpEnabled == true ? 'On' : 'Off',
                 style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
@@ -115,7 +116,7 @@ class SettingsPage extends ConsumerWidget {
             _Row(
               icon: Icons.groups_outlined,
               title: 'Manage family',
-              onTap: () => context.push('/family-manage'),
+              onTap: () => context.push(AppRoutes.familyManage),
               trailing: Text(plural(members.length, 'member'),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
@@ -143,7 +144,7 @@ class SettingsPage extends ConsumerWidget {
             _Row(
               icon: Icons.checklist_outlined,
               title: "What's pending",
-              onTap: () => context.push('/roadmap'),
+              onTap: () => context.push(AppRoutes.roadmap),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             _Row(
@@ -151,7 +152,7 @@ class SettingsPage extends ConsumerWidget {
               title: 'Replay onboarding',
               onTap: () async {
                 await ref.read(onboardingControllerProvider.notifier).reset();
-                if (context.mounted) context.go('/onboarding');
+                if (context.mounted) context.go(AppRoutes.onboarding);
               },
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
@@ -166,7 +167,7 @@ class SettingsPage extends ConsumerWidget {
                   ? null
                   : () async {
                       final ok = await ref.read(authControllerProvider.notifier).signOut();
-                      if (ok && context.mounted) context.go('/sign-in');
+                      if (ok && context.mounted) context.go(AppRoutes.signIn);
                     },
             ),
           ]),

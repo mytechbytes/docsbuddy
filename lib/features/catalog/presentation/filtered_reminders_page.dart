@@ -9,6 +9,7 @@ import '../application/catalog_providers.dart';
 import '../domain/reminder_filters.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 /// Deep-link target of the dashboard stat cards' "View ›" — the reminder
 /// subset a card counts (e.g. Expired → everything overdue).
@@ -53,7 +54,7 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push('/asset/${reminder.assetId}'),
+      onTap: () => context.push(AppRoutes.asset(reminder.assetId)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),

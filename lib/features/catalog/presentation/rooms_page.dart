@@ -10,6 +10,7 @@ import '../../../core/widgets/feedback.dart';
 import '../application/rooms_controller.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 /// Design screen 02 — Rooms: "Add a new room" composer + photo cards with
 /// registered-asset counts, backed by `public.locations`.
@@ -260,7 +261,7 @@ class _RoomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () => context.push('/room/${location.id}'),
+      onTap: () => context.push(AppRoutes.room(location.id)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(

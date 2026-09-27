@@ -12,6 +12,7 @@ import '../../catalog/domain/reminder_filters.dart';
 import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../profile/application/profile_providers.dart';
 import '../application/dashboard_controller.dart';
+import '../../../routing/app_routes.dart';
 
 class DashboardTab extends ConsumerWidget {
   const DashboardTab({super.key});
@@ -96,14 +97,14 @@ class DashboardTab extends ConsumerWidget {
         titleSpacing: 20,
         title: const Align(alignment: Alignment.centerLeft, child: DbLogo(size: 20)),
         actions: [
-          _BarIcon(Icons.search, onTap: () => context.push('/search')),
-          _BarIcon(Icons.notifications_none, dot: overdue, onTap: () => context.push('/notifications')),
+          _BarIcon(Icons.search, onTap: () => context.push(AppRoutes.search)),
+          _BarIcon(Icons.notifications_none, dot: overdue, onTap: () => context.push(AppRoutes.notifications)),
           const _ProfileAvatar(),
           const SizedBox(width: 16),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/appliance-picker'),
+        onPressed: () => context.push(AppRoutes.appliancePicker()),
         backgroundColor: AppColors.chipBlue,
         elevation: 2,
         child: const Icon(Icons.add, color: Colors.white),
@@ -239,7 +240,7 @@ class _ProfileAvatar extends ConsumerWidget {
       padding: const EdgeInsets.only(left: 8),
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () => context.push('/profile'),
+        onTap: () => context.push(AppRoutes.profile),
         child: AssetThumb(
           imageRef: profile?.avatarUrl,
           size: 32,
@@ -343,7 +344,7 @@ class _StatCard extends StatelessWidget {
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => context.push('/reminders/${filter.name}'),
+        onTap: () => context.push(AppRoutes.reminders(filter)),
         child: Container(
           height: 118,
           padding: const EdgeInsets.all(16),
@@ -415,7 +416,7 @@ class _ReminderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push('/asset/${reminder.assetId}'),
+      onTap: () => context.push(AppRoutes.asset(reminder.assetId)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),
@@ -465,7 +466,7 @@ class _AssetGroupCard extends StatelessWidget {
         children: [
           InkWell(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            onTap: () => context.push('/asset/${first.assetId}'),
+            onTap: () => context.push(AppRoutes.asset(first.assetId)),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -506,7 +507,7 @@ class _AssetGroupCard extends StatelessWidget {
           const Divider(height: 1, color: AppColors.line),
           for (final r in reminders)
             InkWell(
-              onTap: () => context.push('/asset/${r.assetId}'),
+              onTap: () => context.push(AppRoutes.asset(r.assetId)),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(

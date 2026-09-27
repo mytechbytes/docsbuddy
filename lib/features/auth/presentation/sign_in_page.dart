@@ -7,6 +7,7 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
+import '../../../routing/app_routes.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -28,17 +29,17 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   Future<void> _submit() async {
     final ok = await ref.read(authControllerProvider.notifier).signIn(_email.text, _password.text);
-    if (ok && mounted) context.go('/dashboard');
+    if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _google() async {
     final ok = await ref.read(authControllerProvider.notifier).google();
-    if (ok && mounted) context.go('/dashboard');
+    if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _apple() async {
     final ok = await ref.read(authControllerProvider.notifier).apple();
-    if (ok && mounted) context.go('/dashboard');
+    if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   @override
@@ -59,7 +60,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         Align(
           alignment: Alignment.centerRight,
           child: GestureDetector(
-            onTap: () => context.push('/forgot-password'),
+            onTap: () => context.push(AppRoutes.forgotPassword),
             child: const Text('Forgot password?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
           ),
         ),
@@ -70,7 +71,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         const SizedBox(height: 10),
         SocialButton(provider: SocialProvider.apple, onPressed: _apple),
         const SizedBox(height: 22),
-        InlineLink(lead: "Don't have an account? ", action: 'Sign up', onTap: () => context.push('/sign-up')),
+        InlineLink(lead: "Don't have an account? ", action: 'Sign up', onTap: () => context.push(AppRoutes.signUp)),
       ],
     );
   }
