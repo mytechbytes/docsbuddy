@@ -11,6 +11,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/document_providers.dart';
 import '../domain/document_models.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Icon for a non-image attachment by file extension / MIME type; the
 /// generic "unknown file" icon when the type isn't recognised.
@@ -32,6 +33,18 @@ IconData fileTypeIcon(String name, [String? mime]) => switch (fileExtension(name
     };
 
 extension DocKindStyle on DocKind {
+  String displayName(BuildContext context) {
+    final l = context.l10n;
+    return switch (this) {
+      DocKind.invoice => l.docKindInvoice,
+      DocKind.warranty => l.docKindWarranty,
+      DocKind.insurance => l.docKindInsurance,
+      DocKind.manual => l.docKindManual,
+      DocKind.photo => l.docKindPhoto,
+      DocKind.other => l.docKindOther,
+    };
+  }
+
   IconData get icon => switch (this) {
         DocKind.invoice => Icons.receipt_long_outlined,
         DocKind.warranty => Icons.verified_outlined,
@@ -127,8 +140,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
             loadingBuilder: (context, child, progress) => progress == null
                 ? child
                 : const Center(child: CircularProgressIndicator(color: Colors.white70)),
-            errorBuilder: (context, _, _) => const Center(
-                child: Text('Could not load image', style: TextStyle(color: Colors.white70))),
+            errorBuilder: (context, _, _) => Center(
+                child: Text(context.l10n.docsImageLoadFailed, style: const TextStyle(color: Colors.white70))),
           );
     return Scaffold(
       backgroundColor: Colors.black,
@@ -348,7 +361,7 @@ class _DocCard extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                        Text('${doc.kind.label} · ${formatBytes(doc.sizeBytes)}',
+                        Text('${doc.kind.displayName(context)} · ${formatBytes(doc.sizeBytes)}',
                             style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
                       ],
                     ),
@@ -364,11 +377,12 @@ class _DocCard extends ConsumerWidget {
                         if (v == 'delete') onDelete?.call();
                       },
                       itemBuilder: (_) => [
-                        const PopupMenuItem(value: 'view', child: Text('View')),
-                        const PopupMenuItem(value: 'share', child: Text('Share')),
+                        PopupMenuItem(value: 'view', child: Text(context.l10n.commonView)),
+                        PopupMenuItem(value: 'share', child: Text(context.l10n.commonShare)),
                         if (onDelete != null)
-                          const PopupMenuItem(
-                              value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.red))),
+                          PopupMenuItem(
+                              value: 'delete',
+                              child: Text(context.l10n.commonDelete, style: const TextStyle(color: AppColors.red))),
                       ],
                     ),
                   ),

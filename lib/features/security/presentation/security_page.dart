@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
-import '../../../core/widgets/formatters.dart';
 import '../application/security_providers.dart';
 import '../domain/security_models.dart';
 import 'widgets/security_widgets.dart';
 import '../../../core/widgets/settings_list.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Design screen 17 — Security: biometric login, TOTP 2FA (QR + copy key),
 /// recovery codes, app lock with auto-lock, and session control.
@@ -29,17 +28,17 @@ class SecurityPage extends ConsumerWidget {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.ink),
-        title: const Text('Security', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.securityTitle, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          const SectionLabel('Biometric login'),
+          SectionLabel(context.l10n.securityBiometricSection),
           SettingsCard(children: [
             SettingsToggleRow(
               icon: Icons.fingerprint,
-              title: 'Unlock with biometrics',
-              subtitle: bioAvailable ? null : 'No biometrics available on this device',
+              title: context.l10n.securityUnlockBiometrics,
+              subtitle: bioAvailable ? null : context.l10n.securityNoBiometrics,
               value: prefs.biometricUnlock && bioAvailable,
               onChanged: bioAvailable
                   ? (v) => ref.read(securityPrefsProvider.notifier).setBiometricUnlock(v)
@@ -47,7 +46,7 @@ class SecurityPage extends ConsumerWidget {
             ),
             const BiometricTypesRow(),
           ]),
-          const SectionLabel('Two-factor authentication'),
+          SectionLabel(context.l10n.securityTwoFactorSection),
           status.when(
             loading: () => const SettingsCard(children: [
               Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
@@ -55,39 +54,41 @@ class SecurityPage extends ConsumerWidget {
             error: (e, _) => SettingsCard(children: [
               Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(failureMessage(e), style: const TextStyle(color: AppColors.muted))),
+                  child: Text(context.failureText(e), style: const TextStyle(color: AppColors.muted))),
             ]),
             data: (s) => SettingsCard(children: [
               SettingsToggleRow(
                 icon: Icons.shield_outlined,
-                title: s.totpEnabled ? '2FA is enabled' : 'Enable 2FA',
+                title: s.totpEnabled ? context.l10n.security2faEnabled : context.l10n.securityEnable2fa,
                 subtitle: s.totpEnabled
-                    ? 'Authenticator app${s.enrolledAt == null ? '' : ' · since ${DateFormat('d MMM yyyy').format(s.enrolledAt!)}'}'
-                    : 'Use Google Authenticator, Authy, 1Password, etc.',
+                    ? (s.enrolledAt == null
+                        ? context.l10n.securityAuthenticatorApp
+                        : context.l10n.securityAuthenticatorSince(context.formatDate(s.enrolledAt!)))
+                    : context.l10n.securityAuthenticatorHint,
                 value: s.totpEnabled,
                 onChanged: (v) => v ? _enroll(context, ref) : _disable(context, ref),
               ),
             ]),
           ),
-          const SectionLabel('More'),
+          SectionLabel(context.l10n.securityMoreSection),
           SettingsCard(children: [
             SettingsToggleRow(
               icon: Icons.lock_outline,
-              title: 'App lock',
-              subtitle: 'Require unlock when reopening the app',
+              title: context.l10n.securityAppLock,
+              subtitle: context.l10n.securityAppLockHint,
               value: prefs.appLock,
               onChanged: (v) => ref.read(securityPrefsProvider.notifier).setAppLock(v),
             ),
             SettingsRow(
               icon: Icons.timer_outlined,
-              title: 'Auto-lock after',
+              title: context.l10n.securityAutoLock,
               onTap: () => _pickAutoLock(context, ref, prefs.autoLockMinutes),
-              trailing: Text('${prefs.autoLockMinutes} min',
+              trailing: Text(context.l10n.securityMinutesShort(prefs.autoLockMinutes),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
             SettingsRow(
               icon: Icons.devices_outlined,
-              title: 'Active sessions',
+              title: context.l10n.securityActiveSessions,
               onTap: () => _sessions(context, ref),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
@@ -117,13 +118,13 @@ class SecurityPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.paper,
-        title: const Text('Disable 2FA?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        content: const Text('Your account will no longer require an authenticator code to sign in.'),
+        title: Text(context.l10n.securityDisable2faTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: Text(context.l10n.securityDisable2faMessage),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.l10n.commonCancel)),
           TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Disable', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
+              child: Text(context.l10n.securityDisable, style: const TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
         ],
       ),
     );
@@ -142,7 +143,7 @@ class SecurityPage extends ConsumerWidget {
           children: [
             for (final m in autoLockOptions)
               ListTile(
-                title: Text(plural(m, 'minute'),
+                title: Text(context.l10n.securityMinutes(m),
                     style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
                 trailing: m == current ? const Icon(Icons.check, color: AppColors.green) : null,
                 onTap: () => Navigator.of(context).pop(m),
@@ -168,7 +169,7 @@ class SecurityPage extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Active sessions',
+              Text(context.l10n.securityActiveSessions,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
               const SizedBox(height: 12),
               ListTile(
@@ -178,26 +179,27 @@ class SecurityPage extends ConsumerWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.ink)),
                 subtitle: Text(
                   session.lastSignIn == null
-                      ? 'Current session'
-                      : 'Signed in ${DateFormat('d MMM yyyy, HH:mm').format(session.lastSignIn!.toLocal())}',
+                      ? context.l10n.securityCurrentSession
+                      : context.l10n.securitySignedInAt(
+                          '${context.formatDate(session.lastSignIn!.toLocal())}, ${TimeOfDay.fromDateTime(session.lastSignIn!.toLocal()).format(context)}'),
                   style: const TextStyle(fontSize: 12.5, color: AppColors.muted),
                 ),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration:
                       BoxDecoration(color: AppColors.greenSoft, borderRadius: BorderRadius.circular(999)),
-                  child: const Text('This device',
+                  child: Text(context.l10n.securityThisDevice,
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.greenLeaf)),
                 ),
               ),
               const SizedBox(height: 8),
               PrimaryButton(
-                label: 'Sign out other devices',
+                label: context.l10n.securitySignOutOthers,
                 onPressed: () async {
                   final ok = await runAction(
                     context,
                     () => ref.read(securityActionsProvider).signOutOtherDevices(),
-                    success: 'Other devices signed out.',
+                    success: context.l10n.securityOthersSignedOut,
                   );
                   if (ok && context.mounted) Navigator.of(context).pop();
                 },

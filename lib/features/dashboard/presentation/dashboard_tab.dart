@@ -13,6 +13,7 @@ import '../../../routing/app_routes.dart';
 import '../../reminders/application/reminder_providers.dart';
 import 'widgets/dashboard_widgets.dart';
 import '../../profile/presentation/widgets/profile_avatar_button.dart';
+import '../../../core/l10n/l10n.dart';
 
 class DashboardTab extends ConsumerWidget {
   const DashboardTab({super.key});
@@ -33,13 +34,13 @@ class DashboardTab extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Expanded(
-                      child: Text('Filter by type',
+                    Expanded(
+                      child: Text(context.l10n.dashboardFilterByType,
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     ),
                     TextButton(
                       onPressed: () => setSheetState(selected.clear),
-                      child: const Text('Clear', style: TextStyle(fontWeight: FontWeight.w700)),
+                      child: Text(context.l10n.commonClear, style: const TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
@@ -53,7 +54,7 @@ class DashboardTab extends ConsumerWidget {
                         selected: selected.contains(k),
                         onSelected: (v) => setSheetState(() => v ? selected.add(k) : selected.remove(k)),
                         avatar: selected.contains(k) ? null : Icon(k.icon, size: 15, color: k.fg),
-                        label: Text(k.label),
+                        label: Text(k.displayName(context)),
                         labelStyle: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
@@ -72,7 +73,7 @@ class DashboardTab extends ConsumerWidget {
                   child: FilledButton(
                     style: FilledButton.styleFrom(backgroundColor: AppColors.ink),
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Apply', style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(context.l10n.commonApply, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -116,7 +117,7 @@ class DashboardTab extends ConsumerWidget {
         },
         child: dashboard.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text(failureMessage(e))),
+          error: (e, _) => Center(child: Text(context.failureText(e))),
           data: (view) {
             final filter = view.filter;
             final visible = view.visible;
@@ -127,18 +128,18 @@ class DashboardTab extends ConsumerWidget {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    const Expanded(
-                      child: Text('Upcoming Expirations',
+                    Expanded(
+                      child: Text(context.l10n.dashboardUpcoming,
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     ),
                     PopupMenuButton<bool>(
-                      tooltip: 'Group by',
+                      tooltip: context.l10n.dashboardGroupBy,
                       onSelected: (v) => ref.read(dashboardControllerProvider.notifier).setGroupByAsset(v),
                       itemBuilder: (_) => [
                         CheckedPopupMenuItem(
-                            value: false, checked: !filter.groupByAsset, child: const Text('Group by: None')),
+                            value: false, checked: !filter.groupByAsset, child: Text(context.l10n.dashboardGroupNone)),
                         CheckedPopupMenuItem(
-                            value: true, checked: filter.groupByAsset, child: const Text('Group by: Asset')),
+                            value: true, checked: filter.groupByAsset, child: Text(context.l10n.dashboardGroupAsset)),
                       ],
                       child: Container(
                         width: 34,
@@ -176,8 +177,8 @@ class DashboardTab extends ConsumerWidget {
                     child: Center(
                         child: Text(
                             filter.kinds.isEmpty
-                                ? 'No reminders yet. Add an asset to get started.'
-                                : 'Nothing matches the selected types.',
+                                ? context.l10n.dashboardEmpty
+                                : context.l10n.dashboardNoMatches,
                             style: const TextStyle(color: AppColors.muted))),
                   )
                 else if (filter.groupByAsset)

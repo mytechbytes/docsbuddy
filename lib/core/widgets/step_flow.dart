@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import 'buttons.dart';
+import '../l10n/l10n.dart';
 
 /// Header for a multi-step form: "STEP i OF n", the step title, and a
 /// segmented progress bar.
@@ -82,8 +83,8 @@ class StepNav extends StatelessWidget {
                 side: const BorderSide(color: AppColors.line, width: 1.5),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: const Text('Back',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
+              child: Text(context.l10n.commonBack,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
             ),
           ),
           const SizedBox(width: 12),

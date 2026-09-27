@@ -31,7 +31,7 @@ class ReminderKindTile extends StatelessWidget {
               child: Icon(kind.icon, size: 18, color: kind.fg),
             ),
             const SizedBox(height: 6),
-            Text(kind.label,
+            Text(kind.displayName(context),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),

@@ -14,5 +14,5 @@ String? normalizePhone(String input) {
 String validatePhoneInput(String input) {
   if (input.trim().isEmpty) return '';
   return normalizePhone(input) ??
-      (throw const ValidationFailure('Use the international format, e.g. +91 9812345678.'));
+      (throw const ValidationFailure('Use the international format, e.g. +91 9812345678.', reason: FailureReason.phoneFormat));
 }

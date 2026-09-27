@@ -8,6 +8,8 @@ import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/feedback.dart';
 import '../../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../domain/family_models.dart';
+import '../../../../core/l10n/l10n.dart';
+import '../family_names.dart';
 
 class FamilyEmptyState extends StatelessWidget {
   const FamilyEmptyState({super.key, required this.onCreate, required this.onJoin});
@@ -29,17 +31,17 @@ class FamilyEmptyState extends StatelessWidget {
               child: const Icon(Icons.groups_outlined, size: 34, color: AppColors.chipBlue),
             ),
             const SizedBox(height: 20),
-            const Text("You're not in a family yet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            Text(context.l10n.familyEmptyTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
             const SizedBox(height: 8),
-            const Text(
-              'Create a family to share assets and reminders, or join one with an invite code.',
+            Text(
+              context.l10n.familyEmptyBody,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
             ),
             const SizedBox(height: 28),
-            PrimaryButton(label: 'Create a family', onPressed: onCreate),
+            PrimaryButton(label: context.l10n.familyCreateTitle, onPressed: onCreate),
             const SizedBox(height: 10),
-            GhostButton(label: 'Join with a code', onPressed: onJoin),
+            GhostButton(label: context.l10n.familyJoinWithCode, onPressed: onJoin),
           ],
         ),
       ),
@@ -89,7 +91,7 @@ class FamilyOverview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(family.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                    Text(plural(members.length, 'member'), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                    Text(context.l10n.memberCount(members.length), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
                   ],
                 ),
               ),
@@ -97,9 +99,9 @@ class FamilyOverview extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 22),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 4, bottom: 8),
-          child: Text('MEMBERS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+          child: Text(context.l10n.familyMembers, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
         ),
         for (final m in members)
           MemberTile(
@@ -109,11 +111,11 @@ class FamilyOverview extends StatelessWidget {
             onRemove: () => onRemove(m),
           ),
         const SizedBox(height: 22),
-        PrimaryButton(label: 'Invite member', onPressed: onInvite),
+        PrimaryButton(label: context.l10n.familyInviteMember, onPressed: onInvite),
         const SizedBox(height: 8),
         TextButton(
           onPressed: onLeave,
-          child: const Text('Leave family', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700)),
+          child: Text(context.l10n.familyLeaveFamily, style: const TextStyle(color: AppColors.red, fontWeight: FontWeight.w700)),
         ),
       ],
     );
@@ -134,7 +136,7 @@ class MemberTile extends StatelessWidget {
 
   Future<void> _launch(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && context.mounted) context.showFailure(const UnavailableFailure('Could not open that app.'));
+    if (!ok && context.mounted) context.showFailure(const UnavailableFailure('Could not open that app.', reason: FailureReason.appOpenFailed));
   }
 
   @override
@@ -190,28 +192,28 @@ class MemberTile extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               onPressed: () => _launch(context, Uri.parse('tel:$phone')),
               icon: const Icon(Icons.call_outlined, size: 18, color: AppColors.chipBlue),
-              tooltip: 'Call',
+              tooltip: context.l10n.familyCall,
             ),
             IconButton(
               visualDensity: VisualDensity.compact,
               onPressed: () => _launch(context, Uri.parse('https://wa.me/$waDigits')),
               icon: const Icon(Icons.chat_outlined, size: 18, color: AppColors.greenLeaf),
-              tooltip: 'WhatsApp',
+              tooltip: context.l10n.familyWhatsapp,
             ),
           ],
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(999)),
-            child: Text(member.role.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink2)),
+            child: Text(member.role.displayName(context), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink2)),
           ),
           if (canManage)
             PopupMenuButton<String>(
               padding: EdgeInsets.zero,
-              icon: const Icon(Icons.more_vert, size: 18, color: AppColors.muted),
+              icon: Icon(Icons.more_vert, size: 18, color: AppColors.muted),
               onSelected: (v) => v == 'role' ? onChangeRole() : onRemove(),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'role', child: Text('Change role')),
-                PopupMenuItem(value: 'remove', child: Text('Remove from family', style: TextStyle(color: AppColors.red))),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'role', child: Text(context.l10n.familyChangeRole)),
+                PopupMenuItem(value: 'remove', child: Text(context.l10n.familyRemoveFromFamily, style: const TextStyle(color: AppColors.red))),
               ],
             ),
         ],
@@ -234,9 +236,9 @@ class InviteSheet extends StatelessWidget {
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(999))),
             const SizedBox(height: 18),
-            const Text('Invite a member', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            Text(context.l10n.familyInviteTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
             const SizedBox(height: 6),
-            Text('Share this code. They can join as ${invite.role.label}. Expires in 7 days.',
+            Text(context.l10n.familyInviteBody(invite.role.displayName(context)),
                 textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
             const SizedBox(height: 20),
             Container(
@@ -256,11 +258,11 @@ class InviteSheet extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             PrimaryButton(
-              label: 'Copy code',
+              label: context.l10n.familyCopyCode,
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: invite.code));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Invite code copied'), backgroundColor: AppColors.green),
+                  SnackBar(content: Text(context.l10n.familyCodeCopied), backgroundColor: AppColors.green),
                 );
                 Navigator.pop(context);
               },
@@ -289,7 +291,7 @@ class FamilyErrorState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.muted)),
             const SizedBox(height: 16),
-            TextButton(onPressed: onRetry, child: const Text('Retry')),
+            TextButton(onPressed: onRetry, child: Text(context.l10n.commonRetry)),
           ],
         ),
       ),

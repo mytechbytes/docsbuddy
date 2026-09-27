@@ -9,6 +9,8 @@ import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/feedback.dart';
 import '../../application/security_providers.dart';
 import '../../domain/security_models.dart';
+import '../../../../core/l10n/l10n.dart';
+import '../security_names.dart';
 
 /// QR + secret + code verification for a pending TOTP enrollment.
 class TotpEnrollSheet extends ConsumerStatefulWidget {
@@ -39,7 +41,7 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
       await ref.read(securityActionsProvider).confirmTotp(widget.enrollment, _code.text);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) setState(() => _error = failureMessage(e));
+      if (mounted) setState(() => _error = context.failureText(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -56,10 +58,10 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Set up authenticator app',
+              Text(context.l10n.securitySetupTitle,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
               const SizedBox(height: 4),
-              const Text('Scan the QR with Google Authenticator, Authy, 1Password, etc., then enter the 6-digit code.',
+              Text(context.l10n.securitySetupBody,
                   style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
               const SizedBox(height: 16),
               Center(
@@ -84,24 +86,24 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
                       await Clipboard.setData(ClipboardData(text: widget.enrollment.secret));
                       if (context.mounted) {
                         ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Key copied.'), backgroundColor: AppColors.green));
+                            .showSnackBar(SnackBar(content: Text(context.l10n.securityKeyCopied), backgroundColor: AppColors.green));
                       }
                     },
                     icon: const Icon(Icons.copy, size: 14),
-                    label: const Text('Copy key', style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.securityCopyKey, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               AppTextField(
-                label: '6-digit code',
+                label: context.l10n.mfaCodeLabel,
                 controller: _code,
                 icon: Icons.pin_outlined,
                 keyboardType: TextInputType.number,
                 errorText: _error,
               ),
               const SizedBox(height: 16),
-              PrimaryButton(label: 'Verify & enable', isLoading: _busy, onPressed: _verify),
+              PrimaryButton(label: context.l10n.securityVerifyEnable, isLoading: _busy, onPressed: _verify),
             ],
           ),
         ),
@@ -121,7 +123,7 @@ class BiometricTypesRow extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: Text('Available: ${kinds.map((k) => k.label).join(' · ')}',
+        child: Text(context.l10n.securityAvailable(kinds.map((k) => k.displayName(context)).join(' · ')),
             style: const TextStyle(fontSize: 12, color: AppColors.muted)),
       ),
     );

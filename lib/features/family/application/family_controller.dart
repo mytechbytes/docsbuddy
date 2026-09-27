@@ -30,12 +30,12 @@ class FamilyController extends AsyncNotifier<FamilyView> {
   }
 
   Family get _family =>
-      state.value?.family ?? (throw const ValidationFailure('No active family.'));
+      state.value?.family ?? (throw const ValidationFailure('No active family.', reason: FailureReason.noActiveFamily));
 
   void _scopeChanged() => ref.read(familyScopeProvider.notifier).changed();
 
   Future<void> createFamily(String name) async {
-    if (name.trim().isEmpty) throw const ValidationFailure('Please enter a family name.');
+    if (name.trim().isEmpty) throw const ValidationFailure('Please enter a family name.', reason: FailureReason.familyNameRequired);
     await _repo.createFamily(name.trim());
     _scopeChanged();
     await refresh();
@@ -46,7 +46,7 @@ class FamilyController extends AsyncNotifier<FamilyView> {
 
   Future<void> acceptInvite(String code) async {
     final normalized = code.trim().toUpperCase();
-    if (normalized.isEmpty) throw const ValidationFailure('Enter a valid invite code.');
+    if (normalized.isEmpty) throw const ValidationFailure('Enter a valid invite code.', reason: FailureReason.inviteCodeInvalid);
     await _repo.acceptInvite(normalized);
     _scopeChanged();
     await refresh();
@@ -62,13 +62,13 @@ class FamilyController extends AsyncNotifier<FamilyView> {
 
   Future<void> changeRole(FamilyMember member, FamilyRole role) async {
     if (role == member.role) return;
-    if (member.userId == _family.ownerId) throw const ValidationFailure("The owner's role can't be changed.");
+    if (member.userId == _family.ownerId) throw const ValidationFailure("The owner's role can't be changed.", reason: FailureReason.ownerRoleLocked);
     await _repo.updateMemberRole(familyId: _family.id, userId: member.userId, role: role);
     await refresh();
   }
 
   Future<void> removeMember(FamilyMember member) async {
-    if (member.userId == _family.ownerId) throw const ValidationFailure("The owner can't be removed.");
+    if (member.userId == _family.ownerId) throw const ValidationFailure("The owner can't be removed.", reason: FailureReason.ownerNotRemovable);
     await _repo.removeMember(familyId: _family.id, userId: member.userId);
     await refresh();
   }

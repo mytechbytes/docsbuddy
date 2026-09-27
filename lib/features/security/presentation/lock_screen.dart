@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../application/security_providers.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Full-screen gate shown while the app is locked — the biometric
 /// quick-unlock surface (design screens 09/17).
@@ -42,7 +43,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             children: [
               const DbLogo(size: 26),
               const SizedBox(height: 10),
-              const Text('Locked', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.muted)),
+              Text(context.l10n.lockLocked, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.muted)),
               const SizedBox(height: 32),
               InkWell(
                 customBorder: const CircleBorder(),
@@ -61,7 +62,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Tap to unlock', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              Text(context.l10n.lockTapToUnlock, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
             ],
           ),
         ),

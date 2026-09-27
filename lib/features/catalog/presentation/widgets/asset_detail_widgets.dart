@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/catalog_models.dart';
 import '../service_detail_sheet.dart';
 import 'catalog_widgets.dart';
+import '../../../../core/l10n/l10n.dart';
 
 class AddPill extends StatelessWidget {
   const AddPill({super.key, required this.onTap});
@@ -18,12 +18,12 @@ class AddPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(999)),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.add, size: 16, color: Colors.white),
             SizedBox(width: 4),
-            Text('Add', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+            Text(context.l10n.commonAdd, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
           ],
         ),
       ),
@@ -51,7 +51,7 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
   @override
   Widget build(BuildContext context) {
     final meta = [
-      '${plural(reminderCount, 'reminder')} tracked',
+      context.l10n.catalogRemindersTracked(reminderCount),
       if (asset.brand != null) asset.brand,
       if (asset.model != null) asset.model,
       if (asset.serialNo != null) asset.serialNo,
@@ -106,7 +106,7 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
               children: [
                 Text(asset.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.2)),
                 const SizedBox(height: 6),
-                Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.typeLabel)),
+                Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.typeName(context))),
                 const SizedBox(height: 8),
                 Text(meta, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                 // Type-specific properties (Tonnage, IMEI, …) from Add asset.
@@ -144,7 +144,7 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
           // Expand: the full asset record inline.
           IconButton(
             visualDensity: VisualDensity.compact,
-            tooltip: _expanded ? 'Hide details' : 'Show all details',
+            tooltip: _expanded ? context.l10n.catalogHideDetails : context.l10n.catalogShowDetails,
             icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: AppColors.ink2),
             onPressed: () => setState(() => _expanded = !_expanded),
           ),
@@ -153,19 +153,19 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
           if (_expanded) ...[
             const SizedBox(height: 6),
             const Divider(color: AppColors.line, height: 16),
-            InfoRow('Type', asset.typeLabel),
-            InfoRow('Category', asset.category.label),
-            if (asset.locationName != null) InfoRow('Room', asset.locationName!),
-            if (asset.brand != null) InfoRow('Brand', asset.brand!),
-            if (asset.model != null) InfoRow('Model', asset.model!),
-            if (asset.serialNo != null) InfoRow('Serial / reg. no.', asset.serialNo!),
+            InfoRow(context.l10n.catalogType, asset.typeName(context)),
+            InfoRow(context.l10n.catalogCategory, asset.category.displayName(context)),
+            if (asset.locationName != null) InfoRow(context.l10n.catalogRoom, asset.locationName!),
+            if (asset.brand != null) InfoRow(context.l10n.catalogBrand, asset.brand!),
+            if (asset.model != null) InfoRow(context.l10n.catalogModel, asset.model!),
+            if (asset.serialNo != null) InfoRow(context.l10n.catalogSerialShort, asset.serialNo!),
             if (asset.purchaseDate != null)
-              InfoRow('Purchase date', DateFormat('d MMM yyyy').format(asset.purchaseDate!)),
+              InfoRow(context.l10n.catalogPurchaseDate, context.formatDate(asset.purchaseDate!)),
             if (asset.purchasePrice != null)
-              InfoRow('Purchase price', '₹ ${NumberFormat('#,##0.##').format(asset.purchasePrice)}'),
-            if (asset.store != null) InfoRow('Store', asset.store!),
+              InfoRow(context.l10n.catalogPurchasePrice, context.formatMoney(asset.purchasePrice!)),
+            if (asset.store != null) InfoRow(context.l10n.catalogStore, asset.store!),
             for (final e in asset.properties.entries) InfoRow(e.key, e.value),
-            InfoRow('Reminders tracked', '$reminderCount'),
+            InfoRow(context.l10n.catalogRemindersTrackedLabel, '$reminderCount'),
           ],
         ],
       ),
@@ -206,7 +206,7 @@ class NextDueBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final phrase = dueCountdown(reminder.daysLeft);
+    final phrase = dueCountdown(context.l10n, reminder.daysLeft);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(18)),
@@ -216,7 +216,7 @@ class NextDueBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('NEXT DUE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 1.2)),
+                Text(context.l10n.catalogNextDue, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 1.2)),
                 const SizedBox(height: 4),
                 Text('${reminder.label} · $phrase',
                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white, height: 1.15)),
@@ -227,10 +227,10 @@ class NextDueBanner extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(DateFormat('d MMM yyyy').format(reminder.dueDate),
+              Text(context.formatDate(reminder.dueDate),
                   style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white)),
               const SizedBox(height: 4),
-              Text('Reminds ${reminder.offsetsLabel}', style: const TextStyle(fontSize: 11, color: Colors.white70)),
+              Text(context.l10n.catalogRemindsOffsets(context.formatOffsets(reminder.notifyOffsets)), style: const TextStyle(fontSize: 11, color: Colors.white70)),
             ],
           ),
         ],
@@ -270,11 +270,11 @@ class ServiceRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    Text(DateFormat('d MMM yyyy').format(reminder.dueDate), style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    Text(context.formatDate(reminder.dueDate), style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                     const SizedBox(width: 8),
                     const Icon(Icons.notifications_none, size: 13, color: AppColors.muted),
                     const SizedBox(width: 3),
-                    Text(reminder.offsetsLabel, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    Text(context.formatOffsets(reminder.notifyOffsets), style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                   ],
                 ),
                 if (service.isNotEmpty) ...[
@@ -284,18 +284,18 @@ class ServiceRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           DayPill(daysLeft: reminder.daysLeft),
           PopupMenuButton<ServiceAction>(
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.more_vert, size: 18, color: AppColors.muted),
+            icon: Icon(Icons.more_vert, size: 18, color: AppColors.muted),
             onSelected: onAction,
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: ServiceAction.complete, child: Text('Mark as done')),
-              PopupMenuItem(value: ServiceAction.edit, child: Text('Edit')),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: ServiceAction.complete, child: Text(context.l10n.catalogMarkAsDone)),
+              PopupMenuItem(value: ServiceAction.edit, child: Text(context.l10n.commonEdit)),
               PopupMenuItem(
                   value: ServiceAction.delete,
-                  child: Text('Delete', style: TextStyle(color: AppColors.red))),
+                  child: Text(context.l10n.commonDelete, style: const TextStyle(color: AppColors.red))),
             ],
           ),
         ],

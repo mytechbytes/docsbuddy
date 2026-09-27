@@ -24,7 +24,7 @@ class ChangePasswordController extends AsyncNotifier<void> {
         try {
           await auth.signInWithPassword(email: email, password: current);
         } on AuthFailure {
-          throw const AuthFailure('Current password is incorrect.');
+          throw const AuthFailure('Current password is incorrect.', reason: FailureReason.currentPasswordIncorrect);
         }
       }
       await auth.updatePassword(fresh);

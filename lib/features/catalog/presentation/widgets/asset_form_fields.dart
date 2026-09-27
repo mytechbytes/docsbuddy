@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/media/media_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/catalog_models.dart';
 import 'catalog_widgets.dart';
+import '../../../../core/l10n/l10n.dart';
 
 /// One selectable category card on step 1.
 class CategoryCard extends StatelessWidget {
@@ -39,7 +39,7 @@ class CategoryCard extends StatelessWidget {
               child: Icon(kind.icon, size: 22, color: selected ? Colors.white : AppColors.ink2),
             ),
             const SizedBox(height: 8),
-            Text(kind.label,
+            Text(kind.displayName(context),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -116,12 +116,12 @@ class RoomDropdown extends StatelessWidget {
         value: value,
         isExpanded: true,
         underline: const SizedBox(),
-        hint: const Text('No room — you can set one later',
+        hint: Text(context.l10n.catalogNoRoomHint,
             style: TextStyle(fontSize: 14, color: AppColors.placeholder)),
         items: [
-          const DropdownMenuItem<String?>(
+          DropdownMenuItem<String?>(
               value: null,
-              child: Text('No room', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.muted))),
+              child: Text(context.l10n.catalogNoRoom, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.muted))),
           for (final n in names)
             DropdownMenuItem<String?>(
               value: n,
@@ -135,11 +135,11 @@ class RoomDropdown extends StatelessWidget {
             ),
           DropdownMenuItem<String?>(
             value: newRoomSentinel,
-            child: const Row(
+            child: Row(
               children: [
                 Icon(Icons.add_circle_outline, size: 18, color: AppColors.chipBlue),
                 SizedBox(width: 8),
-                Text('New room…',
+                Text(context.l10n.catalogNewRoom,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
               ],
             ),
@@ -161,12 +161,12 @@ class AssetPhotoPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = const Column(
+    final placeholder = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
         SizedBox(height: 6),
-        Text('Add photo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
+        Text(context.l10n.catalogAddPhoto, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
       ],
     );
     return InkWell(
@@ -221,7 +221,7 @@ class DateField extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    value == null ? 'optional' : DateFormat('d MMM yyyy').format(value!),
+                    value == null ? context.l10n.commonOptional : context.formatDate(value!),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: value == null ? FontWeight.w400 : FontWeight.w600,

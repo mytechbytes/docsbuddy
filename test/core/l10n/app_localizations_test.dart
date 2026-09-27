@@ -7,8 +7,8 @@ void main() {
   setUpAll(() async => l10n = await AppLocalizations.delegate.load(const Locale('en')));
 
   test('plurals and placeholders render', () {
-    expect(l10n.settingsMemberCount(1), '1 member');
-    expect(l10n.settingsMemberCount(3), '3 members');
+    expect(l10n.memberCount(1), '1 member');
+    expect(l10n.memberCount(3), '3 members');
     expect(l10n.settingsDaysBefore(7), '7d before');
     expect(l10n.authOtpSubtitle('a@b.dev'), contains('a@b.dev'));
   });

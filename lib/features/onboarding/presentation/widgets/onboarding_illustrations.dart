@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/l10n/l10n.dart';
 
 // ─── Shared illustration primitives ──────────────────────────────────────────
 
@@ -143,11 +144,11 @@ class IlloWelcome extends StatelessWidget {
               top: 18,
               child: Transform.rotate(
                 angle: _rad(-6),
-                child: const _StatCard(
+                child: _StatCard(
                   gradient: AppColors.cardNavy,
                   width: 150,
                   height: 110,
-                  label: 'Active Invoices',
+                  label: context.l10n.illoActiveInvoices,
                   value: '23',
                   trailing: Icon(Icons.description_outlined, size: 16, color: Colors.white),
                 ),
@@ -159,11 +160,11 @@ class IlloWelcome extends StatelessWidget {
               top: 0,
               child: Transform.rotate(
                 angle: _rad(8),
-                child: const _StatCard(
+                child: _StatCard(
                   gradient: AppColors.cardTeal,
                   width: 130,
                   height: 100,
-                  label: 'Secured',
+                  label: context.l10n.filterSecured,
                   value: '14',
                 ),
               ),
@@ -179,7 +180,7 @@ class IlloWelcome extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [_softShadow],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _IconBubble(
@@ -192,8 +193,8 @@ class IlloWelcome extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Insurance', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                        Text('in 25 days', style: TextStyle(fontSize: 9.5, color: AppColors.muted)),
+                        Text(context.l10n.kindInsurance, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                        Text(context.l10n.relativeInDays(25), style: const TextStyle(fontSize: 9.5, color: AppColors.muted)),
                       ],
                     ),
                     SizedBox(width: 8),
@@ -269,9 +270,9 @@ class IlloAssets extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            _assetRow('kitchen', 'Samsung 340L Fridge', 'Kitchen', AppColors.tileSand, -66, -4),
-            _assetRow('phone', 'iPhone 15 Pro', 'Smartphone', AppColors.tileSlate, -12, 0),
-            _assetRow('bike', 'Royal Enfield Classic', 'Vehicles', AppColors.tileSage, 42, 4),
+            _assetRow('kitchen', 'Samsung 340L Fridge', context.l10n.illoKitchen, AppColors.tileSand, -66, -4),
+            _assetRow('phone', 'iPhone 15 Pro', context.l10n.illoSmartphone, AppColors.tileSlate, -12, 0),
+            _assetRow('bike', 'Royal Enfield Classic', context.l10n.illoVehicles, AppColors.tileSage, 42, 4),
           ],
         ),
       ),
@@ -323,11 +324,11 @@ class IlloReminders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const markers = [
-      (0.06, '−30d'),
-      (0.40, '−7d'),
-      (0.76, '−1d'),
-      (0.94, 'Due'),
+    final markers = [
+      (0.06, '−${context.l10n.durationDaysShort(30)}'),
+      (0.40, '−${context.l10n.durationDaysShort(7)}'),
+      (0.76, '−${context.l10n.durationDaysShort(1)}'),
+      (0.94, context.l10n.catalogDue),
     ];
     return IlloStage(
       tint: AppColors.redSoft,
@@ -348,7 +349,7 @@ class IlloReminders extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [_softShadow],
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     _IconBubble(bg: AppColors.pollutionBg, fg: AppColors.pollutionFg, icon: Icons.eco_outlined, size: 36),
                     SizedBox(width: 10),
@@ -357,8 +358,8 @@ class IlloReminders extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Pollution due', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                          Text('07 Jun · Bike', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                          Text(context.l10n.illoPollutionDue, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                          Text(context.l10n.illoBikeSample(context.formatShortDate(DateTime(2026, 6, 7))), style: const TextStyle(fontSize: 10, color: AppColors.muted)),
                         ],
                       ),
                     ),
@@ -482,9 +483,9 @@ class IlloFamily extends StatelessWidget {
                     child: const Icon(Icons.notifications_outlined, size: 16, color: Colors.white),
                   ),
                   const SizedBox(height: 6),
-                  const Text('Shared with family', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                  Text(context.l10n.illoSharedWithFamily, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
                   const SizedBox(height: 2),
-                  const Text('Insurance · 25 d', style: TextStyle(fontSize: 9.5, color: AppColors.muted)),
+                  Text('${context.l10n.kindInsurance} · ${context.l10n.durationDaysShort(25)}', style: const TextStyle(fontSize: 9.5, color: AppColors.muted)),
                 ],
               ),
             ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../application/catalog_providers.dart';
@@ -9,6 +8,7 @@ import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/widgets/settings_list.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Search across assets (name/brand/model/serial) and services (label,
 /// provider, policy no.) — wires the dashboard's search icon.
@@ -50,28 +50,28 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             autofocus: true,
             onChanged: (v) => setState(() => _query = v.trim()),
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
-              hintText: 'Search assets, services, policy numbers…',
+              hintText: context.l10n.catalogSearchHint,
               hintStyle: TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400, fontSize: 14),
             ),
           ),
         ),
       ),
       body: q.isEmpty
-          ? const Center(
-              child: Text('Type to search your assets and reminders.', style: TextStyle(color: AppColors.muted)))
+          ? Center(
+              child: Text(context.l10n.catalogSearchEmpty, style: const TextStyle(color: AppColors.muted)))
           : (assetHits.isEmpty && reminderHits.isEmpty)
-              ? const Center(child: Text('No matches.', style: TextStyle(color: AppColors.muted)))
+              ? Center(child: Text(context.l10n.commonNoMatches, style: const TextStyle(color: AppColors.muted)))
               : ListView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
                   children: [
                     if (assetHits.isNotEmpty) ...[
-                      const SectionLabel('Assets'),
+                      SectionLabel(context.l10n.navAssets),
                       for (final a in assetHits) _AssetHit(asset: a),
                     ],
                     if (reminderHits.isNotEmpty) ...[
-                      const SectionLabel('Reminders'),
+                      SectionLabel(context.l10n.catalogReminders),
                       for (final r in reminderHits) _ReminderHit(reminder: r),
                     ],
                   ],
@@ -155,7 +155,7 @@ class _ReminderHit extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                  Text(DateFormat('d MMM yyyy').format(reminder.dueDate),
+                  Text(context.formatDate(reminder.dueDate),
                       style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                 ],
               ),

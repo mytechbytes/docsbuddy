@@ -8,6 +8,7 @@ import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 class AssetsPage extends ConsumerStatefulWidget {
   const AssetsPage({super.key});
@@ -35,13 +36,13 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('Assets', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.navAssets, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.ink,
         onPressed: () => context.push(AppRoutes.appliancePicker()),
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Add asset', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        label: Text(context.l10n.catalogAddAsset, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
       body: Column(
         children: [
@@ -55,7 +56,7 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
                 isDense: true,
                 filled: true,
                 fillColor: AppColors.paper,
-                hintText: 'Search Your Appliance',
+                hintText: context.l10n.catalogSearchAppliance,
                 hintStyle: const TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
                 prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.muted),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
@@ -73,11 +74,11 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
           Expanded(
             child: assets.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(failureMessage(e))),
+              error: (e, _) => Center(child: Text(context.failureText(e))),
               data: (visible) {
                 if (visible.isEmpty) {
                   return Center(
-                      child: Text(_query.isEmpty ? 'No assets yet. Tap “Add asset”.' : 'No matches.',
+                      child: Text(_query.isEmpty ? context.l10n.catalogNoAssets : context.l10n.commonNoMatches,
                           style: const TextStyle(color: AppColors.muted)));
                 }
                 return ListView.builder(
@@ -131,7 +132,7 @@ class _AssetTile extends StatelessWidget {
                 ],
               ),
             ),
-            CategoryChip(asset.typeLabel),
+            CategoryChip(asset.typeName(context)),
             const Icon(Icons.chevron_right, color: AppColors.muted),
           ],
         ),

@@ -34,7 +34,7 @@ class AuthController extends AsyncNotifier<void> {
 
   /// [acceptedTerms] must be true — the sign-up form's checkbox.
   Future<bool> signUp(String name, String email, String password, {required bool acceptedTerms}) => _run(() {
-        if (!acceptedTerms) throw const ValidationFailure('Please accept the Terms to continue.');
+        if (!acceptedTerms) throw const ValidationFailure('Please accept the Terms to continue.', reason: FailureReason.termsRequired);
         return _repo.signUp(name: name.trim(), email: email.trim(), password: password);
       });
 

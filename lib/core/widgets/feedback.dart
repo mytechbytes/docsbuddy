@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
-import '../error/app_failure.dart';
+import '../l10n/failure_text.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_colors.dart';
 
-/// Snackbar feedback. Error text always comes from [AppFailure.message], so
+/// Snackbar feedback. Error text is always localized from the failure, so
 /// widgets never decide how an error is worded.
 extension FeedbackContext on BuildContext {
-  void showFailure(Object error) => _snack(AppFailure.from(error).message, AppColors.red);
+  void showFailure(Object error) => _snack(failureText(error), AppColors.red);
+
+  /// Localized, user-facing text for [error] (see `localizeFailure`).
+  String failureText(Object error) => localizeFailure(l10n, error);
 
   void showSuccess(String message) => _snack(message, AppColors.green);
 
@@ -16,9 +20,6 @@ extension FeedbackContext on BuildContext {
       ..showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 }
-
-/// User-facing text for an [AsyncValue] error.
-String failureMessage(Object error) => AppFailure.from(error).message;
 
 /// Runs a controller action from a widget callback: shows the failure (or
 /// [success]) as a snackbar and reports whether it succeeded. Keeps widgets

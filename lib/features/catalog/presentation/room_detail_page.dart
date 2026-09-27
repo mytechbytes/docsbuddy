@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
@@ -11,6 +10,7 @@ import '../application/rooms_controller.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Design screen 03 — Room detail: hero photo (tap to change), editable name,
 /// summary line, and the appliances registered in the room.
@@ -31,10 +31,10 @@ class RoomDetailPage extends ConsumerWidget {
       ),
       body: detail.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (d) {
           if (d == null) {
-            return const Center(child: Text('Room not found.', style: TextStyle(color: AppColors.muted)));
+            return Center(child: Text(context.l10n.catalogRoomNotFound, style: const TextStyle(color: AppColors.muted)));
           }
           final room = d.room;
           final inRoom = d.appliances;
@@ -60,12 +60,12 @@ class RoomDetailPage extends ConsumerWidget {
                     height: 150,
                     decoration:
                         BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(18)),
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.add_a_photo_outlined, size: 30, color: AppColors.chipBlue),
                         SizedBox(height: 6),
-                        Text('Add a room photo',
+                        Text(context.l10n.catalogAddRoomPhoto,
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.chipBlue)),
                       ],
                     ),
@@ -87,10 +87,10 @@ class RoomDetailPage extends ConsumerWidget {
               ),
               Text.rich(
                 TextSpan(
-                  text: 'The heart of your home, managing ',
+                  text: context.l10n.catalogRoomSummaryLead,
                   children: [
                     TextSpan(
-                        text: plural(inRoom.length, 'appliance'),
+                        text: context.l10n.catalogApplianceCount(inRoom.length),
                         style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
                     const TextSpan(text: '.'),
                   ],
@@ -98,14 +98,14 @@ class RoomDetailPage extends ConsumerWidget {
                 style: const TextStyle(fontSize: 13.5, color: AppColors.muted),
               ),
               const SizedBox(height: 18),
-              const Text('Appliances',
+              Text(context.l10n.catalogAppliances,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
               const SizedBox(height: 10),
               if (inRoom.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 30),
                   child: Center(
-                      child: Text('Nothing registered here yet.', style: TextStyle(color: AppColors.muted))),
+                      child: Text(context.l10n.catalogNothingRegistered, style: const TextStyle(color: AppColors.muted))),
                 )
               else
                 for (final a in inRoom) _ApplianceGroupCard(asset: a.asset, reminders: a.reminders),
@@ -121,7 +121,7 @@ class RoomDetailPage extends ConsumerWidget {
           context.push(AppRoutes.appliancePicker(location: room?.name));
         },
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Add here', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        label: Text(context.l10n.catalogAddHere, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
     );
   }
@@ -132,13 +132,13 @@ class RoomDetailPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.paper,
-        title: const Text('Rename room', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        title: Text(context.l10n.catalogRenameRoom, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         content: TextField(controller: controller, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.l10n.commonCancel)),
           TextButton(
               onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w700))),
+              child: Text(context.l10n.commonSave, style: const TextStyle(fontWeight: FontWeight.w700))),
         ],
       ),
     );
@@ -164,13 +164,13 @@ class _ApplianceGroupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final detailLine = [
-      asset.typeLabel,
+      asset.typeName(context),
       if (asset.brand != null) asset.brand!,
       if (asset.model != null) asset.model!,
     ].join(' · ');
     final extraLine = [
       if (asset.serialNo != null) asset.serialNo!,
-      if (asset.purchaseDate != null) 'since ${DateFormat('MMM yyyy').format(asset.purchaseDate!)}',
+      if (asset.purchaseDate != null) context.l10n.catalogSince(context.formatMonthYear(asset.purchaseDate!)),
       ...asset.properties.entries.map((e) => '${e.key} ${e.value}'),
     ].join(' · ');
     return Container(
@@ -242,7 +242,7 @@ class _ApplianceGroupCard extends StatelessWidget {
                       IconBubble(kind: r.kind, size: 34),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text('${r.label} · ${DateFormat('d MMM').format(r.dueDate)}',
+                        child: Text('${r.label} · ${context.formatShortDate(r.dueDate)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
@@ -254,11 +254,11 @@ class _ApplianceGroupCard extends StatelessWidget {
               ),
             const SizedBox(height: 4),
           ] else
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(12, 0, 12, 10),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('No reminders on this appliance yet.',
+                child: Text(context.l10n.catalogNoRemindersOnAppliance,
                     style: TextStyle(fontSize: 11.5, color: AppColors.muted)),
               ),
             ),

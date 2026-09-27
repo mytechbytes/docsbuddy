@@ -33,7 +33,7 @@ class RemoteNotificationPrefsRepository implements NotificationPrefsRepository {
   @override
   Future<NotificationPrefs> update(NotificationPrefs prefs) => guardBackend(() async {
         final userId = _remote.currentUserId;
-        if (userId == null) throw const AuthFailure('Not signed in.');
+        if (userId == null) throw const AuthFailure('Not signed in.', reason: FailureReason.notSignedIn);
         final row = await _remote.upsert({
           'user_id': userId,
           'channels': prefs.channels,

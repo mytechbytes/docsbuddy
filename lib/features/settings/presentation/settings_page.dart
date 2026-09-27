@@ -118,7 +118,7 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.groups_outlined,
               title: context.l10n.settingsManageFamily,
               onTap: () => context.push(AppRoutes.familyManage),
-              trailing: Text(context.l10n.settingsMemberCount(members.length),
+              trailing: Text(context.l10n.memberCount(members.length),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
           ]),
@@ -138,7 +138,8 @@ class SettingsPage extends ConsumerWidget {
                 if (!context.mounted) return;
                 ok
                     ? context.showSuccess(context.l10n.settingsTestNotificationSent)
-                    : context.showFailure(UnavailableFailure(context.l10n.settingsNotificationsBlocked));
+                    : context.showFailure(const UnavailableFailure('Notifications are blocked in system settings.',
+                        reason: FailureReason.notificationsBlocked));
               },
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),

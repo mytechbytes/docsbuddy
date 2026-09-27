@@ -22,7 +22,7 @@ class RemoteSecurityRepository implements SecurityRepository {
 
   @override
   Future<TotpEnrollment> enrollTotp() => guardBackend(() async {
-        final e = await _remote.enrollTotp() ?? (throw const ServerFailure('TOTP enrollment unavailable.'));
+        final e = await _remote.enrollTotp() ?? (throw const ServerFailure('TOTP enrollment unavailable.', reason: FailureReason.totpUnavailable));
         return TotpEnrollment(factorId: e.id, secret: e.secret, uri: e.uri);
       });
 
@@ -47,7 +47,7 @@ class RemoteSecurityRepository implements SecurityRepository {
   @override
   Future<void> verifyMfaChallenge(String code) => guardBackend(() async {
         final factors = await _remote.verifiedTotpFactors();
-        if (factors.isEmpty) throw const ValidationFailure('No authenticator enrolled.');
+        if (factors.isEmpty) throw const ValidationFailure('No authenticator enrolled.', reason: FailureReason.noAuthenticator);
         await _remote.challengeAndVerify(factors.first.id, code.trim());
       });
 

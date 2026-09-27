@@ -15,6 +15,7 @@ import '../../family/domain/family_models.dart';
 import '../application/profile_providers.dart';
 import '../domain/profile.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Design screen 14 — Profile: avatar (tap to change), identity + Verified
 /// badge, stats row, family card with invite, and account actions.
@@ -31,11 +32,11 @@ class ProfilePage extends ConsumerWidget {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.ink),
-        title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.profileTitle, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
       ),
       body: profile.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (p) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
@@ -53,12 +54,12 @@ class ProfilePage extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(color: AppColors.greenSoft, borderRadius: BorderRadius.circular(999)),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.verified_outlined, size: 14, color: AppColors.greenLeaf),
                       SizedBox(width: 4),
-                      Text('Verified',
+                      Text(context.l10n.profileVerified,
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.greenLeaf)),
                     ],
                   ),
@@ -73,26 +74,26 @@ class ProfilePage extends ConsumerWidget {
             _MenuCard(children: [
               _MenuRow(
                 icon: Icons.person_outline,
-                title: 'Edit personal info',
+                title: context.l10n.profileEditInfo,
                 onTap: () => _editInfo(context, ref, p),
               ),
               _MenuRow(
                 icon: Icons.lock_outline,
-                title: 'Change password',
+                title: context.l10n.commonChangePassword,
                 onTap: () => context.push(AppRoutes.changePassword),
               ),
               _MenuRow(
                 icon: Icons.notifications_none,
-                title: 'Notification preferences',
+                title: context.l10n.profileNotificationPrefs,
                 onTap: () => context.pop(), // managed on the Settings tab
-                subtitle: 'Managed in Settings',
+                subtitle: context.l10n.profileManagedInSettings,
               ),
             ]),
             const SizedBox(height: 16),
             _MenuCard(children: [
               _MenuRow(
                 icon: Icons.logout,
-                title: 'Sign out',
+                title: context.l10n.commonSignOut,
                 danger: true,
                 onTap: () async {
                   final ok = await ref.read(authControllerProvider.notifier).signOut();
@@ -131,13 +132,13 @@ class ProfilePage extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Edit personal info',
+                  Text(context.l10n.profileEditInfo,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
                   const SizedBox(height: 16),
-                  AppTextField(label: 'Display name', controller: name, icon: Icons.person_outline),
+                  AppTextField(label: context.l10n.profileDisplayName, controller: name, icon: Icons.person_outline),
                   const SizedBox(height: 12),
                   AppTextField(
-                      label: 'Phone (for WhatsApp reminders)',
+                      label: context.l10n.profilePhone,
                       controller: phone,
                       icon: Icons.phone_outlined,
                       hint: '+91 9812345678',
@@ -145,7 +146,7 @@ class ProfilePage extends ConsumerWidget {
                       errorText: phoneError),
                   const SizedBox(height: 18),
                   PrimaryButton(
-                    label: 'Save',
+                    label: context.l10n.commonSave,
                     onPressed: () async {
                       try {
                         await ref
@@ -241,9 +242,9 @@ class _StatsRow extends ConsumerWidget {
           color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
       child: Row(
         children: [
-          cell('${stats?.assets ?? '—'}', 'Assets'),
-          cell('${stats?.reminders ?? '—'}', 'Reminders'),
-          cell('${stats?.documents ?? '—'}', 'Documents'),
+          cell('${stats?.assets ?? '—'}', context.l10n.navAssets),
+          cell('${stats?.reminders ?? '—'}', context.l10n.catalogReminders),
+          cell('${stats?.documents ?? '—'}', context.l10n.profileDocuments),
         ],
       ),
     );
@@ -273,7 +274,7 @@ class _FamilyCard extends ConsumerWidget {
                 Text(family.name,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
                 const SizedBox(height: 2),
-                Text(plural(members.length, 'member'),
+                Text(context.l10n.memberCount(members.length),
                     style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -313,7 +314,7 @@ class _FamilyCard extends ConsumerWidget {
           TextButton.icon(
             onPressed: () => context.push(AppRoutes.familyManage),
             icon: const Icon(Icons.person_add_alt_outlined, size: 16),
-            label: const Text('Invite', style: TextStyle(fontWeight: FontWeight.w700)),
+            label: Text(context.l10n.profileInvite, style: const TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
       ),

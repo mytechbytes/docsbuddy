@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../documents/application/document_providers.dart';
@@ -8,6 +7,7 @@ import '../../documents/domain/document_models.dart';
 import '../../documents/presentation/attachment_widgets.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// What the caller wants done after the sheet closes.
 enum ServiceAction { edit, complete, delete }
@@ -33,7 +33,6 @@ class ServiceDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final docs = ref.watch(serviceDocumentsProvider((assetId: reminder.assetId, reminderId: reminder.id))).value ??
         const <DocumentMeta>[];
-    final money = NumberFormat('#,##0.##');
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -69,21 +68,21 @@ class ServiceDetailSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             _DetailRow(
                 icon: Icons.event_outlined,
-                label: 'Due',
+                label: context.l10n.catalogDue,
                 value:
-                    '${DateFormat('d MMM yyyy').format(reminder.dueDate)} · ${reminder.isOneOff ? 'One-off' : reminder.recurrence.label}'),
-            _DetailRow(icon: Icons.notifications_none, label: 'Reminds', value: reminder.offsetsLabel),
+                    '${context.formatDate(reminder.dueDate)} · ${reminder.isOneOff ? context.l10n.catalogOneOff : reminder.recurrence.displayName(context)}'),
+            _DetailRow(icon: Icons.notifications_none, label: context.l10n.catalogReminds, value: context.formatOffsets(reminder.notifyOffsets)),
             if (reminder.provider != null)
-              _DetailRow(icon: Icons.storefront_outlined, label: 'Provider', value: reminder.provider!),
+              _DetailRow(icon: Icons.storefront_outlined, label: context.l10n.catalogProvider, value: reminder.provider!),
             if (reminder.policyNo != null)
-              _DetailRow(icon: Icons.tag, label: 'Policy / contract', value: reminder.policyNo!),
+              _DetailRow(icon: Icons.tag, label: context.l10n.catalogPolicyContract, value: reminder.policyNo!),
             if (reminder.cost != null)
-              _DetailRow(icon: Icons.currency_rupee, label: 'Cost', value: '₹ ${money.format(reminder.cost)}'),
+              _DetailRow(icon: Icons.currency_rupee, label: context.l10n.catalogCost, value: context.formatMoney(reminder.cost!)),
             if (reminder.notes != null)
-              _DetailRow(icon: Icons.sticky_note_2_outlined, label: 'Notes', value: reminder.notes!),
+              _DetailRow(icon: Icons.sticky_note_2_outlined, label: context.l10n.catalogNotes, value: reminder.notes!),
             if (docs.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text('DOCUMENTS FOR THIS SERVICE',
+              Text(context.l10n.catalogServiceDocuments,
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
               const SizedBox(height: 8),
               DocumentGrid(assetId: reminder.assetId, docs: docs),
@@ -95,7 +94,7 @@ class ServiceDetailSheet extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).pop(ServiceAction.edit),
                     icon: const Icon(Icons.edit_outlined, size: 16),
-                    label: const Text('Edit', style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.commonEdit, style: const TextStyle(fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.ink, side: const BorderSide(color: AppColors.line)),
                   ),
@@ -105,7 +104,7 @@ class ServiceDetailSheet extends ConsumerWidget {
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).pop(ServiceAction.complete),
                     icon: const Icon(Icons.check, size: 16),
-                    label: const Text('Done', style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.commonDone, style: const TextStyle(fontWeight: FontWeight.w700)),
                     style: FilledButton.styleFrom(backgroundColor: AppColors.green),
                   ),
                 ),

@@ -13,18 +13,25 @@ them with `context.l10n.someKey` (`lib/core/l10n/l10n.dart`).
   the values, and run `flutter gen-l10n`. `supportedLocales` updates itself.
   On iOS also add the locale to `CFBundleLocalizations` in `Info.plist`.
 
-## Migration status
+## What's localized
 
-Localized: app shell (navigation), the whole auth flow, Settings and Change
-Password.
+Every user-facing screen, dialog, snackbar and empty state (~400 strings),
+plus:
 
-Still English literals (migrate feature by feature, same pattern):
-catalog (assets, rooms, add/edit asset, asset detail, search), reminders,
-dashboard, family, profile, security, documents, onboarding.
+- **Enum labels** — shown via presentation extensions
+  (`kind.displayName(context)`, `role.displayName(context)`, …). The domain
+  `label`s stay English because some are stored as data (e.g. a service's
+  default label).
+- **Errors** — app-originated failures carry a `FailureReason`;
+  `context.failureText(error)` / `context.showFailure(error)` translate it
+  (`core/l10n/failure_text.dart`). Messages that come from the server have
+  no reason and are shown as-is.
+- **Dates, money, offsets** — `context.formatDate`, `formatShortDate`,
+  `formatMoney`, `formatOffsets` use the current locale.
 
-Domain-side text is not localized yet and needs a small design step:
-- enum labels (`ReminderKind.label`, `Recurrence.label`, `DocKind.label`,
-  `FamilyRole.label`) → map to l10n in the presentation layer via
-  extensions instead of reading `.label`;
-- `AppFailure.message` → give failures a code the UI maps to a localized
-  message, keeping `message` as the English fallback.
+Deliberately not localized:
+- `features/roadmap` — an internal developer checklist.
+- Built-in appliance type names and property labels
+  (`common_categories.dart`, `property_specs.dart`) — they mirror the
+  backend seed data; localize them server-side if needed.
+- Product names in the onboarding sample illustrations.

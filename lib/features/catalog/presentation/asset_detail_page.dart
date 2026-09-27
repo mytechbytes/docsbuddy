@@ -14,6 +14,8 @@ import 'service_detail_sheet.dart';
 import '../../../routing/app_routes.dart';
 import 'widgets/asset_detail_widgets.dart';
 import '../../profile/presentation/widgets/profile_avatar_button.dart';
+import '../../../core/l10n/l10n.dart';
+import 'widgets/catalog_widgets.dart';
 
 class AssetDetailPage extends ConsumerWidget {
   const AssetDetailPage({super.key, required this.assetId});
@@ -41,15 +43,15 @@ class AssetDetailPage extends ConsumerWidget {
           ),
           const ProfileAvatarButton(size: 30),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppColors.ink2, size: 22),
+            icon: Icon(Icons.more_vert, color: AppColors.ink2, size: 22),
             onSelected: (v) {
               final a = asset.value;
               if (a == null) return;
               v == 'edit' ? _editAsset(context, ref, a) : _deleteAsset(context, ref, a);
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'edit', child: Text('Edit asset')),
-              PopupMenuItem(value: 'delete', child: Text('Delete asset', style: TextStyle(color: AppColors.red))),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'edit', child: Text(context.l10n.catalogEditAsset)),
+              PopupMenuItem(value: 'delete', child: Text(context.l10n.catalogDeleteAsset, style: const TextStyle(color: AppColors.red))),
             ],
           ),
           const SizedBox(width: 8),
@@ -57,7 +59,7 @@ class AssetDetailPage extends ConsumerWidget {
       ),
       body: asset.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (a) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           children: [
@@ -70,7 +72,7 @@ class AssetDetailPage extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('All Reminders · ${list.length}',
+                Text(context.l10n.catalogAllReminders(list.length),
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
                 AddPill(onTap: () => _addReminder(context, ref, a)),
               ],
@@ -78,9 +80,9 @@ class AssetDetailPage extends ConsumerWidget {
             const SizedBox(height: 12),
             services.when(
               loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text(failureMessage(e)),
+              error: (e, _) => Text(context.failureText(e)),
               data: (s) => s.all.isEmpty
-                  ? const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No reminders for this asset yet.', style: TextStyle(color: AppColors.muted))))
+                  ? Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text(context.l10n.catalogNoRemindersForAsset, style: const TextStyle(color: AppColors.muted))))
                   : Column(children: [
                       for (final r in s.all)
                         ServiceRow(
@@ -111,18 +113,18 @@ class AssetDetailPage extends ConsumerWidget {
   Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
     final confirmed = await _confirm(
       context,
-      title: 'Mark as done?',
+      title: context.l10n.catalogMarkDoneTitle,
       message: r.isOneOff
-          ? '“${r.label}” will be completed and removed from upcoming reminders.'
-          : '“${r.label}” will be completed and its next due date scheduled (${r.recurrence.label.toLowerCase()}).',
-      action: 'Mark done',
+          ? context.l10n.catalogMarkDoneOneOff(r.label)
+          : context.l10n.catalogMarkDoneRecurring(r.label, r.recurrence.displayName(context).toLowerCase()),
+      action: context.l10n.catalogMarkDone,
       color: AppColors.green,
     );
     if (!confirmed || !context.mounted) return;
     await runAction(
       context,
       () => _actions(ref).completeService(r),
-      success: r.isOneOff ? '${r.label} marked as done.' : '${r.label} done — next due date scheduled.',
+      success: r.isOneOff ? context.l10n.catalogMarkedDone(r.label) : context.l10n.catalogDoneRescheduled(r.label),
     );
   }
 
@@ -146,9 +148,9 @@ class AssetDetailPage extends ConsumerWidget {
       case ServiceAction.delete:
         final confirmed = await _confirm(
           context,
-          title: 'Delete reminder?',
-          message: '“${r.label}” and its scheduled notifications will be removed.',
-          action: 'Delete',
+          title: context.l10n.catalogDeleteReminderTitle,
+          message: context.l10n.catalogDeleteReminderMessage(r.label),
+          action: context.l10n.commonDelete,
           color: AppColors.red,
         );
         if (confirmed && context.mounted) await runAction(context, () => _actions(ref).deleteService(r));
@@ -162,9 +164,9 @@ class AssetDetailPage extends ConsumerWidget {
   Future<void> _deleteAsset(BuildContext context, WidgetRef ref, Asset asset) async {
     final confirmed = await _confirm(
       context,
-      title: 'Delete asset?',
-      message: '“${asset.name}” and all its reminders and documents will be removed. This can\'t be undone.',
-      action: 'Delete',
+      title: context.l10n.catalogDeleteAssetTitle,
+      message: context.l10n.catalogDeleteAssetMessage(asset.name),
+      action: context.l10n.commonDelete,
       color: AppColors.red,
     );
     if (!confirmed || !context.mounted) return;
@@ -186,7 +188,7 @@ class AssetDetailPage extends ConsumerWidget {
         title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.l10n.commonCancel)),
           TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(action, style: TextStyle(color: color, fontWeight: FontWeight.w700))),

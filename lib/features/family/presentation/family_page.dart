@@ -6,6 +6,8 @@ import '../../../core/widgets/feedback.dart';
 import '../application/family_controller.dart';
 import '../domain/family_models.dart';
 import 'widgets/family_widgets.dart';
+import '../../../core/l10n/l10n.dart';
+import 'family_names.dart';
 
 class FamilyPage extends ConsumerWidget {
   const FamilyPage({super.key});
@@ -21,14 +23,14 @@ class FamilyPage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('Family', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.commonFamily, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
         iconTheme: const IconThemeData(color: AppColors.ink),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(familyControllerProvider.notifier).refresh(),
         child: state.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => FamilyErrorState(message: failureMessage(e), onRetry: () => _family(ref).refresh()),
+          error: (e, _) => FamilyErrorState(message: context.failureText(e), onRetry: () => _family(ref).refresh()),
           data: (view) => !view.hasFamily
               ? ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -56,15 +58,15 @@ class FamilyPage extends ConsumerWidget {
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Create a family'),
+        title: Text(context.l10n.familyCreateTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: 'e.g. Kumar Family'),
+          decoration: InputDecoration(hintText: context.l10n.familyNameHint),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('Create')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(context.l10n.commonCreate)),
         ],
       ),
     );
@@ -77,16 +79,16 @@ class FamilyPage extends ConsumerWidget {
     final code = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Join a family'),
+        title: Text(context.l10n.familyJoinTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.characters,
-          decoration: const InputDecoration(hintText: 'Invite code (e.g. AB12CD34)'),
+          decoration: InputDecoration(hintText: context.l10n.familyInviteCodeHint),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('Join')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text), child: Text(context.l10n.familyJoin)),
         ],
       ),
     );
@@ -94,7 +96,7 @@ class FamilyPage extends ConsumerWidget {
     await runAction(
       context,
       () => _family(ref).acceptInvite(code),
-      success: 'Joined! Family rooms, assets and reminders are syncing.',
+      success: context.l10n.familyJoined,
     );
   }
 
@@ -122,18 +124,14 @@ class FamilyPage extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Text('Change role — ${member.displayName}',
+              child: Text(context.l10n.familyChangeRoleTitle(member.displayName),
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
             ),
             for (final r in FamilyRole.assignable)
               ListTile(
-                title: Text(r.label, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
+                title: Text(r.displayName(context), style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
                 subtitle: Text(
-                  switch (r) {
-                    FamilyRole.admin => 'Manage members, assets and invites',
-                    FamilyRole.viewer => 'Read-only access',
-                    _ => 'Add and manage own assets',
-                  },
+                  r.description(context),
                   style: const TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
                 trailing: r == member.role ? const Icon(Icons.check, color: AppColors.green) : null,
@@ -151,14 +149,14 @@ class FamilyPage extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove member?'),
-        content: Text('${member.displayName} will lose access to this family’s assets and reminders.'),
+        title: Text(context.l10n.familyRemoveTitle),
+        content: Text(context.l10n.familyRemoveMessage(member.displayName)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Remove'),
+            child: Text(context.l10n.familyRemove),
           ),
         ],
       ),
@@ -171,14 +169,14 @@ class FamilyPage extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Leave family?'),
-        content: const Text('You will stop receiving this family’s reminders.'),
+        title: Text(context.l10n.familyLeaveTitle),
+        content: Text(context.l10n.familyLeaveMessage),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Leave'),
+            child: Text(context.l10n.familyLeave),
           ),
         ],
       ),

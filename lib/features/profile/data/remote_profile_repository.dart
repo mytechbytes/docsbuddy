@@ -39,7 +39,7 @@ class RemoteProfileRepository implements ProfileRepository {
   final AppLogger _logger;
   final Clock _now;
 
-  String get _uid => _remote.currentUserId ?? (throw const AuthFailure('Not signed in.'));
+  String get _uid => _remote.currentUserId ?? (throw const AuthFailure('Not signed in.', reason: FailureReason.notSignedIn));
 
   Profile _map(Json row) =>
       ProfileMapper.fromRow(row, authEmail: _remote.authEmail, verified: _remote.emailConfirmed);
@@ -61,7 +61,7 @@ class RemoteProfileRepository implements ProfileRepository {
       guardBackend(() async {
         final uid = _uid;
         final family = await _remote.firstFamilyId();
-        if (family == null) throw const ValidationFailure('Join or create a family first.');
+        if (family == null) throw const ValidationFailure('Join or create a family first.', reason: FailureReason.familyRequired);
 
         final old = (await _remote.fetch(uid))['avatar_url'] as String?;
         final path = '$family/avatars/$uid/${_now().millisecondsSinceEpoch}_${safeFileName(fileName)}';

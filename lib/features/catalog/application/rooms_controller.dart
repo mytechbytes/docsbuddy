@@ -24,7 +24,7 @@ class RoomsController extends AsyncNotifier<List<Location>> {
   /// Creates a room (and uploads its optional photo).
   Future<Location> create(String name, {PickedMedia? photo}) async {
     final trimmed = name.trim();
-    if (trimmed.isEmpty) throw const ValidationFailure('Please name the room.');
+    if (trimmed.isEmpty) throw const ValidationFailure('Please name the room.', reason: FailureReason.roomNameRequired);
     final room = await _repo.createLocation(trimmed);
     if (photo != null) {
       await _repo.setLocationImage(room.id, bytes: photo.bytes, fileName: photo.name, mimeType: photo.imageMime);

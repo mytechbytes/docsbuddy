@@ -9,7 +9,7 @@ class FakeSecurityRepository implements SecurityRepository {
   bool _verified = false;
 
   void _requireCode(String code) {
-    if (code.trim().length != 6) throw const ValidationFailure('Enter the 6-digit code.');
+    if (code.trim().length != 6) throw const ValidationFailure('Enter the 6-digit code.', reason: FailureReason.codeLength);
   }
 
   @override

@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../application/catalog_providers.dart';
 import '../../domain/catalog_models.dart';
 import 'catalog_style.dart';
+import '../../../../core/l10n/l10n.dart';
 
 export 'catalog_style.dart';
 
@@ -76,11 +77,10 @@ class DayPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color color, String text) = switch (daysLeft) {
-      < 0 => (AppColors.red, 'Overdue'),
-      0 => (AppColors.red, 'Today'),
-      <= 7 => (AppColors.amber, '${daysLeft}d'),
-      <= 30 => (AppColors.green, '${daysLeft}d'),
-      _ => (AppColors.green, '${daysLeft}d'),
+      < 0 => (AppColors.red, context.l10n.pillOverdue),
+      0 => (AppColors.red, context.l10n.pillToday),
+      <= 7 => (AppColors.amber, context.l10n.durationDaysShort(daysLeft)),
+      _ => (AppColors.green, context.l10n.durationDaysShort(daysLeft)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

@@ -44,7 +44,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
       context.showSuccess(context.l10n.changePasswordDone);
       Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) setState(() => _error = failureMessage(e));
+      if (mounted) setState(() => _error = context.failureText(e));
     }
   }
 

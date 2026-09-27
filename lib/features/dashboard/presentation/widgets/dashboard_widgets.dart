@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../routing/app_routes.dart';
 import '../../../catalog/domain/catalog_models.dart';
 import '../../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../../reminders/domain/reminder_filters.dart';
+import '../../../../core/l10n/l10n.dart';
 
 class AppBarIconButton extends StatelessWidget {
   const AppBarIconButton(this.icon, {super.key, this.dot = false, this.onTap});
@@ -61,7 +61,7 @@ class StatGrid extends StatelessWidget {
           children: [
             StatCard(
                 value: '${count(ReminderFilter.active)}',
-                label: 'Active Services',
+                label: context.l10n.filterActive,
                 icon: Icons.description_outlined,
                 bg: AppColors.navy,
                 fg: Colors.white,
@@ -69,7 +69,7 @@ class StatGrid extends StatelessWidget {
             const SizedBox(width: 12),
             StatCard(
                 value: '${count(ReminderFilter.secured)}',
-                label: 'Secured',
+                label: context.l10n.filterSecured,
                 icon: Icons.shield_outlined,
                 bg: AppColors.teal,
                 fg: Colors.white,
@@ -81,7 +81,7 @@ class StatGrid extends StatelessWidget {
           children: [
             StatCard(
                 value: '${count(ReminderFilter.soon)}',
-                label: 'Expiring Soon',
+                label: context.l10n.filterSoon,
                 icon: Icons.hourglass_bottom,
                 bg: AppColors.statSoonBg,
                 fg: AppColors.ink,
@@ -89,7 +89,7 @@ class StatGrid extends StatelessWidget {
             const SizedBox(width: 12),
             StatCard(
                 value: '${count(ReminderFilter.expired)}',
-                label: 'Expired',
+                label: context.l10n.filterExpired,
                 icon: Icons.error_outline,
                 bg: AppColors.statExpiredBg,
                 fg: AppColors.ink,
@@ -146,7 +146,7 @@ class StatCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Text('View', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sub)),
+                  Text(context.l10n.commonView, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sub)),
                   Icon(Icons.chevron_right, size: 15, color: sub),
                 ],
               ),
@@ -177,8 +177,8 @@ class AppliancesCard extends StatelessWidget {
             child: const Icon(Icons.kitchen_outlined, color: AppColors.chipBlue, size: 20),
           ),
           const SizedBox(width: 12),
-          const Expanded(
-            child: Text('Total Active Appliances',
+          Expanded(
+            child: Text(context.l10n.dashboardTotalAppliances,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
           ),
           Text('$count', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.ink)),
@@ -215,7 +215,7 @@ class UpcomingReminderTile extends StatelessWidget {
                 children: [
                   Text(reminder.assetName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.15)),
                   const SizedBox(height: 3),
-                  Text('${reminder.label} · ${DateFormat('d MMM').format(reminder.dueDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                  Text('${reminder.label} · ${context.formatShortDate(reminder.dueDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
                 ],
               ),
             ),
@@ -273,7 +273,7 @@ class AssetGroupCard extends StatelessWidget {
                             style: const TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.15)),
                         const SizedBox(height: 3),
-                        Text(asset?.typeLabel ?? 'Asset',
+                        Text(asset?.typeName(context) ?? context.l10n.dashboardAsset,
                             style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                       ],
                     ),
@@ -295,7 +295,7 @@ class AssetGroupCard extends StatelessWidget {
                     IconBubble(kind: r.kind, size: 34),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text('${r.label} · ${DateFormat('d MMM').format(r.dueDate)}',
+                      child: Text('${r.label} · ${context.formatShortDate(r.dueDate)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.ink)),

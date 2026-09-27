@@ -8,6 +8,7 @@ import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Design screen 05 — "Select Your Appliances": searchable list of the
 /// category catalog; picking one opens Add-asset pre-filled with that type
@@ -48,9 +49,9 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text('Select Your Appliance',
+            child: Text(context.l10n.catalogSelectYourAppliance,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
           ),
           Padding(
@@ -63,7 +64,7 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
                 isDense: true,
                 filled: true,
                 fillColor: AppColors.paper,
-                hintText: 'Search Your Appliance',
+                hintText: context.l10n.catalogSearchAppliance,
                 hintStyle: const TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
                 prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.muted),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
@@ -82,11 +83,11 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
           Expanded(
             child: categories.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(failureMessage(e), style: const TextStyle(color: AppColors.muted))),
+              error: (e, _) => Center(child: Text(context.failureText(e), style: const TextStyle(color: AppColors.muted))),
               data: (filtered) {
                 if (filtered.isEmpty) {
-                  return const Center(
-                      child: Text('No matching appliance — use "Something else" below.',
+                  return Center(
+                      child: Text(context.l10n.catalogNoMatchingAppliance,
                           style: TextStyle(color: AppColors.muted)));
                 }
                 return ListView.builder(
@@ -157,12 +158,12 @@ class _SomethingElseTile extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
             color: AppColors.bg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.add_circle_outline, color: AppColors.chipBlue, size: 20),
             SizedBox(width: 12),
             Expanded(
-                child: Text('Something else',
+                child: Text(context.l10n.catalogSomethingElse,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.chipBlue))),
           ],
         ),

@@ -16,6 +16,7 @@ import '../domain/common_categories.dart';
 import '../domain/property_specs.dart';
 import 'widgets/catalog_widgets.dart';
 import 'widgets/asset_form_fields.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Add / edit asset as a 3-step flow:
 ///   1. Category (responsive grid, includes Other)
@@ -146,24 +147,24 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.paper,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Custom appliance type',
+        title: Text(context.l10n.catalogCustomTypeTitle,
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
-          decoration: const InputDecoration(
-            hintText: 'e.g. Dishwasher, Inverter, Camera…',
+          decoration: InputDecoration(
+            hintText: context.l10n.catalogCustomTypeHint,
             hintStyle: TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
           ),
           onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.l10n.commonCancel)),
           TextButton(
               onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('Use type', style: TextStyle(fontWeight: FontWeight.w700))),
+              child: Text(context.l10n.catalogUseType, style: TextStyle(fontWeight: FontWeight.w700))),
         ],
       ),
     );
@@ -238,7 +239,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
         backgroundColor: AppColors.bg,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.ink),
-        title: Text(_isEdit ? 'Edit asset' : 'Add asset',
+        title: Text(_isEdit ? context.l10n.catalogEditAsset : context.l10n.catalogAddAsset,
             style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
       ),
       body: Column(
@@ -261,9 +262,9 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
                 step: _step,
                 busy: saving,
                 nextLabel: switch (_step) {
-                  _stepCategory => 'Next',
-                  _stepType => type == null && _customType == null ? 'Skip' : 'Next',
-                  _ => _isEdit ? 'Save changes' : 'Save asset',
+                  _stepCategory => context.l10n.commonNext,
+                  _stepType => type == null && _customType == null ? context.l10n.commonSkip : context.l10n.commonNext,
+                  _ => _isEdit ? context.l10n.catalogSaveChanges : context.l10n.catalogSaveAsset,
                 },
                 onBack: () => setState(() => _step--),
                 onNext: () {
@@ -284,7 +285,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   // ── Step 1: category ──
   List<Widget> _categoryStep() {
     return [
-      const StepHeader(step: 0, total: 3, title: 'Choose a category', subtitle: 'What kind of thing are you adding?'),
+      StepHeader(step: 0, total: 3, title: context.l10n.catalogChooseCategory, subtitle: context.l10n.catalogChooseCategorySubtitle),
       const SizedBox(height: 18),
       LayoutBuilder(
         builder: (context, constraints) {
@@ -326,10 +327,10 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       StepHeader(
           step: 1,
           total: 3,
-          title: 'Select your appliance',
+          title: context.l10n.catalogSelectAppliance,
           subtitle: forCategory.isEmpty
-              ? 'No preset types for ${_category.label} — use a custom type or skip.'
-              : 'Types in ${_category.label}; pick one or add your own.'),
+              ? context.l10n.catalogNoPresetTypes(_category.displayName(context))
+              : context.l10n.catalogTypesIn(_category.displayName(context))),
       const SizedBox(height: 18),
       Wrap(
         spacing: 8,
@@ -345,7 +346,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           // The custom type escape hatch is always available.
           AssetTypeChip(
             icon: _customType == null ? Icons.add_circle_outline : Icons.edit_outlined,
-            label: _customType ?? 'Others',
+            label: _customType ?? context.l10n.catalogOthers,
             selected: _customType != null,
             onTap: _askCustomType,
           ),
@@ -362,14 +363,14 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       StepHeader(
           step: 2,
           total: 3,
-          title: type?.name ?? _customType ?? 'Details',
-          subtitle: 'Only the name is required.'),
+          title: type?.name ?? _customType ?? context.l10n.catalogDetails,
+          subtitle: context.l10n.catalogOnlyNameRequired),
       const SizedBox(height: 16),
       Center(child: AssetPhotoPicker(photo: _photo, existingRef: widget.editing?.imageUrl, onTap: _pickPhoto)),
       const SizedBox(height: 18),
-      AppTextField(label: 'Name', controller: _name, icon: Icons.label_outline, hint: 'e.g. Samsung 340L Fridge'),
+      AppTextField(label: context.l10n.catalogName, controller: _name, icon: Icons.label_outline, hint: context.l10n.catalogNameHint),
       const SizedBox(height: 14),
-      const Text('Room (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.catalogRoomOptional, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
       const SizedBox(height: 6),
       RoomDropdown(
         rooms: rooms,
@@ -379,40 +380,40 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       ),
       if (_room == _newRoomSentinel) ...[
         const SizedBox(height: 10),
-        AppTextField(label: '', controller: _newRoom, icon: Icons.place_outlined, hint: 'New room name — e.g. Kitchen'),
+        AppTextField(label: '', controller: _newRoom, icon: Icons.place_outlined, hint: context.l10n.catalogNewRoomHint),
       ],
       const SizedBox(height: 14),
       Row(
         children: [
-          Expanded(child: AppTextField(label: 'Brand', controller: _brand, hint: 'optional')),
+          Expanded(child: AppTextField(label: context.l10n.catalogBrand, controller: _brand, hint: context.l10n.commonOptional)),
           const SizedBox(width: 12),
-          Expanded(child: AppTextField(label: 'Model number', controller: _model, hint: 'optional')),
+          Expanded(child: AppTextField(label: context.l10n.catalogModelNumber, controller: _model, hint: context.l10n.commonOptional)),
         ],
       ),
       const SizedBox(height: 14),
-      AppTextField(label: 'Serial / registration no.', controller: _serialNo, icon: Icons.tag, hint: 'e.g. TN 01 AB 1234'),
+      AppTextField(label: context.l10n.catalogSerialNo, controller: _serialNo, icon: Icons.tag, hint: context.l10n.catalogSerialHint),
       const SizedBox(height: 14),
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: DateField(label: 'Purchase date', value: _purchaseDate, onTap: () => _pickDate(amc: false))),
+          Expanded(child: DateField(label: context.l10n.catalogPurchaseDate, value: _purchaseDate, onTap: () => _pickDate(amc: false))),
           const SizedBox(width: 12),
           Expanded(
             child: AppTextField(
-              label: 'Purchase price',
+              label: context.l10n.catalogPurchasePrice,
               controller: _price,
-              hint: 'e.g. 42000',
+              hint: context.l10n.catalogPriceHint,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
           ),
         ],
       ),
       const SizedBox(height: 14),
-      AppTextField(label: 'Store', controller: _store, icon: Icons.storefront_outlined, hint: 'e.g. Croma'),
+      AppTextField(label: context.l10n.catalogStore, controller: _store, icon: Icons.storefront_outlined, hint: context.l10n.catalogStoreHint),
 
       // ── Type-specific properties ──
       const SizedBox(height: 20),
-      Text('Details for ${type?.name ?? _customType ?? 'this appliance'}'.toUpperCase(),
+      Text(context.l10n.catalogDetailsFor(type?.name ?? _customType ?? context.l10n.catalogThisAppliance).toUpperCase(),
           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
       const SizedBox(height: 10),
       for (final spec in specs) ...[
@@ -427,9 +428,9 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$1, hint: 'e.g. Colour')),
+            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$1, hint: context.l10n.catalogPropertyHint)),
             const SizedBox(width: 10),
-            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$2, hint: 'value')),
+            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$2, hint: context.l10n.catalogValueHint)),
             IconButton(
               icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppColors.muted),
               onPressed: () => setState(() {
@@ -448,15 +449,15 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           onPressed: () =>
               setState(() => _extraProps.add((TextEditingController(), TextEditingController()))),
           icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add property', style: TextStyle(fontWeight: FontWeight.w700)),
+          label: Text(context.l10n.catalogAddProperty, style: const TextStyle(fontWeight: FontWeight.w700)),
         ),
       ),
 
       if (!_isEdit) ...[
         const SizedBox(height: 8),
-        DateField(label: 'AMC date', value: _amcDate, onTap: () => _pickDate(amc: true)),
+        DateField(label: context.l10n.catalogAmcDate, value: _amcDate, onTap: () => _pickDate(amc: true)),
         const SizedBox(height: 14),
-        const Text('Invoices / receipts',
+        Text(context.l10n.catalogInvoices,
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
         const SizedBox(height: 8),
         PickedMediaGrid(files: _invoices, onRemove: (i) => setState(() => _invoices.removeAt(i))),
@@ -469,7 +470,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           icon: const Icon(Icons.upload_file_outlined, size: 18, color: AppColors.ink2),
-          label: const Text('Attach invoice — camera, gallery or files',
+          label: Text(context.l10n.catalogAttachInvoice,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
         ),
         if (type != null && type.defaults.isNotEmpty) ...[
@@ -478,7 +479,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(12)),
             child: Text(
-              'Will auto-add: ${type.defaults.map((d) => d.label).join(' · ')}',
+              context.l10n.catalogWillAutoAdd(type.defaults.map((d) => d.label).join(' · ')),
               style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
             ),
           ),

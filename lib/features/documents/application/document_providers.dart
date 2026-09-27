@@ -75,7 +75,10 @@ class AssetDocumentsController {
   /// failure as a [ServerFailure].
   Future<void> attach(List<PickedMedia> files) async {
     final failed = await upload(files);
-    if (failed > 0) throw ServerFailure('$failed of ${files.length} uploads failed.');
+    if (failed > 0) {
+      throw ServerFailure('$failed of ${files.length} uploads failed.',
+          reason: FailureReason.uploadsFailed, args: [failed, files.length]);
+    }
   }
 
   Future<void> delete(DocumentMeta doc) async {

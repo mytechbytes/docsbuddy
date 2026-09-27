@@ -11,6 +11,7 @@ import '../application/rooms_controller.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Design screen 02 — Rooms: "Add a new room" composer + photo cards with
 /// registered-asset counts, backed by `public.locations`.
@@ -65,12 +66,12 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
         onPressed: _openAddRoomSheet,
         backgroundColor: AppColors.ink,
         foregroundColor: Colors.white,
-        tooltip: 'Create room',
+        tooltip: context.l10n.catalogCreateRoom,
         child: const Icon(Icons.add),
       ),
       body: locations.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (list) {
           return Column(
             children: [
@@ -86,10 +87,10 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                   child: list.isEmpty
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          children: const [
+                          children: [
                             SizedBox(height: 140),
                             Center(
-                                child: Text('No rooms yet. Add your first room above.',
+                                child: Text(context.l10n.catalogNoRooms,
                                     style: TextStyle(color: AppColors.muted))),
                           ],
                         )
@@ -151,7 +152,7 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Create room',
+          Text(context.l10n.catalogCreateRoom,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
           const SizedBox(height: 16),
           InkWell(
@@ -168,12 +169,12 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
               clipBehavior: Clip.antiAlias,
               child: _photo != null
                   ? Image.memory(_photo!.bytes, fit: BoxFit.cover)
-                  : const Column(
+                  : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
                         SizedBox(height: 6),
-                        Text('Add a room photo — camera or device',
+                        Text(context.l10n.catalogAddRoomPhotoLong,
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
                       ],
                     ),
@@ -190,7 +191,7 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
               isDense: true,
               filled: true,
               fillColor: AppColors.bg,
-              hintText: 'Room name — e.g. Kitchen',
+              hintText: context.l10n.catalogRoomNameHint,
               hintStyle: const TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
               enabledBorder: OutlineInputBorder(
@@ -204,7 +205,7 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
             ),
           ),
           const SizedBox(height: 18),
-          PrimaryButton(label: 'Create room', isLoading: _busy, onPressed: _create),
+          PrimaryButton(label: context.l10n.catalogCreateRoom, isLoading: _busy, onPressed: _create),
         ],
       ),
     );
@@ -231,9 +232,9 @@ class _AddRoomComposer extends StatelessWidget {
               controller: controller,
               onSubmitted: (_) => onSubmit(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'Add a new room',
+                hintText: context.l10n.catalogAddNewRoom,
                 hintStyle: TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
               ),
             ),
@@ -295,7 +296,7 @@ class _RoomCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
                         const SizedBox(height: 2),
-                        Text('${location.assetCount} Registered',
+                        Text(context.l10n.catalogRegisteredCount(location.assetCount),
                             style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                       ],
                     ),
