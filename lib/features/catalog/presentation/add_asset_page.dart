@@ -476,7 +476,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(12)),
             child: Text(
               'Will auto-add: ${type.defaults.map((d) => d.label).join(' · ')}',
               style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),

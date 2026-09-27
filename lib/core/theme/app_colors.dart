@@ -36,11 +36,45 @@ abstract final class AppColors {
   static const cardNavy = [Color(0xFF1F3A5F), Color(0xFF2A4A6E)];
   static const cardTeal = [Color(0xFF2A7F9E), Color(0xFF3AA1BB)];
 
+  // Surfaces & accents
+  static const blueSoft = Color(0xFFEEF3FB); // icon tiles, chips, info banners, nav indicator
+  static const lineSoft = Color(0xFFEEF2F8); // subtle card borders
+  static const amberSoft = Color(0xFFFDF1E0);
+  static const amberDeep = Color(0xFFC68318);
+  static const shadow = Color(0xFF0F1E37); // base for drop shadows (apply alpha)
+
+  // Dashboard stat cards
+  static const statSoonBg = Color(0xFFC9D6E0);
+  static const statExpiredBg = Color(0xFFE89098);
+
+  // Default avatar gradient
+  static const avatarGradient = [Color(0xFFF1C27D), Color(0xFFD68B5C)];
+
   // Reminder-type bubble palette (bg, fg) — REMINDER_TYPES in shared.jsx
   static const insuranceBg = Color(0xFFE1F1F5);
   static const insuranceFg = Color(0xFF3A8FA3);
   static const pollutionBg = Color(0xFFE3F5E7);
   static const pollutionFg = Color(0xFF3FA75C);
+  static const amcBg = amberSoft;
+  static const amcFg = amberDeep;
+  static const serviceBg = Color(0xFFFBE7EE);
+  static const serviceFg = Color(0xFFC63D75);
+  static const taxBg = Color(0xFFE8E4F7);
+  static const taxFg = Color(0xFF6C52C2);
+  static const warrantyBg = Color(0xFFDFECFF);
+  static const warrantyFg = chipBlue;
+  static const registrationBg = Color(0xFFE5EFE8);
+  static const registrationFg = Color(0xFF4D8A64);
+  static const otherKindBg = Color(0xFFEEF1F6);
+
+  // Onboarding illustrations
+  static const illustrationLabel = Color(0xFF7A6A53);
+  static const tintBlue = Color(0xFFEAF0FB);
+  static const tintGreen = Color(0xFFE7F4EC);
+  static const tileSand = Color(0xFFE8D9C4);
+  static const tileSlate = Color(0xFFDEE2EA);
+  static const tileSage = Color(0xFFDDE9E2);
+  static const amberLight = Color(0xFFFBD58A);
 
   // Family avatar gradients (illustration 4)
   static const familyAvatars = [

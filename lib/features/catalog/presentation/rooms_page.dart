@@ -278,7 +278,7 @@ class _RoomCard extends StatelessWidget {
               fallback: Container(
                 width: double.infinity,
                 height: 140,
-                color: const Color(0xFFEEF3FB),
+                color: AppColors.blueSoft,
                 child: const Icon(Icons.meeting_room_outlined, size: 40, color: AppColors.chipBlue),
               ),
             ),

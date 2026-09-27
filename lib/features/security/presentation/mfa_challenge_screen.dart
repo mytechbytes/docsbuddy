@@ -59,8 +59,8 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
               width: 64,
               height: 64,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(color: Color(0xFFE1F1F5), shape: BoxShape.circle),
-              child: const Icon(Icons.shield_outlined, size: 30, color: Color(0xFF3A8FA3)),
+              decoration: const BoxDecoration(color: AppColors.insuranceBg, shape: BoxShape.circle),
+              child: const Icon(Icons.shield_outlined, size: 30, color: AppColors.insuranceFg),
             ),
             const SizedBox(height: 16),
             const Center(

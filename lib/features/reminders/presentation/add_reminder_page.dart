@@ -339,7 +339,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
       const SizedBox(height: 14),
       Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(12)),
         child: Text(
           offsets.isEmpty
               ? 'No reminders will fire for this service — pick at least one offset to be notified.'

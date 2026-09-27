@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../routing/app_routes.dart';
 import '../../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../application/profile_providers.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// The signed-in user's avatar for app bars (`users.avatar_url`, else a
 /// gradient initial); tap opens Profile.
@@ -27,7 +28,7 @@ class ProfileAvatarButton extends ConsumerWidget {
           height: size,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(colors: [Color(0xFFF1C27D), Color(0xFFD68B5C)]),
+            gradient: LinearGradient(colors: AppColors.avatarGradient),
           ),
           alignment: Alignment.center,
           child: profile == null

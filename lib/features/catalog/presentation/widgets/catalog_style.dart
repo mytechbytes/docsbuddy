@@ -10,26 +10,24 @@ export '../../../../core/widgets/formatters.dart';
 /// the domain so models stay pure Dart.
 extension ReminderKindStyle on ReminderKind {
   Color get bg => switch (this) {
-        ReminderKind.insurance => const Color(0xFFE1F1F5),
-        ReminderKind.pollution => const Color(0xFFE3F5E7),
-        ReminderKind.amc => const Color(0xFFFDF1E0),
-        ReminderKind.service => const Color(0xFFFBE7EE),
-        ReminderKind.tax => const Color(0xFFE8E4F7),
-        ReminderKind.warranty => const Color(0xFFDFECFF),
-        ReminderKind.registration => const Color(0xFFE5EFE8),
-        ReminderKind.fitness => const Color(0xFFFDF1E0),
-        ReminderKind.other => const Color(0xFFEEF1F6),
+        ReminderKind.insurance => AppColors.insuranceBg,
+        ReminderKind.pollution => AppColors.pollutionBg,
+        ReminderKind.amc || ReminderKind.fitness => AppColors.amcBg,
+        ReminderKind.service => AppColors.serviceBg,
+        ReminderKind.tax => AppColors.taxBg,
+        ReminderKind.warranty => AppColors.warrantyBg,
+        ReminderKind.registration => AppColors.registrationBg,
+        ReminderKind.other => AppColors.otherKindBg,
       };
 
   Color get fg => switch (this) {
-        ReminderKind.insurance => const Color(0xFF3A8FA3),
-        ReminderKind.pollution => const Color(0xFF3FA75C),
-        ReminderKind.amc => const Color(0xFFC68318),
-        ReminderKind.service => const Color(0xFFC63D75),
-        ReminderKind.tax => const Color(0xFF6C52C2),
-        ReminderKind.warranty => const Color(0xFF2476E8),
-        ReminderKind.registration => const Color(0xFF4D8A64),
-        ReminderKind.fitness => const Color(0xFFC68318),
+        ReminderKind.insurance => AppColors.insuranceFg,
+        ReminderKind.pollution => AppColors.pollutionFg,
+        ReminderKind.amc || ReminderKind.fitness => AppColors.amcFg,
+        ReminderKind.service => AppColors.serviceFg,
+        ReminderKind.tax => AppColors.taxFg,
+        ReminderKind.warranty => AppColors.warrantyFg,
+        ReminderKind.registration => AppColors.registrationFg,
         ReminderKind.other => AppColors.muted,
       };
 

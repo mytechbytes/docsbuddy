@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../reminders/application/reminder_notification_sync.dart';
 import '../../catalog/presentation/assets_page.dart';
 import '../../catalog/presentation/rooms_page.dart';
@@ -72,8 +71,6 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
-        backgroundColor: AppColors.paper,
-        indicatorColor: const Color(0xFFEEF3FB),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(

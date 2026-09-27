@@ -53,7 +53,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       showLogo: false,
       children: [
         const SizedBox(height: 14),
-        const Center(child: HeroBadge(background: Color(0xFFFDF1E0), foreground: Color(0xFFC68318), icon: Icons.lock_outline)),
+        const Center(child: HeroBadge(background: AppColors.amberSoft, foreground: AppColors.amberDeep, icon: Icons.lock_outline)),
         const SizedBox(height: 22),
         const AuthHero(title: 'Set a new password', subtitle: "Choose a strong password you haven't used here before."),
         const SizedBox(height: 20),
@@ -87,7 +87,7 @@ class _RequirementsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.paper,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEEF2F8)),
+        border: Border.all(color: AppColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

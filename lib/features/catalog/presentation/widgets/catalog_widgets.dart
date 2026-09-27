@@ -99,7 +99,7 @@ class CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(999)),
       child: Text(label, style: const TextStyle(color: AppColors.chipBlue, fontSize: 11, fontWeight: FontWeight.w700)),
     );
   }

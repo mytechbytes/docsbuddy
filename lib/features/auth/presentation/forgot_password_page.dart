@@ -39,7 +39,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       showLogo: false,
       children: [
         const SizedBox(height: 14),
-        const Center(child: HeroBadge(background: Color(0xFFEEF3FB), foreground: AppColors.chipBlue, icon: Icons.vpn_key_outlined)),
+        const Center(child: HeroBadge(background: AppColors.blueSoft, foreground: AppColors.chipBlue, icon: Icons.vpn_key_outlined)),
         const SizedBox(height: 22),
         const AuthHero(title: 'Forgot password?', subtitle: "No worries. Enter your email and we'll send you a 6-digit code to reset it."),
         const SizedBox(height: 20),

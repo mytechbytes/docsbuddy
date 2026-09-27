@@ -25,7 +25,7 @@ class FamilyEmptyState extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: const BoxDecoration(color: Color(0xFFEEF3FB), shape: BoxShape.circle),
+              decoration: const BoxDecoration(color: AppColors.blueSoft, shape: BoxShape.circle),
               child: const Icon(Icons.groups_outlined, size: 34, color: AppColors.chipBlue),
             ),
             const SizedBox(height: 20),

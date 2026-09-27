@@ -174,7 +174,7 @@ class _Slide extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(999)),
+                            decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(999)),
                             child: Text(
                               data.eyebrow.toUpperCase(),
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.chipBlue, letterSpacing: 0.66),

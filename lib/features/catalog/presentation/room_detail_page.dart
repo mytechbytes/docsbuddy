@@ -59,7 +59,7 @@ class RoomDetailPage extends ConsumerWidget {
                     width: double.infinity,
                     height: 150,
                     decoration:
-                        BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(18)),
+                        BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(18)),
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -192,7 +192,7 @@ class _ApplianceGroupCard extends StatelessWidget {
                     fallback: Container(
                       width: 52,
                       height: 52,
-                      decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(14)),
                       child: Icon(asset.category.icon, size: 24, color: AppColors.chipBlue),
                     ),
                   ),
