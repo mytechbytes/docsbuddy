@@ -1,4 +1,4 @@
-import 'catalog_models.dart';
+import '../../catalog/domain/catalog_models.dart';
 
 /// The dashboard stat-card segments (and the filtered-list deep links).
 enum ReminderFilter {
@@ -25,18 +25,6 @@ List<Reminder> filterReminders(List<Reminder> reminders, ReminderFilter filter) 
 /// Pure: reminders restricted to [kinds] (empty set = no kind filter).
 List<Reminder> filterByKinds(List<Reminder> reminders, Set<ReminderKind> kinds) =>
     kinds.isEmpty ? reminders : reminders.where((r) => kinds.contains(r.kind)).toList();
-
-/// Pure: soonest first (overdue first). Returns a new list.
-List<Reminder> sortedByUrgency(Iterable<Reminder> reminders) =>
-    [...reminders]..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
-
-/// Pure: the most urgent reminder, or null.
-Reminder? soonest(Iterable<Reminder> reminders) =>
-    reminders.isEmpty ? null : sortedByUrgency(reminders).first;
-
-/// Pure: an asset's reminders, most urgent first.
-List<Reminder> remindersForAsset(String assetId, Iterable<Reminder> reminders) =>
-    sortedByUrgency(reminders.where((r) => r.assetId == assetId));
 
 /// Pure: buckets already-sorted reminders by asset, keeping groups ordered by
 /// their soonest expiration.

@@ -1,4 +1,4 @@
-import 'package:docsbuddy/features/catalog/domain/reminder_filters.dart';
+import 'package:docsbuddy/features/reminders/domain/reminder_filters.dart';
 import 'package:docsbuddy/routing/app_routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 

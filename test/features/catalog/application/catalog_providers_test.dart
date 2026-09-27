@@ -2,9 +2,7 @@ import 'package:docsbuddy/features/catalog/application/catalog_providers.dart';
 import 'package:docsbuddy/features/catalog/application/catalog_sync.dart';
 import 'package:docsbuddy/features/catalog/application/rooms_controller.dart';
 import 'package:docsbuddy/features/catalog/data/fake_catalog_repository.dart';
-import 'package:docsbuddy/features/catalog/domain/reminder_filters.dart';
-import 'package:docsbuddy/features/settings/application/settings_providers.dart';
-import 'package:docsbuddy/features/settings/domain/notification_prefs.dart';
+import 'package:docsbuddy/features/catalog/domain/catalog_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -50,43 +48,28 @@ void main() {
     expect(await container.read(roomDetailProvider('missing').future), isNull);
   });
 
-  test('inbox splits overdue from coming-up; stat filters count services', () async {
-    final inbox = await container.read(notificationInboxProvider.future);
-    expect(inbox.overdue.single.label, 'AppleCare');
-    expect(inbox.comingUp, isNotEmpty);
-    expect(await container.read(filteredRemindersProvider(ReminderFilter.expired).future), hasLength(1));
-  });
-
-  test('notification sync schedules alerts and re-arms when quiet hours change', () async {
-    container.listen(reminderNotificationSyncProvider, (_, _) {});
-    await container.read(upcomingRemindersProvider.future);
-    await container.read(notificationPrefsProvider.future);
-    await pumpEventQueue();
-    expect(notifications.scheduled, isNotEmpty);
-    expect(notifications.scheduled.last, isNotEmpty);
-
-    final runs = notifications.scheduled.length;
-    await container
-        .read(notificationPrefsProvider.notifier)
-        .setQuietHours((hour: 6, minute: 0), (hour: 10, minute: 0));
-    await pumpEventQueue();
-    expect(notifications.scheduled.length, greaterThan(runs));
-    // 09:00 alerts now fall inside 06:00–10:00 and move to 10:00.
-    expect(notifications.scheduled.last.every((a) => a.when.hour == 10), isTrue);
-  });
-
   test('a silent push refreshes catalog reads', () async {
-    container.listen(remoteChangeSyncProvider, (_, _) {});
-    final first = await container.read(assetsProvider.future);
+    final catalog = _CountingCatalog();
+    final c = makeContainer(overrides: testOverrides(catalog: catalog, push: push));
+    c.listen(remoteChangeSyncProvider, (_, _) {});
+    c.listen(assetsProvider, (_, _) {});
+    await c.read(assetsProvider.future);
+    expect(catalog.assetReads, 1);
+
     push.changes.add(null);
     await pumpEventQueue();
-    expect(container.read(assetsProvider).isLoading || !identical(container.read(assetsProvider).value, first), isTrue);
+    await c.read(assetsProvider.future);
+    expect(catalog.assetReads, 2);
   });
+}
 
-  test('default notify offsets follow the user’s preference', () async {
-    expect(container.read(defaultNotifyOffsetsProvider), const NotificationPrefs().defaultOffsets);
-    await container.read(notificationPrefsProvider.future);
-    await container.read(notificationPrefsProvider.notifier).setDefaultOffsets({1, 60});
-    expect(container.read(defaultNotifyOffsetsProvider), [60, 1]);
-  });
+class _CountingCatalog extends FakeCatalogRepository {
+  _CountingCatalog() : super(latency: Duration.zero);
+  int assetReads = 0;
+
+  @override
+  Future<List<Asset>> assets() {
+    assetReads++;
+    return super.assets();
+  }
 }

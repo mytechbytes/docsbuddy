@@ -1,5 +1,5 @@
 import 'package:docsbuddy/features/catalog/domain/catalog_models.dart';
-import 'package:docsbuddy/features/catalog/domain/reminder_alerts.dart';
+import 'package:docsbuddy/features/reminders/domain/reminder_alerts.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/catalog_fixtures.dart';

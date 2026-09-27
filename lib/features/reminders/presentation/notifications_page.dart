@@ -5,10 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
-import '../application/catalog_providers.dart';
-import '../domain/catalog_models.dart';
-import 'widgets/catalog_widgets.dart';
+import '../../catalog/domain/catalog_models.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../application/reminder_providers.dart';
 
 /// The bell's inbox: what needs attention now (overdue) and what's inside a
 /// notify window (a reminder whose days-left has crossed one of its own

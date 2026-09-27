@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
-import '../application/catalog_providers.dart';
 import '../domain/reminder_filters.dart';
-import '../domain/catalog_models.dart';
-import 'widgets/catalog_widgets.dart';
+import '../../catalog/domain/catalog_models.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../application/reminder_providers.dart';
 
 /// Deep-link target of the dashboard stat cards' "View ›" — the reminder
 /// subset a card counts (e.g. Expired → everything overdue).

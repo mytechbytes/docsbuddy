@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../catalog/application/catalog_sync.dart';
+import '../../reminders/application/reminder_notification_sync.dart';
 import '../../catalog/presentation/assets_page.dart';
 import '../../catalog/presentation/rooms_page.dart';
 import '../../dashboard/presentation/dashboard_tab.dart';
@@ -12,6 +12,7 @@ import '../../security/application/security_providers.dart';
 import '../../security/presentation/lock_screen.dart';
 import '../../security/presentation/mfa_challenge_screen.dart';
 import '../../settings/presentation/settings_page.dart';
+import '../../catalog/application/catalog_sync.dart';
 
 /// Signed-in app shell with bottom navigation. Gates on the MFA step-up and
 /// the app lock (whose rules live in [AppLockController]; this widget only

@@ -3,7 +3,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../catalog/application/catalog_providers.dart';
 import '../../catalog/domain/catalog_models.dart';
-import '../../catalog/domain/reminder_filters.dart';
+import '../../reminders/domain/reminder_filters.dart';
+import '../../catalog/domain/reminder_ordering.dart';
 
 part 'dashboard_controller.freezed.dart';
 

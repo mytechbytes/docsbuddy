@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/catalog/domain/catalog_models.dart';
-import '../features/catalog/domain/reminder_filters.dart';
+import '../features/reminders/domain/reminder_filters.dart';
 
 /// Every route in the app, in one place. Screens navigate with these
 /// builders (or the [AppNavigation] helpers for routes that carry an

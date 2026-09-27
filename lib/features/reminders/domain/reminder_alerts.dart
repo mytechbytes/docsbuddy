@@ -1,5 +1,5 @@
 import '../../../core/notifications/local_alert.dart';
-import 'catalog_models.dart';
+import '../../catalog/domain/catalog_models.dart';
 
 /// Pure: turn reminders into the local notifications to schedule. Each
 /// reminder fires at its own `notifyOffsets` thresholds (days before due,

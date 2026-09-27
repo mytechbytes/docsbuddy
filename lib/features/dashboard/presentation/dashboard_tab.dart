@@ -8,11 +8,12 @@ import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../catalog/application/catalog_providers.dart';
 import '../../catalog/domain/catalog_models.dart';
-import '../../catalog/domain/reminder_filters.dart';
+import '../../reminders/domain/reminder_filters.dart';
 import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../profile/application/profile_providers.dart';
 import '../application/dashboard_controller.dart';
 import '../../../routing/app_routes.dart';
+import '../../reminders/application/reminder_providers.dart';
 
 class DashboardTab extends ConsumerWidget {
   const DashboardTab({super.key});

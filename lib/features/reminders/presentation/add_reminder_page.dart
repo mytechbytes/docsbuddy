@@ -10,11 +10,11 @@ import '../../../core/widgets/step_flow.dart';
 import '../../documents/presentation/attachment_widgets.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/domain/notification_prefs.dart';
-import '../application/catalog_providers.dart';
-import '../application/editor_controllers.dart';
-import '../domain/catalog_inputs.dart';
-import '../domain/catalog_models.dart';
-import 'widgets/catalog_widgets.dart';
+import '../../catalog/application/catalog_providers.dart';
+import '../../catalog/domain/catalog_inputs.dart';
+import '../../catalog/domain/catalog_models.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
+import '../application/reminder_editor_controller.dart';
 
 /// Design screen 08 — Add Reminder as a 4-step flow:
 ///   1. Reminder type
