@@ -1,6 +1,6 @@
 import 'package:docsbuddy/features/catalog/data/fake_catalog_repository.dart';
 import 'package:docsbuddy/features/catalog/domain/catalog_models.dart';
-import 'package:docsbuddy/features/catalog/domain/reminder_filters.dart';
+import 'package:docsbuddy/features/reminders/domain/reminder_filters.dart';
 import 'package:docsbuddy/features/dashboard/application/dashboard_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

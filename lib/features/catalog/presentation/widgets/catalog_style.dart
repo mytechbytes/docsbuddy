@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/catalog_models.dart';
+import '../../../../core/l10n/l10n.dart';
 
 export '../../../../core/widgets/formatters.dart';
 
@@ -10,26 +11,24 @@ export '../../../../core/widgets/formatters.dart';
 /// the domain so models stay pure Dart.
 extension ReminderKindStyle on ReminderKind {
   Color get bg => switch (this) {
-        ReminderKind.insurance => const Color(0xFFE1F1F5),
-        ReminderKind.pollution => const Color(0xFFE3F5E7),
-        ReminderKind.amc => const Color(0xFFFDF1E0),
-        ReminderKind.service => const Color(0xFFFBE7EE),
-        ReminderKind.tax => const Color(0xFFE8E4F7),
-        ReminderKind.warranty => const Color(0xFFDFECFF),
-        ReminderKind.registration => const Color(0xFFE5EFE8),
-        ReminderKind.fitness => const Color(0xFFFDF1E0),
-        ReminderKind.other => const Color(0xFFEEF1F6),
+        ReminderKind.insurance => AppColors.insuranceBg,
+        ReminderKind.pollution => AppColors.pollutionBg,
+        ReminderKind.amc || ReminderKind.fitness => AppColors.amcBg,
+        ReminderKind.service => AppColors.serviceBg,
+        ReminderKind.tax => AppColors.taxBg,
+        ReminderKind.warranty => AppColors.warrantyBg,
+        ReminderKind.registration => AppColors.registrationBg,
+        ReminderKind.other => AppColors.otherKindBg,
       };
 
   Color get fg => switch (this) {
-        ReminderKind.insurance => const Color(0xFF3A8FA3),
-        ReminderKind.pollution => const Color(0xFF3FA75C),
-        ReminderKind.amc => const Color(0xFFC68318),
-        ReminderKind.service => const Color(0xFFC63D75),
-        ReminderKind.tax => const Color(0xFF6C52C2),
-        ReminderKind.warranty => const Color(0xFF2476E8),
-        ReminderKind.registration => const Color(0xFF4D8A64),
-        ReminderKind.fitness => const Color(0xFFC68318),
+        ReminderKind.insurance => AppColors.insuranceFg,
+        ReminderKind.pollution => AppColors.pollutionFg,
+        ReminderKind.amc || ReminderKind.fitness => AppColors.amcFg,
+        ReminderKind.service => AppColors.serviceFg,
+        ReminderKind.tax => AppColors.taxFg,
+        ReminderKind.warranty => AppColors.warrantyFg,
+        ReminderKind.registration => AppColors.registrationFg,
         ReminderKind.other => AppColors.muted,
       };
 
@@ -79,11 +78,62 @@ extension AssetCategoryStyle on AssetCategory {
 }
 
 /// "Overdue by 3 days" / "Due today" / "5 days left".
-String dueCountdown(int daysLeft) => daysLeft < 0
-    ? 'Overdue by ${-daysLeft} day${daysLeft == -1 ? '' : 's'}'
+String dueCountdown(AppLocalizations l10n, int daysLeft) => daysLeft < 0
+    ? l10n.dueOverdueBy(-daysLeft)
     : daysLeft == 0
-        ? 'Due today'
-        : '$daysLeft day${daysLeft == 1 ? '' : 's'} left';
+        ? l10n.dueToday
+        : l10n.dueDaysLeft(daysLeft);
 
 /// "in 5 days" / "3d ago" for a date picker hint.
-String relativeDays(int days) => days < 0 ? '${-days}d ago' : 'in $days day${days == 1 ? '' : 's'}';
+String relativeDays(AppLocalizations l10n, int days) =>
+    days < 0 ? l10n.relativeDaysAgo(-days) : l10n.relativeInDays(days);
+
+/// Localized names for catalog domain values (the domain `label`s stay
+/// English because some are stored as data).
+extension ReminderKindName on ReminderKind {
+  String displayName(BuildContext context) {
+    final l = context.l10n;
+    return switch (this) {
+      ReminderKind.insurance => l.kindInsurance,
+      ReminderKind.pollution => l.kindPollution,
+      ReminderKind.amc => l.kindAmc,
+      ReminderKind.service => l.kindService,
+      ReminderKind.tax => l.kindTax,
+      ReminderKind.warranty => l.kindWarranty,
+      ReminderKind.registration => l.kindRegistration,
+      ReminderKind.fitness => l.kindFitness,
+      ReminderKind.other => l.kindOther,
+    };
+  }
+}
+
+extension AssetCategoryKindName on AssetCategoryKind {
+  String displayName(BuildContext context) {
+    final l = context.l10n;
+    return switch (this) {
+      AssetCategoryKind.vehicle => l.groupVehicle,
+      AssetCategoryKind.appliance => l.groupAppliance,
+      AssetCategoryKind.electronics => l.groupElectronics,
+      AssetCategoryKind.document => l.groupDocument,
+      AssetCategoryKind.other => l.groupOther,
+    };
+  }
+}
+
+extension RecurrenceName on Recurrence {
+  String displayName(BuildContext context) {
+    final l = context.l10n;
+    return switch (this) {
+      Recurrence.none => l.recurrenceNone,
+      Recurrence.monthly => l.recurrenceMonthly,
+      Recurrence.quarterly => l.recurrenceQuarterly,
+      Recurrence.halfYearly => l.recurrenceHalfYearly,
+      Recurrence.yearly => l.recurrenceYearly,
+    };
+  }
+}
+
+extension AssetTypeName on Asset {
+  /// Specific type when known, else the localized group name.
+  String typeName(BuildContext context) => categoryName ?? category.displayName(context);
+}

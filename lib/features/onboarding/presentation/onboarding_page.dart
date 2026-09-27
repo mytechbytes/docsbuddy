@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../application/onboarding_controller.dart';
 import 'widgets/onboarding_illustrations.dart';
+import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// First-launch walkthrough — 4 swipeable slides (`Onboarding.jsx` in the
 /// design handoff). Shown only when onboarding has not been completed on this
@@ -22,12 +24,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final _controller = PageController();
   int _index = 0;
 
-  static const _slides = <_SlideData>[
-    _SlideData(eyebrow: 'Welcome', title: 'Never miss a renewal again', subtitle: 'DocsBuddy keeps track of warranties, insurance, bills and dates — so the deadlines don’t sneak up on you.'),
-    _SlideData(eyebrow: 'Organise', title: 'All your assets in one place', subtitle: 'Vehicles, appliances, electronics, even documents — organised by room and category.'),
-    _SlideData(eyebrow: 'Stay ahead', title: 'Smart reminders, weeks ahead', subtitle: 'Configure 60 / 30 / 7 / 1-day alerts. Push, email or WhatsApp — your choice.'),
-    _SlideData(eyebrow: 'Together', title: 'Keep the whole family in sync', subtitle: 'Invite up to 8 members. Everyone gets reminded, anyone can update — no more single point of failure.'),
-  ];
+  static const _slideCount = 4;
+
+  static List<_SlideData> _slides(AppLocalizations l) => [
+        _SlideData(eyebrow: l.onboardingEyebrow1, title: l.onboardingTitle1, subtitle: l.onboardingBody1),
+        _SlideData(eyebrow: l.onboardingEyebrow2, title: l.onboardingTitle2, subtitle: l.onboardingBody2),
+        _SlideData(eyebrow: l.onboardingEyebrow3, title: l.onboardingTitle3, subtitle: l.onboardingBody3),
+        _SlideData(eyebrow: l.onboardingEyebrow4, title: l.onboardingTitle4, subtitle: l.onboardingBody4),
+      ];
 
   @override
   void dispose() {
@@ -52,7 +56,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -63,10 +67,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const DbLogo(),
-                  if (_index < _slides.length - 1)
+                  if (_index < _slideCount - 1)
                     GestureDetector(
-                      onTap: () => _finish('/sign-in'),
-                      child: const Text('Skip', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                      onTap: () => _finish(AppRoutes.signIn),
+                      child: Text(context.l10n.commonSkip, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.textMuted)),
                     )
                   else
                     const SizedBox(width: 28),
@@ -76,18 +80,22 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             Expanded(
               child: PageView.builder(
                 controller: _controller,
-                itemCount: _slides.length,
+                itemCount: _slideCount,
                 onPageChanged: (i) => setState(() => _index = i),
                 itemBuilder: (context, i) => _Slide(
-                  data: _slides[i],
+                  data: _slides(context.l10n)[i],
                   index: i,
-                  total: _slides.length,
+                  total: _slideCount,
                   illustration: _illustrationFor(i),
-                  onPrimary: i < _slides.length - 1 ? _next : () => _finish('/sign-up'),
-                  primaryLabel: switch (i) { 0 => 'Get Started', 3 => 'Create Account', _ => 'Next' },
-                  secondaryLabel: i == _slides.length - 1 ? 'I already have an account' : null,
-                  onSecondary: i == _slides.length - 1 ? () => _finish('/sign-in') : null,
-                  footer: i == 0 ? _SignInFooter(onTap: () => _finish('/sign-in')) : null,
+                  onPrimary: i < _slideCount - 1 ? _next : () => _finish(AppRoutes.signUp),
+                  primaryLabel: switch (i) {
+                    0 => context.l10n.onboardingGetStarted,
+                    3 => context.l10n.authCreateAccountCta,
+                    _ => context.l10n.commonNext,
+                  },
+                  secondaryLabel: i == _slideCount - 1 ? context.l10n.onboardingHaveAccount : null,
+                  onSecondary: i == _slideCount - 1 ? () => _finish(AppRoutes.signIn) : null,
+                  footer: i == 0 ? _SignInFooter(onTap: () => _finish(AppRoutes.signIn)) : null,
                 ),
               ),
             ),
@@ -159,7 +167,7 @@ class _Slide extends StatelessWidget {
                             height: 6,
                             width: i == index ? 22 : 6,
                             decoration: BoxDecoration(
-                              color: i == index ? AppColors.ink : AppColors.indicatorIdle,
+                              color: i == index ? context.palette.text : context.palette.indicatorIdle,
                               borderRadius: BorderRadius.circular(999),
                             ),
                           ),
@@ -173,23 +181,23 @@ class _Slide extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(999)),
+                            decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(999)),
                             child: Text(
                               data.eyebrow.toUpperCase(),
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.chipBlue, letterSpacing: 0.66),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.accent, letterSpacing: 0.66),
                             ),
                           ),
                           const SizedBox(height: 10),
                           Text(
                             data.title,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: AppColors.ink),
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: context.palette.text),
                           ),
                           const SizedBox(height: 10),
                           Text(
                             data.subtitle,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
+                            style: TextStyle(fontSize: 14, height: 1.5, color: context.palette.textMuted),
                           ),
                         ],
                       ),
@@ -230,10 +238,10 @@ class _SignInFooter extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('Already with us? ', style: TextStyle(fontSize: 13, color: AppColors.ink2)),
+        Text(context.l10n.onboardingAlreadyWithUs, style: TextStyle(fontSize: 13, color: context.palette.textSecondary)),
         GestureDetector(
           onTap: onTap,
-          child: const Text('Sign in', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
+          child: Text(context.l10n.commonSignIn, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),
         ),
       ],
     );

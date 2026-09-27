@@ -1,14 +1,16 @@
 import '../../../core/data/supabase/supabase_guard.dart';
 import '../../../core/error/app_failure.dart';
+import '../../../core/logging/app_logger.dart';
 import '../domain/security_models.dart';
 import '../domain/security_repository.dart';
 import 'security_remote_data_source.dart';
 
 /// Security over GoTrue MFA + the auth session.
 class RemoteSecurityRepository implements SecurityRepository {
-  RemoteSecurityRepository(this._remote);
+  RemoteSecurityRepository(this._remote, {required this._logger});
 
   final SecurityRemoteDataSource _remote;
+  final AppLogger _logger;
 
   @override
   Future<SecurityStatus> status() => guardBackend(() async {
@@ -20,7 +22,7 @@ class RemoteSecurityRepository implements SecurityRepository {
 
   @override
   Future<TotpEnrollment> enrollTotp() => guardBackend(() async {
-        final e = await _remote.enrollTotp() ?? (throw const ServerFailure('TOTP enrollment unavailable.'));
+        final e = await _remote.enrollTotp() ?? (throw const ServerFailure('TOTP enrollment unavailable.', reason: FailureReason.totpUnavailable));
         return TotpEnrollment(factorId: e.id, secret: e.secret, uri: e.uri);
       });
 
@@ -36,7 +38,8 @@ class RemoteSecurityRepository implements SecurityRepository {
     try {
       final aal = _remote.assuranceLevels();
       return aal.next == 'aal2' && aal.current != aal.next;
-    } catch (_) {
+    } catch (e, st) {
+      _logger.warning('Could not read the session assurance level', error: e, stackTrace: st);
       return false;
     }
   }
@@ -44,7 +47,7 @@ class RemoteSecurityRepository implements SecurityRepository {
   @override
   Future<void> verifyMfaChallenge(String code) => guardBackend(() async {
         final factors = await _remote.verifiedTotpFactors();
-        if (factors.isEmpty) throw const ValidationFailure('No authenticator enrolled.');
+        if (factors.isEmpty) throw const ValidationFailure('No authenticator enrolled.', reason: FailureReason.noAuthenticator);
         await _remote.challengeAndVerify(factors.first.id, code.trim());
       });
 

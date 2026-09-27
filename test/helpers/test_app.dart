@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:docsbuddy/bootstrap/backends/fake_backend.dart';
 import 'package:docsbuddy/bootstrap/dependencies.dart';
+import 'package:docsbuddy/core/l10n/l10n.dart';
+import 'package:docsbuddy/core/logging/app_logger.dart';
 import 'package:docsbuddy/core/notifications/local_alert.dart';
 import 'package:docsbuddy/core/notifications/notification_service.dart';
 import 'package:docsbuddy/core/providers/core_providers.dart';
@@ -16,6 +18,8 @@ import 'package:docsbuddy/features/profile/domain/profile.dart';
 import 'package:docsbuddy/features/security/application/security_providers.dart';
 import 'package:docsbuddy/features/security/domain/security_models.dart';
 import 'package:docsbuddy/features/security/domain/security_repository.dart';
+import 'package:docsbuddy/features/settings/application/appearance_controller.dart';
+import 'package:docsbuddy/features/settings/domain/appearance.dart';
 import 'package:docsbuddy/features/settings/domain/notification_prefs_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +27,22 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // ── In-memory platform fakes ──
+
+/// Captures log calls so tests can assert best-effort failures are reported.
+class RecordingLogger implements AppLogger {
+  final warnings = <String>[];
+  final errors = <String>[];
+
+  @override
+  void info(String message) {}
+
+  @override
+  void warning(String message, {Object? error, StackTrace? stackTrace}) => warnings.add(message);
+
+  @override
+  void error(String message, {required Object error, StackTrace? stackTrace, bool fatal = false}) =>
+      errors.add(message);
+}
 
 class RecordingNotificationService implements NotificationService {
   final scheduled = <List<LocalAlert>>[];
@@ -88,6 +108,17 @@ class InMemorySecurityPrefsStore implements SecurityPrefsStore {
   Future<void> save(SecurityPrefs next) async => prefs = next;
 }
 
+class InMemoryAppearanceStore implements AppearanceStore {
+  InMemoryAppearanceStore([this.mode = AppearanceMode.system]);
+  AppearanceMode mode;
+
+  @override
+  AppearanceMode load() => mode;
+
+  @override
+  Future<void> save(AppearanceMode next) async => mode = next;
+}
+
 class InMemoryOnboardingStore implements OnboardingStore {
   InMemoryOnboardingStore({this.isComplete = false});
 
@@ -112,6 +143,7 @@ List<Override> testOverrides({
   PushMessagingService? push,
   BiometricAuthenticator? biometrics,
   SecurityPrefsStore? securityPrefs,
+  AppLogger? logger,
   DateTime Function()? clock,
 }) =>
     [
@@ -124,6 +156,8 @@ List<Override> testOverrides({
         security: security,
         notificationPrefs: notificationPrefs,
       )),
+      appLoggerProvider.overrideWithValue(logger ?? RecordingLogger()),
+      appearanceStoreProvider.overrideWithValue(InMemoryAppearanceStore()),
       onboardingStoreProvider.overrideWithValue(onboarding ?? InMemoryOnboardingStore()),
       notificationServiceProvider.overrideWithValue(notifications ?? RecordingNotificationService()),
       pushMessagingServiceProvider.overrideWithValue(push ?? FakePushMessagingService()),
@@ -143,7 +177,11 @@ ProviderContainer makeContainer({List<Override> overrides = const []}) =>
 Widget testApp(Widget child, {List<Override>? overrides}) => ProviderScope(
       overrides: overrides ?? testOverrides(),
       retry: noRetry,
-      child: MaterialApp(home: child),
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: child,
+      ),
     );
 
 /// Elapses the fakes' simulated latency (timers, not frames) and settles.

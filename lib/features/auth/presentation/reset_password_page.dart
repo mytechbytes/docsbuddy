@@ -9,6 +9,9 @@ import '../../../core/widgets/feedback.dart';
 import '../application/auth_controller.dart';
 import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
+import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
   const ResetPasswordPage({super.key});
@@ -37,8 +40,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   Future<void> _submit() async {
     final ok = await ref.read(authControllerProvider.notifier).resetPassword(_password.text, _confirm.text);
     if (ok && mounted) {
-      context.showSuccess('Password updated. Please sign in.');
-      context.go('/sign-in');
+      context.showSuccess(context.l10n.authResetDone);
+      context.go(AppRoutes.signIn);
     }
   }
 
@@ -52,24 +55,24 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       showLogo: false,
       children: [
         const SizedBox(height: 14),
-        const Center(child: HeroBadge(background: Color(0xFFFDF1E0), foreground: Color(0xFFC68318), icon: Icons.lock_outline)),
+        Center(child: HeroBadge(background: context.palette.warningSoft, foreground: AppColors.amberDeep, icon: Icons.lock_outline)),
         const SizedBox(height: 22),
-        const AuthHero(title: 'Set a new password', subtitle: "Choose a strong password you haven't used here before."),
+        AuthHero(title: context.l10n.authResetTitle, subtitle: context.l10n.authResetSubtitle),
         const SizedBox(height: 20),
-        AppTextField(label: 'New Password', controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, autofillHints: const [AutofillHints.newPassword]),
+        AppTextField(label: context.l10n.authNewPassword, controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, autofillHints: const [AutofillHints.newPassword]),
         const SizedBox(height: 14),
-        AppTextField(label: 'Confirm Password', controller: _confirm, icon: Icons.lock_outline, hint: '••••••••', obscure: true, onSubmitted: (_) => _submit()),
+        AppTextField(label: context.l10n.authConfirmPassword, controller: _confirm, icon: Icons.lock_outline, hint: '••••••••', obscure: true, onSubmitted: (_) => _submit()),
         const SizedBox(height: 16),
         _RequirementsCard(
           rules: [
-            (label: 'At least 8 characters', ok: checks.length),
-            (label: 'One uppercase letter', ok: checks.upper),
-            (label: 'One number', ok: checks.number),
-            (label: r'One special character (!@#$…)', ok: checks.special),
+            (label: context.l10n.authRuleLength, ok: checks.length),
+            (label: context.l10n.authRuleUpper, ok: checks.upper),
+            (label: context.l10n.authRuleNumber, ok: checks.number),
+            (label: context.l10n.authRuleSpecial, ok: checks.special),
           ],
         ),
         const SizedBox(height: 18),
-        PrimaryButton(label: 'Reset Password', isLoading: loading, onPressed: _submit),
+        PrimaryButton(label: context.l10n.authResetCta, isLoading: loading, onPressed: _submit),
       ],
     );
   }
@@ -84,14 +87,14 @@ class _RequirementsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: AppColors.paper,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEEF2F8)),
+        border: Border.all(color: context.palette.borderSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Password must have', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          Text(context.l10n.authPasswordMustHave, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.palette.text)),
           const SizedBox(height: 8),
           for (final r in rules)
             Padding(
@@ -101,11 +104,11 @@ class _RequirementsCard extends StatelessWidget {
                   Container(
                     width: 16,
                     height: 16,
-                    decoration: BoxDecoration(color: r.ok ? AppColors.green : AppColors.hairline, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: r.ok ? context.palette.success : context.palette.hairline, shape: BoxShape.circle),
                     child: r.ok ? const Icon(Icons.check, size: 11, color: Colors.white) : null,
                   ),
                   const SizedBox(width: 8),
-                  Text(r.label, style: TextStyle(fontSize: 12, color: r.ok ? AppColors.ink : AppColors.muted)),
+                  Text(r.label, style: TextStyle(fontSize: 12, color: r.ok ? context.palette.text : context.palette.textMuted)),
                 ],
               ),
             ),

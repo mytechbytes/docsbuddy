@@ -66,13 +66,13 @@ class RemoteFamilyRepository implements FamilyRepository {
   Future<Family> acceptInvite(String code) => guardBackend(() async {
         await _remote.acceptInvite(code);
         final row = await _remote.firstFamily();
-        if (row == null) throw const ServerFailure('Could not load the joined family.');
+        if (row == null) throw const ServerFailure('Could not load the joined family.', reason: FailureReason.joinedFamilyUnavailable);
         return FamilyMapper.family(row);
       });
 
   @override
   Future<void> leaveFamily(String familyId) => guardBackend(() async {
-        final uid = _remote.currentUserId ?? (throw const AuthFailure('Not signed in.'));
+        final uid = _remote.currentUserId ?? (throw const AuthFailure('Not signed in.', reason: FailureReason.notSignedIn));
         await _remote.deleteMember(familyId, uid);
       });
 }

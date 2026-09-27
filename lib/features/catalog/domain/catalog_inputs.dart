@@ -88,7 +88,7 @@ abstract class AssetDraft with _$AssetDraft {
   /// Throws [ValidationFailure] when the draft can't be saved.
   AssetInput toInput() {
     final trimmedName = name.trim();
-    if (trimmedName.isEmpty) throw const ValidationFailure('Please enter a name.');
+    if (trimmedName.isEmpty) throw const ValidationFailure('Please enter a name.', reason: FailureReason.nameRequired);
 
     // Fallback/custom types carry their name in typeName (no DB FK).
     final t = type;

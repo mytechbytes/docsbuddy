@@ -1,5 +1,6 @@
 import 'package:docsbuddy/features/catalog/domain/catalog_models.dart';
-import 'package:docsbuddy/features/catalog/domain/reminder_filters.dart';
+import 'package:docsbuddy/features/catalog/domain/reminder_ordering.dart';
+import 'package:docsbuddy/features/reminders/domain/reminder_filters.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/catalog_fixtures.dart';
@@ -28,18 +29,12 @@ void main() {
     expect(isOverdue(reminderDueIn(-2)), isTrue);
   });
 
-  test('urgency ordering, soonest and per-asset grouping', () {
+  test('groups already-sorted reminders by asset, soonest group first', () {
     final a = reminderDueIn(10, assetId: 'a');
     final b = reminderDueIn(-1, assetId: 'b');
     final c = reminderDueIn(3, assetId: 'a');
-    final sorted = sortedByUrgency([a, b, c]);
-    expect(sorted.map((r) => r.id), [b.id, c.id, a.id]);
-    expect(soonest([a, b, c]), b);
-    expect(soonest(const []), isNull);
-    expect(remindersForAsset('a', [a, b, c]), [c, a]);
-
-    final groups = groupByAsset(sorted);
-    expect(groups.map((g) => g.first.assetId), ['b', 'a']); // ordered by soonest
+    final groups = groupByAsset(sortedByUrgency([a, b, c]));
+    expect(groups.map((g) => g.first.assetId), ['b', 'a']);
     expect(groups[1], [c, a]);
   });
 

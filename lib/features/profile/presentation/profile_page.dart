@@ -14,6 +14,9 @@ import '../../family/application/family_controller.dart';
 import '../../family/domain/family_models.dart';
 import '../application/profile_providers.dart';
 import '../domain/profile.dart';
+import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Design screen 14 — Profile: avatar (tap to change), identity + Verified
 /// badge, stats row, family card with invite, and account actions.
@@ -24,17 +27,17 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: AppColors.ink),
-        title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        iconTheme: IconThemeData(color: context.palette.text),
+        title: Text(context.l10n.profileTitle, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: profile.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (p) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
@@ -42,23 +45,23 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 12),
             Center(
               child: Text(p.displayName,
-                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: context.palette.text)),
             ),
             const SizedBox(height: 2),
-            Center(child: Text(p.email, style: const TextStyle(fontSize: 13, color: AppColors.muted))),
+            Center(child: Text(p.email, style: TextStyle(fontSize: 13, color: context.palette.textMuted))),
             if (p.verified) ...[
               const SizedBox(height: 8),
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: AppColors.greenSoft, borderRadius: BorderRadius.circular(999)),
-                  child: const Row(
+                  decoration: BoxDecoration(color: context.palette.successSoft, borderRadius: BorderRadius.circular(999)),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.verified_outlined, size: 14, color: AppColors.greenLeaf),
+                      Icon(Icons.verified_outlined, size: 14, color: context.palette.successStrong),
                       SizedBox(width: 4),
-                      Text('Verified',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.greenLeaf)),
+                      Text(context.l10n.profileVerified,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.palette.successStrong)),
                     ],
                   ),
                 ),
@@ -72,30 +75,30 @@ class ProfilePage extends ConsumerWidget {
             _MenuCard(children: [
               _MenuRow(
                 icon: Icons.person_outline,
-                title: 'Edit personal info',
+                title: context.l10n.profileEditInfo,
                 onTap: () => _editInfo(context, ref, p),
               ),
               _MenuRow(
                 icon: Icons.lock_outline,
-                title: 'Change password',
-                onTap: () => context.push('/change-password'),
+                title: context.l10n.commonChangePassword,
+                onTap: () => context.push(AppRoutes.changePassword),
               ),
               _MenuRow(
                 icon: Icons.notifications_none,
-                title: 'Notification preferences',
+                title: context.l10n.profileNotificationPrefs,
                 onTap: () => context.pop(), // managed on the Settings tab
-                subtitle: 'Managed in Settings',
+                subtitle: context.l10n.profileManagedInSettings,
               ),
             ]),
             const SizedBox(height: 16),
             _MenuCard(children: [
               _MenuRow(
                 icon: Icons.logout,
-                title: 'Sign out',
+                title: context.l10n.commonSignOut,
                 danger: true,
                 onTap: () async {
                   final ok = await ref.read(authControllerProvider.notifier).signOut();
-                  if (ok && context.mounted) context.go('/sign-in');
+                  if (ok && context.mounted) context.go(AppRoutes.signIn);
                 },
               ),
             ]),
@@ -118,7 +121,7 @@ class ProfilePage extends ConsumerWidget {
     await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
@@ -130,13 +133,13 @@ class ProfilePage extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Edit personal info',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  Text(context.l10n.profileEditInfo,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
                   const SizedBox(height: 16),
-                  AppTextField(label: 'Display name', controller: name, icon: Icons.person_outline),
+                  AppTextField(label: context.l10n.profileDisplayName, controller: name, icon: Icons.person_outline),
                   const SizedBox(height: 12),
                   AppTextField(
-                      label: 'Phone (for WhatsApp reminders)',
+                      label: context.l10n.profilePhone,
                       controller: phone,
                       icon: Icons.phone_outlined,
                       hint: '+91 9812345678',
@@ -144,7 +147,7 @@ class ProfilePage extends ConsumerWidget {
                       errorText: phoneError),
                   const SizedBox(height: 18),
                   PrimaryButton(
-                    label: 'Save',
+                    label: context.l10n.commonSave,
                     onPressed: () async {
                       try {
                         await ref
@@ -192,7 +195,7 @@ class _Avatar extends StatelessWidget {
               height: 96,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(colors: [Color(0xFFF1C27D), Color(0xFFD68B5C)]),
+                gradient: LinearGradient(colors: AppColors.avatarGradient),
               ),
               alignment: Alignment.center,
               child: Text(profile.initial,
@@ -206,11 +209,11 @@ class _Avatar extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: AppColors.ink,
+                color: context.palette.inverseSurface,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.bg, width: 2.5),
+                border: Border.all(color: context.palette.background, width: 2.5),
               ),
-              child: const Icon(Icons.photo_camera_outlined, size: 14, color: Colors.white),
+              child: Icon(Icons.photo_camera_outlined, size: 14, color: context.palette.onInverse),
             ),
           ),
         ],
@@ -228,21 +231,21 @@ class _StatsRow extends ConsumerWidget {
     Widget cell(String value, String label) => Expanded(
           child: Column(
             children: [
-              Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+              Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
               const SizedBox(height: 2),
-              Text(label, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+              Text(label, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
             ],
           ),
         );
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+          color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
       child: Row(
         children: [
-          cell('${stats?.assets ?? '—'}', 'Assets'),
-          cell('${stats?.reminders ?? '—'}', 'Reminders'),
-          cell('${stats?.documents ?? '—'}', 'Documents'),
+          cell('${stats?.assets ?? '—'}', context.l10n.navAssets),
+          cell('${stats?.reminders ?? '—'}', context.l10n.catalogReminders),
+          cell('${stats?.documents ?? '—'}', context.l10n.profileDocuments),
         ],
       ),
     );
@@ -262,7 +265,7 @@ class _FamilyCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+          color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
       child: Row(
         children: [
           Expanded(
@@ -270,10 +273,10 @@ class _FamilyCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(family.name,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text)),
                 const SizedBox(height: 2),
-                Text(plural(members.length, 'member'),
-                    style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                Text(context.l10n.memberCount(members.length),
+                    style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                 const SizedBox(height: 8),
                 SizedBox(
                   height: 28,
@@ -285,7 +288,7 @@ class _FamilyCard extends ConsumerWidget {
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.paper, width: 2),
+                              border: Border.all(color: context.palette.surface, width: 2),
                             ),
                             child: AssetThumb(
                               imageRef: members[i].avatarUrl,
@@ -294,7 +297,7 @@ class _FamilyCard extends ConsumerWidget {
                               fallback: Container(
                                 width: 24,
                                 height: 24,
-                                decoration: const BoxDecoration(color: AppColors.chipBlue, shape: BoxShape.circle),
+                                decoration: BoxDecoration(color: context.palette.accent, shape: BoxShape.circle),
                                 alignment: Alignment.center,
                                 child: Text(members[i].initial,
                                     style: const TextStyle(
@@ -310,9 +313,9 @@ class _FamilyCard extends ConsumerWidget {
             ),
           ),
           TextButton.icon(
-            onPressed: () => context.push('/family-manage'),
+            onPressed: () => context.push(AppRoutes.familyManage),
             icon: const Icon(Icons.person_add_alt_outlined, size: 16),
-            label: const Text('Invite', style: TextStyle(fontWeight: FontWeight.w700)),
+            label: Text(context.l10n.profileInvite, style: const TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -328,7 +331,7 @@ class _MenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+          color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
       child: Column(children: children),
     );
   }
@@ -344,13 +347,13 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = danger ? AppColors.red : AppColors.ink;
+    final color = danger ? context.palette.danger : context.palette.text;
     return ListTile(
       onTap: onTap,
       leading: Icon(icon, color: color),
       title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
-      subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-      trailing: danger ? null : const Icon(Icons.chevron_right, color: AppColors.muted),
+      subtitle: subtitle == null ? null : Text(subtitle!, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
+      trailing: danger ? null : Icon(Icons.chevron_right, color: context.palette.textMuted),
     );
   }
 }

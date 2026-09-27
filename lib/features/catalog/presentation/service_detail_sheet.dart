@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../documents/application/document_providers.dart';
@@ -8,6 +7,8 @@ import '../../documents/domain/document_models.dart';
 import '../../documents/presentation/attachment_widgets.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// What the caller wants done after the sheet closes.
 enum ServiceAction { edit, complete, delete }
@@ -23,7 +24,7 @@ class ServiceDetailSheet extends ConsumerWidget {
     return showModalBottomSheet<ServiceAction>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => ServiceDetailSheet(reminder: reminder),
     );
@@ -33,7 +34,6 @@ class ServiceDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final docs = ref.watch(serviceDocumentsProvider((assetId: reminder.assetId, reminderId: reminder.id))).value ??
         const <DocumentMeta>[];
-    final money = NumberFormat('#,##0.##');
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -47,7 +47,7 @@ class ServiceDetailSheet extends ConsumerWidget {
                     width: 40,
                     height: 4,
                     decoration:
-                        BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(999)))),
+                        BoxDecoration(color: context.palette.border, borderRadius: BorderRadius.circular(999)))),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -58,8 +58,8 @@ class ServiceDetailSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(reminder.label,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                      Text(reminder.assetName, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
+                      Text(reminder.assetName, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                     ],
                   ),
                 ),
@@ -69,22 +69,22 @@ class ServiceDetailSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             _DetailRow(
                 icon: Icons.event_outlined,
-                label: 'Due',
+                label: context.l10n.catalogDue,
                 value:
-                    '${DateFormat('d MMM yyyy').format(reminder.dueDate)} · ${reminder.isOneOff ? 'One-off' : reminder.recurrence.label}'),
-            _DetailRow(icon: Icons.notifications_none, label: 'Reminds', value: reminder.offsetsLabel),
+                    '${context.formatDate(reminder.dueDate)} · ${reminder.isOneOff ? context.l10n.catalogOneOff : reminder.recurrence.displayName(context)}'),
+            _DetailRow(icon: Icons.notifications_none, label: context.l10n.catalogReminds, value: context.formatOffsets(reminder.notifyOffsets)),
             if (reminder.provider != null)
-              _DetailRow(icon: Icons.storefront_outlined, label: 'Provider', value: reminder.provider!),
+              _DetailRow(icon: Icons.storefront_outlined, label: context.l10n.catalogProvider, value: reminder.provider!),
             if (reminder.policyNo != null)
-              _DetailRow(icon: Icons.tag, label: 'Policy / contract', value: reminder.policyNo!),
+              _DetailRow(icon: Icons.tag, label: context.l10n.catalogPolicyContract, value: reminder.policyNo!),
             if (reminder.cost != null)
-              _DetailRow(icon: Icons.currency_rupee, label: 'Cost', value: '₹ ${money.format(reminder.cost)}'),
+              _DetailRow(icon: Icons.currency_rupee, label: context.l10n.catalogCost, value: context.formatMoney(reminder.cost!)),
             if (reminder.notes != null)
-              _DetailRow(icon: Icons.sticky_note_2_outlined, label: 'Notes', value: reminder.notes!),
+              _DetailRow(icon: Icons.sticky_note_2_outlined, label: context.l10n.catalogNotes, value: reminder.notes!),
             if (docs.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text('DOCUMENTS FOR THIS SERVICE',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+              Text(context.l10n.catalogServiceDocuments,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
               const SizedBox(height: 8),
               DocumentGrid(assetId: reminder.assetId, docs: docs),
             ],
@@ -95,9 +95,9 @@ class ServiceDetailSheet extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).pop(ServiceAction.edit),
                     icon: const Icon(Icons.edit_outlined, size: 16),
-                    label: const Text('Edit', style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.commonEdit, style: const TextStyle(fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.ink, side: const BorderSide(color: AppColors.line)),
+                        foregroundColor: context.palette.text, side: BorderSide(color: context.palette.border)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -105,15 +105,15 @@ class ServiceDetailSheet extends ConsumerWidget {
                   child: FilledButton.icon(
                     onPressed: () => Navigator.of(context).pop(ServiceAction.complete),
                     icon: const Icon(Icons.check, size: 16),
-                    label: const Text('Done', style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.commonDone, style: const TextStyle(fontWeight: FontWeight.w700)),
                     style: FilledButton.styleFrom(backgroundColor: AppColors.green),
                   ),
                 ),
                 const SizedBox(width: 10),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(ServiceAction.delete),
-                  icon: const Icon(Icons.delete_outline, color: AppColors.red),
-                  style: IconButton.styleFrom(side: const BorderSide(color: AppColors.line)),
+                  icon: Icon(Icons.delete_outline, color: context.palette.danger),
+                  style: IconButton.styleFrom(side: BorderSide(color: context.palette.border)),
                 ),
               ],
             ),
@@ -137,15 +137,15 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppColors.muted),
+          Icon(icon, size: 16, color: context.palette.textMuted),
           const SizedBox(width: 10),
           SizedBox(
             width: 110,
-            child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+            child: Text(label, style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
           ),
           Expanded(
             child: Text(value,
-                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: context.palette.text)),
           ),
         ],
       ),

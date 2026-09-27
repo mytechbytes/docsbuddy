@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging/app_logger.dart';
+
 import '../domain/asset_search.dart';
 import '../domain/catalog_models.dart';
 import '../domain/catalog_repository.dart';
 import '../domain/common_categories.dart';
-import '../domain/reminder_filters.dart';
+import '../domain/reminder_ordering.dart';
 import 'rooms_controller.dart';
 
 /// Bound at the composition root (`bootstrap/dependencies.dart`).
@@ -39,7 +41,9 @@ final categoriesProvider = FutureProvider<List<AssetCategory>>((ref) async {
     final all = await ref.watch(catalogRepositoryProvider).categories();
     final specific = all.where((c) => !c.isGeneric).toList();
     if (specific.isNotEmpty) return specific;
-  } catch (_) {/* fall through to the built-ins */}
+  } catch (e, st) {
+    ref.read(appLoggerProvider).warning('Category catalog unavailable; using built-ins', error: e, stackTrace: st);
+  }
   return commonAssetCategories;
 });
 
@@ -74,22 +78,6 @@ final filteredCategoriesProvider = FutureProvider.family<List<AssetCategory>, St
   final categories = await ref.watch(categoriesProvider.future);
   return categories.where((c) => categoryMatches(c, query)).toList();
 });
-
-/// A stat card's reminder subset.
-final filteredRemindersProvider = FutureProvider.family<List<Reminder>, ReminderFilter>((ref, filter) async {
-  return filterReminders(await ref.watch(upcomingRemindersProvider.future), filter);
-});
-
-/// The bell inbox: overdue services and those inside a notify window.
-final notificationInboxProvider =
-    FutureProvider<({List<Reminder> overdue, List<Reminder> comingUp})>((ref) async {
-  final list = await ref.watch(upcomingRemindersProvider.future);
-  return (overdue: list.where(isOverdue).toList(), comingUp: list.where(inAlertWindow).toList());
-});
-
-final hasOverdueProvider = Provider<bool>(
-  (ref) => ref.watch(upcomingRemindersProvider).value?.any(isOverdue) ?? false,
-);
 
 /// An asset's services, most urgent first, plus the soonest one.
 final assetServicesProvider =

@@ -4,16 +4,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/error/app_failure.dart';
 import '../../../core/providers/core_providers.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../auth/application/auth_controller.dart';
-import '../../../core/widgets/formatters.dart';
 import '../../family/application/family_controller.dart';
 import '../../onboarding/application/onboarding_controller.dart';
 import '../../profile/application/profile_providers.dart';
 import '../../security/application/security_providers.dart';
 import '../application/settings_providers.dart';
 import '../domain/notification_prefs.dart';
+import '../../../routing/app_routes.dart';
+import '../../../core/widgets/settings_list.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
+import '../application/appearance_controller.dart';
+import '../domain/appearance.dart';
 
 /// Design screen 15 — Settings: Account / Notifications / Family sections
 /// (notification toggles + default offsets are backed by
@@ -32,141 +36,148 @@ class SettingsPage extends ConsumerWidget {
         runAction(context, () => ref.read(notificationPrefsProvider.notifier).setChannel(channel, enabled));
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.commonSettings, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          const _SectionLabel('Account'),
-          _Card(children: [
-            _Row(
+          SectionLabel(context.l10n.settingsSectionAccount),
+          SettingsCard(children: [
+            SettingsRow(
               icon: Icons.person_outline,
-              title: 'Personal information',
-              onTap: () => context.push('/profile'),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              title: context.l10n.settingsPersonalInfo,
+              onTap: () => context.push(AppRoutes.profile),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.mail_outline,
-              title: 'Email',
+              title: context.l10n.commonEmail,
               trailing: Text(profile?.email ?? '—',
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.lock_outline,
-              title: 'Change password',
-              onTap: () => context.push('/change-password'),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              title: context.l10n.commonChangePassword,
+              onTap: () => context.push(AppRoutes.changePassword),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.shield_outlined,
-              title: 'Security & 2FA',
-              onTap: () => context.push('/security'),
+              title: context.l10n.settingsSecurity,
+              onTap: () => context.push(AppRoutes.security),
               trailing: Text(
-                ref.watch(securityStatusProvider).value?.totpEnabled == true ? 'On' : 'Off',
-                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+                ref.watch(securityStatusProvider).value?.totpEnabled == true ? context.l10n.commonOn : context.l10n.commonOff,
+                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
           ]),
-          const _SectionLabel('Notifications'),
-          _Card(children: [
-            _ToggleRow(
+          SectionLabel(context.l10n.commonNotifications),
+          SettingsCard(children: [
+            SettingsToggleRow(
               icon: Icons.notifications_active_outlined,
-              title: 'Push notifications',
+              title: context.l10n.settingsPush,
               value: prefs.has(NotificationChannel.push),
               onChanged: (v) => setChannel(NotificationChannel.push, v),
             ),
-            _ToggleRow(
+            SettingsToggleRow(
               icon: Icons.mail_outline,
-              title: 'Email reminders',
+              title: context.l10n.settingsEmailReminders,
               value: prefs.has(NotificationChannel.email),
               onChanged: (v) => setChannel(NotificationChannel.email, v),
             ),
-            _ToggleRow(
+            SettingsToggleRow(
               icon: Icons.chat_outlined,
-              title: 'WhatsApp reminders',
+              title: context.l10n.settingsWhatsappReminders,
               value: prefs.has(NotificationChannel.whatsapp),
               onChanged: (v) => setChannel(NotificationChannel.whatsapp, v),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.update_outlined,
-              title: 'Default offsets',
+              title: context.l10n.settingsDefaultOffsets,
               onTap: () => _editOffsets(context, ref, prefs),
               trailing: Text(
-                '${prefs.defaultOffsets.join(' · ')}d',
-                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+                context.formatOffsets(prefs.defaultOffsets),
+                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.bedtime_outlined,
-              title: 'Quiet hours',
+              title: context.l10n.settingsQuietHours,
               onTap: () => _editQuietHours(context, ref, prefs),
               trailing: Text(
                 '${prefs.quietStart} – ${prefs.quietEnd}',
-                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
           ]),
-          const _SectionLabel('Family'),
-          _Card(children: [
-            _Row(
+          SectionLabel(context.l10n.commonFamily),
+          SettingsCard(children: [
+            SettingsRow(
               icon: Icons.groups_outlined,
-              title: 'Manage family',
-              onTap: () => context.push('/family-manage'),
-              trailing: Text(plural(members.length, 'member'),
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+              title: context.l10n.settingsManageFamily,
+              onTap: () => context.push(AppRoutes.familyManage),
+              trailing: Text(context.l10n.memberCount(members.length),
+                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
           ]),
-          const _SectionLabel('App'),
-          _Card(children: [
-            _Row(
-              icon: Icons.cloud_outlined,
-              title: 'Backend',
-              trailing: Text(ref.watch(backendLabelProvider),
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+          SectionLabel(context.l10n.settingsSectionApp),
+          SettingsCard(children: [
+            SettingsRow(
+              icon: Icons.dark_mode_outlined,
+              title: context.l10n.settingsAppearance,
+              onTap: () => _pickAppearance(context, ref),
+              trailing: SettingsValue(_appearanceName(context, ref.watch(appearanceProvider))),
             ),
-            _Row(
+            SettingsRow(
+              icon: Icons.cloud_outlined,
+              title: context.l10n.settingsBackend,
+              trailing: Text(ref.watch(backendLabelProvider),
+                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+            ),
+            SettingsRow(
               icon: Icons.notification_add_outlined,
-              title: 'Send test notification',
+              title: context.l10n.settingsTestNotification,
               onTap: () async {
                 final ok = await ref.read(sendTestNotificationProvider)();
                 if (!context.mounted) return;
                 ok
-                    ? context.showSuccess('Sent a test notification.')
-                    : context.showFailure(const UnavailableFailure('Notifications are blocked in system settings.'));
+                    ? context.showSuccess(context.l10n.settingsTestNotificationSent)
+                    : context.showFailure(const UnavailableFailure('Notifications are blocked in system settings.',
+                        reason: FailureReason.notificationsBlocked));
               },
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.checklist_outlined,
-              title: "What's pending",
-              onTap: () => context.push('/roadmap'),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              title: context.l10n.settingsPending,
+              onTap: () => context.push(AppRoutes.roadmap),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
-            _Row(
+            SettingsRow(
               icon: Icons.replay_outlined,
-              title: 'Replay onboarding',
+              title: context.l10n.settingsReplayOnboarding,
               onTap: () async {
                 await ref.read(onboardingControllerProvider.notifier).reset();
-                if (context.mounted) context.go('/onboarding');
+                if (context.mounted) context.go(AppRoutes.onboarding);
               },
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
           ]),
           const SizedBox(height: 16),
-          _Card(children: [
-            _Row(
+          SettingsCard(children: [
+            SettingsRow(
               icon: Icons.logout,
-              title: 'Sign out',
+              title: context.l10n.commonSignOut,
               danger: true,
               onTap: loading
                   ? null
                   : () async {
                       final ok = await ref.read(authControllerProvider.notifier).signOut();
-                      if (ok && context.mounted) context.go('/sign-in');
+                      if (ok && context.mounted) context.go(AppRoutes.signIn);
                     },
             ),
           ]),
@@ -181,7 +192,7 @@ class SettingsPage extends ConsumerWidget {
     final selected = {...prefs.defaultOffsets};
     final saved = await showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => SafeArea(
@@ -191,11 +202,11 @@ class SettingsPage extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Default reminder offsets',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                Text(context.l10n.settingsOffsetsTitle,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
                 const SizedBox(height: 4),
-                const Text('Days before a due date to notify — used for new reminders.',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                Text(context.l10n.settingsOffsetsSubtitle,
+                    style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 8,
@@ -205,17 +216,17 @@ class SettingsPage extends ConsumerWidget {
                       FilterChip(
                         selected: selected.contains(d),
                         onSelected: (v) => setState(() => v ? selected.add(d) : selected.remove(d)),
-                        label: Text('${d}d before'),
+                        label: Text(context.l10n.settingsDaysBefore(d)),
                         labelStyle: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
-                            color: selected.contains(d) ? Colors.white : AppColors.ink2),
-                        selectedColor: AppColors.chipBlue,
+                            color: selected.contains(d) ? Colors.white : context.palette.textSecondary),
+                        selectedColor: context.palette.accent,
                         checkmarkColor: Colors.white,
-                        backgroundColor: AppColors.bg,
+                        backgroundColor: context.palette.background,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(999),
-                            side: const BorderSide(color: AppColors.line)),
+                            side: BorderSide(color: context.palette.border)),
                       ),
                   ],
                 ),
@@ -223,9 +234,9 @@ class SettingsPage extends ConsumerWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: AppColors.ink),
+                    style: FilledButton.styleFrom(backgroundColor: context.palette.inverseSurface),
                     onPressed: selected.isEmpty ? null : () => Navigator.of(context).pop(true),
-                    child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(context.l10n.commonSave, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -250,13 +261,13 @@ Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPr
 
   final start = await showTimePicker(
     context: context,
-    helpText: 'Quiet hours start',
+    helpText: context.l10n.settingsQuietHoursStart,
     initialTime: toTimeOfDay(prefs.quietStart, (hour: 22, minute: 0)),
   );
   if (start == null || !context.mounted) return;
   final end = await showTimePicker(
     context: context,
-    helpText: 'Quiet hours end',
+    helpText: context.l10n.settingsQuietHoursEnd,
     initialTime: toTimeOfDay(prefs.quietEnd, (hour: 7, minute: 0)),
   );
   if (end == null || !context.mounted) return;
@@ -270,66 +281,29 @@ Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPr
   );
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
+String _appearanceName(BuildContext context, AppearanceMode mode) => switch (mode) {
+      AppearanceMode.system => context.l10n.appearanceSystem,
+      AppearanceMode.light => context.l10n.appearanceLight,
+      AppearanceMode.dark => context.l10n.appearanceDark,
+    };
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 14, 4, 8),
-      child: Text(text.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  const _Card({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row({required this.icon, required this.title, this.trailing, this.onTap, this.danger = false});
-  final IconData icon;
-  final String title;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-  final bool danger;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = danger ? AppColors.red : AppColors.ink;
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
-      trailing: trailing,
-    );
-  }
-}
-
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({required this.icon, required this.title, required this.value, required this.onChanged});
-  final IconData icon;
-  final String title;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.ink),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
-      trailing: Switch(value: value, onChanged: onChanged, activeTrackColor: AppColors.green),
-    );
-  }
+Future<void> _pickAppearance(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(appearanceProvider);
+  final picked = await showModalBottomSheet<AppearanceMode>(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final mode in AppearanceMode.values)
+            ListTile(
+              title: Text(_appearanceName(context, mode), style: const TextStyle(fontWeight: FontWeight.w600)),
+              trailing: mode == current ? Icon(Icons.check, color: context.palette.success) : null,
+              onTap: () => Navigator.of(context).pop(mode),
+            ),
+        ],
+      ),
+    ),
+  );
+  if (picked != null) await ref.read(appearanceProvider.notifier).set(picked);
 }

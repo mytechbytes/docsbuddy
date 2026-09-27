@@ -1,0 +1,682 @@
+{
+  "@@locale": "en",
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonOn": "On",
+  "commonOff": "Off",
+  "commonEmail": "Email",
+  "commonPassword": "Password",
+  "commonEmailHint": "you@example.com",
+  "commonSignIn": "Sign in",
+  "commonSignOut": "Sign out",
+  "commonSettings": "Settings",
+  "commonFamily": "Family",
+  "commonNotifications": "Notifications",
+  "commonChangePassword": "Change password",
+  "commonForgotPassword": "Forgot password?",
+  "navHome": "Home",
+  "navRooms": "Rooms",
+  "navAssets": "Assets",
+  "authSignInTitle": "Welcome back",
+  "authSignInSubtitle": "Sign in to keep your assets and reminders in sync.",
+  "authSignInCta": "Sign In",
+  "authNoAccountLead": "Don't have an account? ",
+  "authSignUpAction": "Sign up",
+  "authOrContinueWith": "or continue with",
+  "authContinueWithGoogle": "Continue with Google",
+  "authContinueWithApple": "Continue with Apple",
+  "authSignUpTitle": "Create your account",
+  "authSignUpSubtitle": "Track warranties, bills and renewals with your family — never miss a due date.",
+  "authFullName": "Full Name",
+  "authFullNameHint": "Your name",
+  "authCreateAccountCta": "Create Account",
+  "authHaveAccountLead": "Already have an account? ",
+  "authTermsLead": "I agree to the ",
+  "authTermsOfService": "Terms of Service",
+  "authTermsAnd": " and ",
+  "authPrivacyPolicy": "Privacy Policy",
+  "authForgotSendCode": "Send Verification Code",
+  "authRememberLead": "Remember it? ",
+  "authBackToSignIn": "Back to sign in",
+  "authOtpTitle": "Check your inbox",
+  "authOtpSubtitle": "We sent a 6-digit code to {email}. Enter it below to continue.",
+  "@authOtpSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpVerify": "Verify",
+  "authOtpResendIn": "Didn't receive it? Resend in ",
+  "authOtpNotReceivedLead": "Didn't receive it? ",
+  "authOtpResend": "Resend code",
+  "authResetTitle": "Set a new password",
+  "authNewPassword": "New Password",
+  "authConfirmPassword": "Confirm Password",
+  "authResetCta": "Reset Password",
+  "authPasswordMustHave": "Password must have",
+  "authRuleLength": "At least 8 characters",
+  "authRuleUpper": "One uppercase letter",
+  "authRuleNumber": "One number",
+  "authRuleSpecial": "One special character (!@#$…)",
+  "authResetDone": "Password updated. Please sign in.",
+  "settingsSectionAccount": "Account",
+  "settingsPersonalInfo": "Personal information",
+  "settingsSecurity": "Security & 2FA",
+  "settingsPush": "Push notifications",
+  "settingsEmailReminders": "Email reminders",
+  "settingsWhatsappReminders": "WhatsApp reminders",
+  "settingsDefaultOffsets": "Default offsets",
+  "settingsQuietHours": "Quiet hours",
+  "settingsQuietHoursStart": "Quiet hours start",
+  "settingsQuietHoursEnd": "Quiet hours end",
+  "settingsManageFamily": "Manage family",
+  "settingsSectionApp": "App",
+  "settingsBackend": "Backend",
+  "settingsTestNotification": "Send test notification",
+  "settingsTestNotificationSent": "Sent a test notification.",
+  "settingsNotificationsBlocked": "Notifications are blocked in system settings.",
+  "settingsPending": "What's pending",
+  "settingsReplayOnboarding": "Replay onboarding",
+  "settingsOffsetsTitle": "Default reminder offsets",
+  "settingsOffsetsSubtitle": "Days before a due date to notify — used for new reminders.",
+  "settingsDaysBefore": "{days}d before",
+  "@settingsDaysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "changePasswordTitle": "Change Password",
+  "changePasswordCurrent": "Current Password",
+  "changePasswordConfirm": "Confirm New Password",
+  "changePasswordCta": "Update Password",
+  "changePasswordDone": "Password updated.",
+  "authForgotSubtitle": "No worries. Enter your email and we'll send you a 6-digit code to reset it.",
+  "authResetSubtitle": "Choose a strong password you haven't used here before.",
+  "changePasswordNotice": "For your security, you'll be signed out of other devices after changing your password.",
+  "errorNetwork": "Can’t reach the server. Check your internet connection.",
+  "errorUnknown": "Something went wrong. Please try again.",
+  "errorNotSignedIn": "You’re signed out. Please sign in again.",
+  "errorNameRequired": "Please enter a name.",
+  "errorRoomNameRequired": "Please name the room.",
+  "errorFamilyNameRequired": "Please enter a family name.",
+  "errorInviteCodeInvalid": "Enter a valid invite code.",
+  "errorOwnerRoleLocked": "The owner's role can't be changed.",
+  "errorOwnerNotRemovable": "The owner can't be removed.",
+  "errorNoActiveFamily": "No active family.",
+  "errorFamilyRequired": "Join or create a family first.",
+  "errorJoinedFamilyUnavailable": "Could not load the joined family.",
+  "errorPhoneFormat": "Use the international format, e.g. +91 9812345678.",
+  "errorTermsRequired": "Please accept the Terms to continue.",
+  "errorPasswordRequirements": "Please meet the password requirements.",
+  "errorPasswordMismatch": "Passwords do not match.",
+  "errorNewPasswordTooShort": "New password must be at least 8 characters.",
+  "errorCurrentPasswordIncorrect": "Current password is incorrect.",
+  "errorOffsetsRequired": "Pick at least one reminder offset.",
+  "errorNoAuthenticator": "No authenticator enrolled.",
+  "errorTotpUnavailable": "Authenticator setup is unavailable right now.",
+  "errorCodeLength": "Enter the 6-digit code.",
+  "errorUploadsFailed": "{failed} of {total} uploads failed.",
+  "@errorUploadsFailed": {
+    "placeholders": {
+      "failed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "errorFilesUnavailable": "Connect a backend to open or share files.",
+  "errorAppOpenFailed": "Could not open that app.",
+  "errorNotificationsBlocked": "Notifications are blocked in system settings.",
+  "commonAdd": "Add",
+  "commonEdit": "Edit",
+  "commonDelete": "Delete",
+  "commonDone": "Done",
+  "commonNext": "Next",
+  "commonSkip": "Skip",
+  "commonOptional": "optional",
+  "commonNoMatches": "No matches.",
+  "commonCreate": "Create",
+  "commonRetry": "Retry",
+  "commonView": "View",
+  "commonShare": "Share",
+  "commonApply": "Apply",
+  "commonClear": "Clear",
+  "durationDaysShort": "{days}d",
+  "@durationDaysShort": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "kindInsurance": "Insurance",
+  "kindPollution": "Pollution",
+  "kindAmc": "AMC",
+  "kindService": "Service",
+  "kindTax": "Tax",
+  "kindWarranty": "Warranty",
+  "kindRegistration": "Registration",
+  "kindFitness": "Fitness",
+  "kindOther": "Other",
+  "groupVehicle": "Vehicle",
+  "groupAppliance": "Appliance",
+  "groupElectronics": "Electronics",
+  "groupDocument": "Document",
+  "groupOther": "Other",
+  "recurrenceNone": "None",
+  "recurrenceNever": "Never",
+  "recurrenceMonthly": "Monthly",
+  "recurrenceQuarterly": "Quarterly",
+  "recurrenceHalfYearly": "Half-yearly",
+  "recurrenceYearly": "Yearly",
+  "dueOverdueBy": "{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}",
+  "@dueOverdueBy": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "dueToday": "Due today",
+  "dueDaysLeft": "{days, plural, =1{1 day left} other{{days} days left}}",
+  "@dueDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDaysAgo": "{days}d ago",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeInDays": "{days, plural, =1{in 1 day} other{in {days} days}}",
+  "@relativeInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "pillOverdue": "Overdue",
+  "pillToday": "Today",
+  "catalogAddAsset": "Add asset",
+  "catalogEditAsset": "Edit asset",
+  "catalogDeleteAsset": "Delete asset",
+  "catalogSaveChanges": "Save changes",
+  "catalogSaveAsset": "Save asset",
+  "catalogCustomTypeTitle": "Custom appliance type",
+  "catalogCustomTypeHint": "e.g. Dishwasher, Inverter, Camera…",
+  "catalogUseType": "Use type",
+  "catalogChooseCategory": "Choose a category",
+  "catalogChooseCategorySubtitle": "What kind of thing are you adding?",
+  "catalogSelectAppliance": "Select your appliance",
+  "catalogNoPresetTypes": "No preset types for {group} — use a custom type or skip.",
+  "@catalogNoPresetTypes": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogTypesIn": "Types in {group}; pick one or add your own.",
+  "@catalogTypesIn": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogOthers": "Others",
+  "catalogDetails": "Details",
+  "catalogOnlyNameRequired": "Only the name is required.",
+  "catalogName": "Name",
+  "catalogNameHint": "e.g. Samsung 340L Fridge",
+  "catalogRoomOptional": "Room (optional)",
+  "catalogNewRoomHint": "New room name — e.g. Kitchen",
+  "catalogBrand": "Brand",
+  "catalogModelNumber": "Model number",
+  "catalogSerialNo": "Serial / registration no.",
+  "catalogSerialHint": "e.g. TN 01 AB 1234",
+  "catalogPurchaseDate": "Purchase date",
+  "catalogPurchasePrice": "Purchase price",
+  "catalogPriceHint": "e.g. 42000",
+  "catalogStore": "Store",
+  "catalogStoreHint": "e.g. Croma",
+  "catalogDetailsFor": "Details for {name}",
+  "@catalogDetailsFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogThisAppliance": "this appliance",
+  "catalogPropertyHint": "e.g. Colour",
+  "catalogValueHint": "value",
+  "catalogAddProperty": "Add property",
+  "catalogAmcDate": "AMC date",
+  "catalogInvoices": "Invoices / receipts",
+  "catalogAttachInvoice": "Attach invoice — camera, gallery or files",
+  "catalogWillAutoAdd": "Will auto-add: {services}",
+  "@catalogWillAutoAdd": {
+    "placeholders": {
+      "services": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogSelectYourAppliance": "Select Your Appliance",
+  "catalogSearchAppliance": "Search Your Appliance",
+  "catalogNoMatchingAppliance": "No matching appliance — use \"Something else\" below.",
+  "catalogSomethingElse": "Something else",
+  "catalogAllReminders": "All Reminders · {count}",
+  "@catalogAllReminders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogNoRemindersForAsset": "No reminders for this asset yet.",
+  "catalogMarkDoneTitle": "Mark as done?",
+  "catalogMarkDoneOneOff": "“{label}” will be completed and removed from upcoming reminders.",
+  "@catalogMarkDoneOneOff": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogMarkDoneRecurring": "“{label}” will be completed and its next due date scheduled ({recurrence}).",
+  "@catalogMarkDoneRecurring": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "recurrence": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogMarkDone": "Mark done",
+  "catalogMarkedDone": "{label} marked as done.",
+  "@catalogMarkedDone": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogDoneRescheduled": "{label} done — next due date scheduled.",
+  "@catalogDoneRescheduled": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogDeleteReminderTitle": "Delete reminder?",
+  "catalogDeleteReminderMessage": "“{label}” and its scheduled notifications will be removed.",
+  "@catalogDeleteReminderMessage": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogDeleteAssetTitle": "Delete asset?",
+  "catalogDeleteAssetMessage": "“{name}” and all its reminders and documents will be removed. This can't be undone.",
+  "@catalogDeleteAssetMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogNoAssets": "No assets yet. Tap “Add asset”.",
+  "catalogRoomNotFound": "Room not found.",
+  "catalogAddRoomPhoto": "Add a room photo",
+  "catalogRoomSummaryLead": "The heart of your home, managing ",
+  "catalogApplianceCount": "{count, plural, =1{1 appliance} other{{count} appliances}}",
+  "@catalogApplianceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogAppliances": "Appliances",
+  "catalogNothingRegistered": "Nothing registered here yet.",
+  "catalogAddHere": "Add here",
+  "catalogRenameRoom": "Rename room",
+  "catalogSince": "since {date}",
+  "@catalogSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogNoRemindersOnAppliance": "No reminders on this appliance yet.",
+  "catalogCreateRoom": "Create room",
+  "catalogNoRooms": "No rooms yet. Add your first room above.",
+  "catalogAddRoomPhotoLong": "Add a room photo — camera or device",
+  "catalogRoomNameHint": "Room name — e.g. Kitchen",
+  "catalogAddNewRoom": "Add a new room",
+  "catalogRegisteredCount": "{count} Registered",
+  "@catalogRegisteredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogSearchHint": "Search assets, services, policy numbers…",
+  "catalogSearchEmpty": "Type to search your assets and reminders.",
+  "catalogReminders": "Reminders",
+  "catalogDue": "Due",
+  "catalogOneOff": "One-off",
+  "catalogReminds": "Reminds",
+  "catalogProvider": "Provider",
+  "catalogPolicyContract": "Policy / contract",
+  "catalogCost": "Cost",
+  "catalogNotes": "Notes",
+  "catalogServiceDocuments": "DOCUMENTS FOR THIS SERVICE",
+  "catalogRemindersTracked": "{count, plural, =1{1 reminder tracked} other{{count} reminders tracked}}",
+  "@catalogRemindersTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogHideDetails": "Hide details",
+  "catalogShowDetails": "Show all details",
+  "catalogType": "Type",
+  "catalogCategory": "Category",
+  "catalogRoom": "Room",
+  "catalogModel": "Model",
+  "catalogSerialShort": "Serial / reg. no.",
+  "catalogRemindersTrackedLabel": "Reminders tracked",
+  "catalogNextDue": "NEXT DUE",
+  "catalogRemindsOffsets": "Reminds {offsets}",
+  "@catalogRemindsOffsets": {
+    "placeholders": {
+      "offsets": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogMarkAsDone": "Mark as done",
+  "catalogNoRoomHint": "No room — you can set one later",
+  "catalogNoRoom": "No room",
+  "catalogNewRoom": "New room…",
+  "catalogAddPhoto": "Add photo",
+  "dashboardFilterByType": "Filter by type",
+  "dashboardUpcoming": "Upcoming Expirations",
+  "dashboardGroupBy": "Group by",
+  "dashboardGroupNone": "Group by: None",
+  "dashboardGroupAsset": "Group by: Asset",
+  "dashboardEmpty": "No reminders yet. Add an asset to get started.",
+  "dashboardNoMatches": "Nothing matches the selected types.",
+  "dashboardAsset": "Asset",
+  "dashboardTotalAppliances": "Total Active Appliances",
+  "filterActive": "Active Services",
+  "filterSecured": "Secured",
+  "filterSoon": "Expiring Soon",
+  "filterExpired": "Expired",
+  "docsTitle": "DOCUMENTS",
+  "docsAdd": "+ Add",
+  "docsEmpty": "No documents yet. Attach invoices, warranties or photos.",
+  "docsImageLoadFailed": "Could not load image",
+  "docKindInvoice": "Invoice",
+  "docKindWarranty": "Warranty",
+  "docKindInsurance": "Insurance",
+  "docKindManual": "Manual",
+  "docKindPhoto": "Photo",
+  "docKindOther": "Other",
+  "familyCreateTitle": "Create a family",
+  "familyNameHint": "e.g. Kumar Family",
+  "familyJoinTitle": "Join a family",
+  "familyInviteCodeHint": "Invite code (e.g. AB12CD34)",
+  "familyJoin": "Join",
+  "familyJoined": "Joined! Family rooms, assets and reminders are syncing.",
+  "familyChangeRoleTitle": "Change role — {name}",
+  "@familyChangeRoleTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyRoleAdminHint": "Manage members, assets and invites",
+  "familyRoleViewerHint": "Read-only access",
+  "familyRoleMemberHint": "Add and manage own assets",
+  "familyRemoveTitle": "Remove member?",
+  "familyRemoveMessage": "{name} will lose access to this family’s assets and reminders.",
+  "@familyRemoveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyRemove": "Remove",
+  "familyLeaveTitle": "Leave family?",
+  "familyLeaveMessage": "You will stop receiving this family’s reminders.",
+  "familyLeave": "Leave",
+  "familyEmptyTitle": "You're not in a family yet",
+  "familyEmptyBody": "Create a family to share assets and reminders, or join one with an invite code.",
+  "familyJoinWithCode": "Join with a code",
+  "familyMembers": "MEMBERS",
+  "familyInviteMember": "Invite member",
+  "familyLeaveFamily": "Leave family",
+  "familyCall": "Call",
+  "familyWhatsapp": "WhatsApp",
+  "familyChangeRole": "Change role",
+  "familyRemoveFromFamily": "Remove from family",
+  "familyInviteTitle": "Invite a member",
+  "familyInviteBody": "Share this code. They can join as {role}. Expires in 7 days.",
+  "@familyInviteBody": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "familyCopyCode": "Copy code",
+  "familyCodeCopied": "Invite code copied",
+  "roleOwner": "Owner",
+  "roleAdmin": "Admin",
+  "roleMember": "Member",
+  "roleViewer": "Viewer",
+  "memberCount": "{count, plural, =1{1 member} other{{count} members}}",
+  "@memberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileTitle": "Profile",
+  "profileVerified": "Verified",
+  "profileEditInfo": "Edit personal info",
+  "profileNotificationPrefs": "Notification preferences",
+  "profileManagedInSettings": "Managed in Settings",
+  "profileDisplayName": "Display name",
+  "profilePhone": "Phone (for WhatsApp reminders)",
+  "profileDocuments": "Documents",
+  "profileInvite": "Invite",
+  "reminderAddTitle": "Add Reminder",
+  "reminderEditTitle": "Edit Reminder",
+  "reminderFor": "For ",
+  "reminderSaveChanges": "Save Changes",
+  "reminderSave": "Save Reminder",
+  "reminderTypeTitle": "Reminder type",
+  "reminderTypeSubtitle": "What should we track?",
+  "reminderDetailsTitle": "{kind} details",
+  "@reminderDetailsTitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderDetailsSubtitle": "When is it due?",
+  "reminderLabel": "Label",
+  "reminderDueDate": "Due Date",
+  "reminderRepeats": "Repeats",
+  "reminderServiceDetails": "Service details (optional)",
+  "reminderProviderHint": "e.g. Acko",
+  "reminderPolicyNo": "Policy / contract no.",
+  "reminderCostHint": "e.g. 4200",
+  "reminderNotifyTitle": "Notification settings",
+  "reminderNotifySubtitle": "Push notification & reminder to all family members.",
+  "reminderNotifyMe": "Notify me",
+  "reminderNoOffsets": "No reminders will fire for this service — pick at least one offset to be notified.",
+  "reminderOffsetsSummary": "You'll be reminded {offsets} before the due date, on your enabled channels (see Settings).",
+  "@reminderOffsetsSummary": {
+    "placeholders": {
+      "offsets": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderAttachTitle": "Attachments",
+  "reminderAttachSubtitle": "Policy PDF, receipt, photos… attach now or later from the asset page.",
+  "reminderAttachDocs": "Attach documents — camera, gallery or files",
+  "remindersEmpty": "Nothing here right now.",
+  "inboxAllCaughtUp": "You're all caught up 🎉",
+  "inboxOverdue": "Overdue",
+  "inboxComingUp": "Coming up",
+  "inboxDueIn": "{days, plural, =1{Due in 1 day — {date}} other{Due in {days} days — {date}}}",
+  "@inboxDueIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "lockLocked": "Locked",
+  "lockTapToUnlock": "Tap to unlock",
+  "mfaTitle": "Two-factor verification",
+  "mfaSubtitle": "Enter the 6-digit code from your authenticator app.",
+  "mfaCodeLabel": "6-digit code",
+  "securityTitle": "Security",
+  "securityBiometricSection": "Biometric login",
+  "securityUnlockBiometrics": "Unlock with biometrics",
+  "securityNoBiometrics": "No biometrics available on this device",
+  "securityTwoFactorSection": "Two-factor authentication",
+  "security2faEnabled": "2FA is enabled",
+  "securityEnable2fa": "Enable 2FA",
+  "securityAuthenticatorApp": "Authenticator app",
+  "securityAuthenticatorSince": "Authenticator app · since {date}",
+  "@securityAuthenticatorSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "securityAuthenticatorHint": "Use Google Authenticator, Authy, 1Password, etc.",
+  "securityMoreSection": "More",
+  "securityAppLock": "App lock",
+  "securityAppLockHint": "Require unlock when reopening the app",
+  "securityAutoLock": "Auto-lock after",
+  "securityMinutesShort": "{minutes} min",
+  "@securityMinutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "securityMinutes": "{minutes, plural, =1{1 minute} other{{minutes} minutes}}",
+  "@securityMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "securityActiveSessions": "Active sessions",
+  "securityDisable2faTitle": "Disable 2FA?",
+  "securityDisable2faMessage": "Your account will no longer require an authenticator code to sign in.",
+  "securityDisable": "Disable",
+  "securityCurrentSession": "Current session",
+  "securitySignedInAt": "Signed in {date}",
+  "@securitySignedInAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "securityThisDevice": "This device",
+  "securitySignOutOthers": "Sign out other devices",
+  "securityOthersSignedOut": "Other devices signed out.",
+  "securitySetupTitle": "Set up authenticator app",
+  "securitySetupBody": "Scan the QR with Google Authenticator, Authy, 1Password, etc., then enter the 6-digit code.",
+  "securityKeyCopied": "Key copied.",
+  "securityCopyKey": "Copy key",
+  "securityVerifyEnable": "Verify & enable",
+  "securityAvailable": "Available: {kinds}",
+  "@securityAvailable": {
+    "placeholders": {
+      "kinds": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricFace": "Face ID",
+  "biometricFingerprint": "Fingerprint",
+  "biometricDevice": "Device biometrics",
+  "onboardingEyebrow1": "Welcome",
+  "onboardingTitle1": "Never miss a renewal again",
+  "onboardingBody1": "DocsBuddy keeps track of warranties, insurance, bills and dates — so the deadlines don’t sneak up on you.",
+  "onboardingEyebrow2": "Organise",
+  "onboardingTitle2": "All your assets in one place",
+  "onboardingBody2": "Vehicles, appliances, electronics, even documents — organised by room and category.",
+  "onboardingEyebrow3": "Stay ahead",
+  "onboardingTitle3": "Smart reminders, weeks ahead",
+  "onboardingBody3": "Configure 60 / 30 / 7 / 1-day alerts. Push, email or WhatsApp — your choice.",
+  "onboardingEyebrow4": "Together",
+  "onboardingTitle4": "Keep the whole family in sync",
+  "onboardingBody4": "Invite up to 8 members. Everyone gets reminded, anyone can update — no more single point of failure.",
+  "onboardingGetStarted": "Get Started",
+  "onboardingHaveAccount": "I already have an account",
+  "onboardingAlreadyWithUs": "Already with us? ",
+  "commonBack": "Back",
+  "illoActiveInvoices": "Active Invoices",
+  "illoKitchen": "Kitchen",
+  "illoSmartphone": "Smartphone",
+  "illoVehicles": "Vehicles",
+  "illoPollutionDue": "Pollution due",
+  "illoSharedWithFamily": "Shared with family",
+  "illoBikeSample": "{date} · Bike",
+  "@illoBikeSample": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAppearance": "Appearance",
+  "appearanceSystem": "System",
+  "appearanceLight": "Light",
+  "appearanceDark": "Dark"
+}

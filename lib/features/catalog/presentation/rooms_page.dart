@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/media/media_picker.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/rooms_controller.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Design screen 02 — Rooms: "Add a new room" composer + photo cards with
 /// registered-asset counts, backed by `public.locations`.
@@ -44,7 +46,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
   Future<void> _openAddRoomSheet() => showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
-        backgroundColor: AppColors.paper,
+        backgroundColor: context.palette.surface,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
         builder: (context) => const _AddRoomSheet(),
       );
@@ -53,23 +55,23 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
   Widget build(BuildContext context) {
     final locations = ref.watch(locationsProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
         titleSpacing: 20,
         title: const Align(alignment: Alignment.centerLeft, child: DbLogo(size: 20)),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _openAddRoomSheet,
-        backgroundColor: AppColors.ink,
-        foregroundColor: Colors.white,
-        tooltip: 'Create room',
+        backgroundColor: context.palette.inverseSurface,
+        foregroundColor: context.palette.onInverse,
+        tooltip: context.l10n.catalogCreateRoom,
         child: const Icon(Icons.add),
       ),
       body: locations.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (list) {
           return Column(
             children: [
@@ -85,11 +87,11 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                   child: list.isEmpty
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          children: const [
+                          children: [
                             SizedBox(height: 140),
                             Center(
-                                child: Text('No rooms yet. Add your first room above.',
-                                    style: TextStyle(color: AppColors.muted))),
+                                child: Text(context.l10n.catalogNoRooms,
+                                    style: TextStyle(color: context.palette.textMuted))),
                           ],
                         )
                       // Long-press-drag a card to reorder rooms.
@@ -150,8 +152,8 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Create room',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+          Text(context.l10n.catalogCreateRoom,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: context.palette.text)),
           const SizedBox(height: 16),
           InkWell(
             borderRadius: BorderRadius.circular(16),
@@ -160,20 +162,20 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
               width: double.infinity,
               height: 120,
               decoration: BoxDecoration(
-                color: AppColors.bg,
+                color: context.palette.background,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+                border: Border.all(color: context.palette.fieldBorder, width: 1.5),
               ),
               clipBehavior: Clip.antiAlias,
               child: _photo != null
                   ? Image.memory(_photo!.bytes, fit: BoxFit.cover)
-                  : const Column(
+                  : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
+                        Icon(Icons.add_a_photo_outlined, color: context.palette.textMuted, size: 26),
                         SizedBox(height: 6),
-                        Text('Add a room photo — camera or device',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                        Text(context.l10n.catalogAddRoomPhotoLong,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.palette.textMuted)),
                       ],
                     ),
             ),
@@ -184,26 +186,26 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
             autofocus: true,
             textCapitalization: TextCapitalization.words,
             onSubmitted: (_) => _create(),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text),
             decoration: InputDecoration(
               isDense: true,
               filled: true,
-              fillColor: AppColors.bg,
-              hintText: 'Room name — e.g. Kitchen',
-              hintStyle: const TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
+              fillColor: context.palette.background,
+              hintText: context.l10n.catalogRoomNameHint,
+              hintStyle: TextStyle(color: context.palette.placeholder, fontWeight: FontWeight.w400),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.fieldBorder, width: 1.5),
+                borderSide: BorderSide(color: context.palette.fieldBorder, width: 1.5),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.chipBlue, width: 1.5),
+                borderSide: BorderSide(color: context.palette.accent, width: 1.5),
               ),
             ),
           ),
           const SizedBox(height: 18),
-          PrimaryButton(label: 'Create room', isLoading: _busy, onPressed: _create),
+          PrimaryButton(label: context.l10n.catalogCreateRoom, isLoading: _busy, onPressed: _create),
         ],
       ),
     );
@@ -222,18 +224,18 @@ class _AddRoomComposer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 4, 8, 4),
       decoration: BoxDecoration(
-          color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+          color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
       child: Row(
         children: [
           Expanded(
             child: TextField(
               controller: controller,
               onSubmitted: (_) => onSubmit(),
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
-              decoration: const InputDecoration(
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text),
+              decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'Add a new room',
-                hintStyle: TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
+                hintText: context.l10n.catalogAddNewRoom,
+                hintStyle: TextStyle(color: context.palette.placeholder, fontWeight: FontWeight.w400),
               ),
             ),
           ),
@@ -244,7 +246,7 @@ class _AddRoomComposer extends StatelessWidget {
                 )
               : IconButton(
                   onPressed: onSubmit,
-                  icon: const Icon(Icons.add_circle_outline, color: AppColors.ink2),
+                  icon: Icon(Icons.add_circle_outline, color: context.palette.textSecondary),
                 ),
         ],
       ),
@@ -260,11 +262,11 @@ class _RoomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () => context.push('/room/${location.id}'),
+      onTap: () => context.push(AppRoutes.room(location.id)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
-            color: AppColors.paper, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.line)),
+            color: context.palette.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: context.palette.border)),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,8 +279,8 @@ class _RoomCard extends StatelessWidget {
               fallback: Container(
                 width: double.infinity,
                 height: 140,
-                color: const Color(0xFFEEF3FB),
-                child: const Icon(Icons.meeting_room_outlined, size: 40, color: AppColors.chipBlue),
+                color: context.palette.accentSoft,
+                child: Icon(Icons.meeting_room_outlined, size: 40, color: context.palette.accent),
               ),
             ),
             Padding(
@@ -292,10 +294,10 @@ class _RoomCard extends StatelessWidget {
                         Text(location.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
                         const SizedBox(height: 2),
-                        Text('${location.assetCount} Registered',
-                            style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                        Text(context.l10n.catalogRegisteredCount(location.assetCount),
+                            style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                       ],
                     ),
                   ),
@@ -303,10 +305,10 @@ class _RoomCard extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                        color: AppColors.bg,
+                        color: context.palette.background,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.line)),
-                    child: const Icon(Icons.chevron_right, size: 18, color: AppColors.ink2),
+                        border: Border.all(color: context.palette.border)),
+                    child: Icon(Icons.chevron_right, size: 18, color: context.palette.textSecondary),
                   ),
                 ],
               ),

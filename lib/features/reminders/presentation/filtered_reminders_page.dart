@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
-import '../application/catalog_providers.dart';
 import '../domain/reminder_filters.dart';
-import '../domain/catalog_models.dart';
-import 'widgets/catalog_widgets.dart';
+import '../../catalog/domain/catalog_models.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
+import '../../../routing/app_routes.dart';
+import '../application/reminder_providers.dart';
+import '../../../core/l10n/l10n.dart';
+import 'reminder_names.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Deep-link target of the dashboard stat cards' "View ›" — the reminder
 /// subset a card counts (e.g. Expired → everything overdue).
@@ -20,19 +22,19 @@ class FilteredRemindersPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final reminders = ref.watch(filteredRemindersProvider(filter));
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
-        title: Text(filter.title, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        iconTheme: IconThemeData(color: context.palette.text),
+        title: Text(filter.displayName(context), style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: reminders.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (filtered) {
           if (filtered.isEmpty) {
-            return const Center(child: Text('Nothing here right now.', style: TextStyle(color: AppColors.muted)));
+            return Center(child: Text(context.l10n.remindersEmpty, style: TextStyle(color: context.palette.textMuted)));
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -53,12 +55,12 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push('/asset/${reminder.assetId}'),
+      onTap: () => context.push(AppRoutes.asset(reminder.assetId)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+            color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
         child: Row(
           children: [
             AssetThumb(
@@ -74,12 +76,12 @@ class _Row extends StatelessWidget {
                   Text(reminder.assetName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text)),
                   const SizedBox(height: 3),
-                  Text('${reminder.label} · ${DateFormat('d MMM yyyy').format(reminder.dueDate)}',
+                  Text('${reminder.label} · ${context.formatDate(reminder.dueDate)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                      style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
                 ],
               ),
             ),

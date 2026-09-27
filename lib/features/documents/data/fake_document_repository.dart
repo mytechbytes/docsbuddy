@@ -9,7 +9,7 @@ class FakeDocumentRepository implements DocumentRepository {
   final _byAsset = <String, List<DocumentMeta>>{};
   int _seq = 0;
 
-  static const _noStorage = UnavailableFailure('Connect Supabase to open or share files.');
+  static const _noStorage = UnavailableFailure('Connect Supabase to open or share files.', reason: FailureReason.filesUnavailable);
 
   Future<void> _delay() => Future<void>.delayed(const Duration(milliseconds: 400));
 

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_failure.dart';
+import '../../../core/logging/app_logger.dart';
 import '../../../core/media/picked_media.dart';
 import '../domain/document_models.dart';
 import '../domain/document_repository.dart';
@@ -28,7 +29,8 @@ final serviceDocumentsProvider =
 final documentUrlProvider = FutureProvider.family<String?, DocumentMeta>((ref, doc) async {
   try {
     return await ref.watch(documentRepositoryProvider).viewUrl(doc);
-  } catch (_) {
+  } catch (e) {
+    ref.read(appLoggerProvider).info('No preview URL for ${doc.id}: $e');
     return null;
   }
 });
@@ -43,6 +45,7 @@ class AssetDocumentsController {
   final String assetId;
 
   DocumentRepository get _repo => _ref.read(documentRepositoryProvider);
+  AppLogger get _logger => _ref.read(appLoggerProvider);
 
   /// Uploads every file, continuing past failures; returns how many failed.
   /// [kind] defaults to photo/other by file type; [reminderId] scopes the
@@ -59,7 +62,8 @@ class AssetDocumentsController {
           mimeType: f.docMime,
           kind: kind ?? kindForFileName(f.name),
         );
-      } catch (_) {
+      } catch (e, st) {
+        _logger.warning('Upload of ${f.name} failed', error: e, stackTrace: st);
         failed++;
       }
     }
@@ -71,7 +75,10 @@ class AssetDocumentsController {
   /// failure as a [ServerFailure].
   Future<void> attach(List<PickedMedia> files) async {
     final failed = await upload(files);
-    if (failed > 0) throw ServerFailure('$failed of ${files.length} uploads failed.');
+    if (failed > 0) {
+      throw ServerFailure('$failed of ${files.length} uploads failed.',
+          reason: FailureReason.uploadsFailed, args: [failed, files.length]);
+    }
   }
 
   Future<void> delete(DocumentMeta doc) async {

@@ -36,7 +36,7 @@ class FakeFamilyRepository implements FamilyRepository {
     await _delay();
     final i = _members.indexWhere((m) => m.userId == userId);
     if (i < 0) throw const ValidationFailure('Member not found.');
-    if (_members[i].role == FamilyRole.owner) throw const ValidationFailure("The owner's role can't be changed.");
+    if (_members[i].role == FamilyRole.owner) throw const ValidationFailure("The owner's role can't be changed.", reason: FailureReason.ownerRoleLocked);
     _members[i] = _members[i].copyWith(role: role);
   }
 
@@ -45,7 +45,7 @@ class FakeFamilyRepository implements FamilyRepository {
     await _delay();
     final target = _members.where((m) => m.userId == userId).firstOrNull;
     if (target == null) throw const ValidationFailure('Member not found.');
-    if (target.role == FamilyRole.owner) throw const ValidationFailure("The owner can't be removed.");
+    if (target.role == FamilyRole.owner) throw const ValidationFailure("The owner can't be removed.", reason: FailureReason.ownerNotRemovable);
     _members.removeWhere((m) => m.userId == userId);
   }
 
@@ -58,7 +58,7 @@ class FakeFamilyRepository implements FamilyRepository {
   @override
   Future<Family> createFamily(String name) async {
     await _delay();
-    if (name.trim().isEmpty) throw const ValidationFailure('Please enter a family name.');
+    if (name.trim().isEmpty) throw const ValidationFailure('Please enter a family name.', reason: FailureReason.familyNameRequired);
     final family = Family(id: 'fam_${_rng.nextInt(99999)}', name: name.trim(), ownerId: 'me');
     _family = family;
     _members
@@ -76,7 +76,7 @@ class FakeFamilyRepository implements FamilyRepository {
   @override
   Future<Family> acceptInvite(String code) async {
     await _delay();
-    if (code.trim().length < 6) throw const ValidationFailure('Enter a valid invite code.');
+    if (code.trim().length < 6) throw const ValidationFailure('Enter a valid invite code.', reason: FailureReason.inviteCodeInvalid);
     // Demo behaviour: joining lands you in a shared family with an existing owner.
     _family ??= const Family(id: 'fam_shared', name: 'Shared Home', ownerId: 'owner');
     if (_members.isEmpty) {

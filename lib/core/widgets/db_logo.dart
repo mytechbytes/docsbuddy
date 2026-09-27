@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 /// Brand mark + "Docs**Buddy**" wordmark — `DBLogo` in the design handoff.
 /// The mark is the provided gradient-Z logo (`assets/icon/source_logo.png`),
@@ -23,9 +23,9 @@ class DbLogo extends StatelessWidget {
           fontSize: size,
           letterSpacing: -0.02 * size,
         ),
-        children: const [
-          TextSpan(text: 'Docs', style: TextStyle(color: AppColors.ink)),
-          TextSpan(text: 'Buddy', style: TextStyle(color: AppColors.muted)),
+        children: [
+          TextSpan(text: 'Docs', style: TextStyle(color: context.palette.text)),
+          TextSpan(text: 'Buddy', style: TextStyle(color: context.palette.textMuted)),
         ],
       ),
     );

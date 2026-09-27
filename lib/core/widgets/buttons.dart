@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 /// Filled dark CTA — matches `PrimaryBtn` in the design handoff.
 class PrimaryButton extends StatelessWidget {
@@ -25,10 +25,10 @@ class PrimaryButton extends StatelessWidget {
       child: FilledButton(
         onPressed: isLoading ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.ink,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.ink,
-          disabledForegroundColor: Colors.white,
+          backgroundColor: context.palette.inverseSurface,
+          foregroundColor: context.palette.onInverse,
+          disabledBackgroundColor: context.palette.inverseSurface,
+          disabledForegroundColor: context.palette.onInverse,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -39,10 +39,10 @@ class PrimaryButton extends StatelessWidget {
           ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 22,
                 height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
+                child: CircularProgressIndicator(strokeWidth: 2.4, color: context.palette.onInverse),
               )
             : Text(label),
       ),
@@ -65,9 +65,9 @@ class GhostButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.ink,
-          backgroundColor: AppColors.paper,
-          side: const BorderSide(color: AppColors.line),
+          foregroundColor: context.palette.text,
+          backgroundColor: context.palette.surface,
+          side: BorderSide(color: context.palette.border),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),

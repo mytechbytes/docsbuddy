@@ -28,7 +28,7 @@ class NotificationPrefsController extends AsyncNotifier<NotificationPrefs> {
       _save(_current.withChannel(channel, enabled: enabled));
 
   Future<void> setDefaultOffsets(Set<int> offsets) {
-    if (offsets.isEmpty) throw const ValidationFailure('Pick at least one reminder offset.');
+    if (offsets.isEmpty) throw const ValidationFailure('Pick at least one reminder offset.', reason: FailureReason.offsetsRequired);
     return _save(_current.copyWith(defaultOffsets: offsets.toList()..sort((a, b) => b.compareTo(a))));
   }
 

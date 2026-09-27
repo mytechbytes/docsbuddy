@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/media/media_picker.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../documents/presentation/asset_documents_section.dart';
-import '../../profile/application/profile_providers.dart';
 import '../application/asset_actions.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'service_detail_sheet.dart';
+import '../../../routing/app_routes.dart';
+import 'widgets/asset_detail_widgets.dart';
+import '../../profile/presentation/widgets/profile_avatar_button.dart';
+import '../../../core/l10n/l10n.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../core/theme/app_theme.dart';
 
 class AssetDetailPage extends ConsumerWidget {
   const AssetDetailPage({super.key, required this.assetId});
@@ -27,29 +29,29 @@ class AssetDetailPage extends ConsumerWidget {
     final next = services.value?.next;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: context.palette.text),
         title: const DbLogo(size: 18),
         actions: [
           IconButton(
-            onPressed: () => context.push('/notifications'),
-            icon: const Icon(Icons.notifications_none, color: AppColors.ink2, size: 22),
+            onPressed: () => context.push(AppRoutes.notifications),
+            icon: Icon(Icons.notifications_none, color: context.palette.textSecondary, size: 22),
           ),
-          const _Avatar(),
+          const ProfileAvatarButton(size: 30),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppColors.ink2, size: 22),
+            icon: Icon(Icons.more_vert, color: context.palette.textSecondary, size: 22),
             onSelected: (v) {
               final a = asset.value;
               if (a == null) return;
               v == 'edit' ? _editAsset(context, ref, a) : _deleteAsset(context, ref, a);
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'edit', child: Text('Edit asset')),
-              PopupMenuItem(value: 'delete', child: Text('Delete asset', style: TextStyle(color: AppColors.red))),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'edit', child: Text(context.l10n.catalogEditAsset)),
+              PopupMenuItem(value: 'delete', child: Text(context.l10n.catalogDeleteAsset, style: TextStyle(color: context.palette.danger))),
             ],
           ),
           const SizedBox(width: 8),
@@ -57,33 +59,33 @@ class AssetDetailPage extends ConsumerWidget {
       ),
       body: asset.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(failureMessage(e))),
+        error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (a) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           children: [
-            _InfoCard(asset: a, reminderCount: list.length, onChangePhoto: () => _changePhoto(context, ref, a)),
+            AssetInfoCard(asset: a, reminderCount: list.length, onChangePhoto: () => _changePhoto(context, ref, a)),
             const SizedBox(height: 16),
             if (next != null) ...[
-              _NextDueBanner(reminder: next),
+              NextDueBanner(reminder: next),
               const SizedBox(height: 20),
             ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('All Reminders · ${list.length}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                _AddPill(onTap: () => _addReminder(context, ref, a)),
+                Text(context.l10n.catalogAllReminders(list.length),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
+                AddPill(onTap: () => _addReminder(context, ref, a)),
               ],
             ),
             const SizedBox(height: 12),
             services.when(
               loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text(failureMessage(e)),
+              error: (e, _) => Text(context.failureText(e)),
               data: (s) => s.all.isEmpty
-                  ? const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No reminders for this asset yet.', style: TextStyle(color: AppColors.muted))))
+                  ? Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text(context.l10n.catalogNoRemindersForAsset, style: TextStyle(color: context.palette.textMuted))))
                   : Column(children: [
                       for (final r in s.all)
-                        _ReminderRow(
+                        ServiceRow(
                           reminder: r,
                           onTap: () => _openService(context, ref, r),
                           onAction: (action) => _handleServiceAction(context, ref, r, action),
@@ -111,23 +113,23 @@ class AssetDetailPage extends ConsumerWidget {
   Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
     final confirmed = await _confirm(
       context,
-      title: 'Mark as done?',
+      title: context.l10n.catalogMarkDoneTitle,
       message: r.isOneOff
-          ? '“${r.label}” will be completed and removed from upcoming reminders.'
-          : '“${r.label}” will be completed and its next due date scheduled (${r.recurrence.label.toLowerCase()}).',
-      action: 'Mark done',
-      color: AppColors.green,
+          ? context.l10n.catalogMarkDoneOneOff(r.label)
+          : context.l10n.catalogMarkDoneRecurring(r.label, r.recurrence.displayName(context).toLowerCase()),
+      action: context.l10n.catalogMarkDone,
+      color: context.palette.success,
     );
     if (!confirmed || !context.mounted) return;
     await runAction(
       context,
       () => _actions(ref).completeService(r),
-      success: r.isOneOff ? '${r.label} marked as done.' : '${r.label} done — next due date scheduled.',
+      success: r.isOneOff ? context.l10n.catalogMarkedDone(r.label) : context.l10n.catalogDoneRescheduled(r.label),
     );
   }
 
   Future<void> _addReminder(BuildContext context, WidgetRef ref, Asset asset) async {
-    await context.push('/asset/${asset.id}/add-reminder');
+    await context.pushAddReminder(asset.id);
   }
 
   Future<void> _openService(BuildContext context, WidgetRef ref, Reminder r) async {
@@ -140,32 +142,32 @@ class AssetDetailPage extends ConsumerWidget {
   Future<void> _handleServiceAction(BuildContext context, WidgetRef ref, Reminder r, ServiceAction action) async {
     switch (action) {
       case ServiceAction.edit:
-        await context.push('/asset/$assetId/add-reminder', extra: r);
+        await context.pushEditReminder(r);
       case ServiceAction.complete:
         await _complete(context, ref, r);
       case ServiceAction.delete:
         final confirmed = await _confirm(
           context,
-          title: 'Delete reminder?',
-          message: '“${r.label}” and its scheduled notifications will be removed.',
-          action: 'Delete',
-          color: AppColors.red,
+          title: context.l10n.catalogDeleteReminderTitle,
+          message: context.l10n.catalogDeleteReminderMessage(r.label),
+          action: context.l10n.commonDelete,
+          color: context.palette.danger,
         );
         if (confirmed && context.mounted) await runAction(context, () => _actions(ref).deleteService(r));
     }
   }
 
   Future<void> _editAsset(BuildContext context, WidgetRef ref, Asset asset) async {
-    await context.push('/asset-edit', extra: asset);
+    await context.pushEditAsset(asset);
   }
 
   Future<void> _deleteAsset(BuildContext context, WidgetRef ref, Asset asset) async {
     final confirmed = await _confirm(
       context,
-      title: 'Delete asset?',
-      message: '“${asset.name}” and all its reminders and documents will be removed. This can\'t be undone.',
-      action: 'Delete',
-      color: AppColors.red,
+      title: context.l10n.catalogDeleteAssetTitle,
+      message: context.l10n.catalogDeleteAssetMessage(asset.name),
+      action: context.l10n.commonDelete,
+      color: context.palette.danger,
     );
     if (!confirmed || !context.mounted) return;
     final ok = await runAction(context, () => _actions(ref).deleteAsset());
@@ -182,11 +184,11 @@ class AssetDetailPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.paper,
+        backgroundColor: context.palette.surface,
         title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.l10n.commonCancel)),
           TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(action, style: TextStyle(color: color, fontWeight: FontWeight.w700))),
@@ -196,335 +198,3 @@ class AssetDetailPage extends ConsumerWidget {
     return confirmed == true;
   }
 }
-
-/// Real `users.avatar_url`; tap opens Profile.
-class _Avatar extends ConsumerWidget {
-  const _Avatar();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileProvider).value;
-    return InkWell(
-      customBorder: const CircleBorder(),
-      onTap: () => context.push('/profile'),
-      child: AssetThumb(
-        imageRef: profile?.avatarUrl,
-        size: 30,
-        radius: 15,
-        fallback: Container(
-          width: 30,
-          height: 30,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(colors: [Color(0xFFF1C27D), Color(0xFFD68B5C)]),
-          ),
-          alignment: Alignment.center,
-          child: profile == null
-              ? const Icon(Icons.person, color: Colors.white, size: 17)
-              : Text(profile.initial,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
-        ),
-      ),
-    );
-  }
-}
-
-class _AddPill extends StatelessWidget {
-  const _AddPill({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(999)),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add, size: 16, color: Colors.white),
-            SizedBox(width: 4),
-            Text('Add', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatefulWidget {
-  const _InfoCard({required this.asset, required this.reminderCount, required this.onChangePhoto});
-  final Asset asset;
-  final int reminderCount;
-  final VoidCallback onChangePhoto;
-
-  @override
-  State<_InfoCard> createState() => _InfoCardState();
-}
-
-class _InfoCardState extends State<_InfoCard> {
-  bool _expanded = false;
-
-  Asset get asset => widget.asset;
-  int get reminderCount => widget.reminderCount;
-  VoidCallback get onChangePhoto => widget.onChangePhoto;
-
-  @override
-  Widget build(BuildContext context) {
-    final meta = [
-      '${plural(reminderCount, 'reminder')} tracked',
-      if (asset.brand != null) asset.brand,
-      if (asset.model != null) asset.model,
-      if (asset.serialNo != null) asset.serialNo,
-    ].whereType<String>().join(' · ');
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.line)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: onChangePhoto,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                AssetThumb(
-                  imageRef: asset.imageUrl,
-                  size: 64,
-                  radius: 16,
-                  fallback: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(16)),
-                    child: Icon(asset.category.icon, color: AppColors.ink2, size: 30),
-                  ),
-                ),
-                Positioned(
-                  right: -4,
-                  bottom: -4,
-                  child: Container(
-                    width: 22,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      color: AppColors.ink,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.paper, width: 2),
-                    ),
-                    child: const Icon(Icons.photo_camera_outlined, size: 11, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(asset.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.2)),
-                const SizedBox(height: 6),
-                Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.typeLabel)),
-                const SizedBox(height: 8),
-                Text(meta, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
-                // Type-specific properties (Tonnage, IMEI, …) from Add asset.
-                if (asset.properties.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final e in asset.properties.entries)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                          decoration: BoxDecoration(
-                              color: AppColors.bg,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: AppColors.line)),
-                          child: Text.rich(
-                            TextSpan(
-                              text: '${e.key}  ',
-                              style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600),
-                              children: [
-                                TextSpan(
-                                    text: e.value,
-                                    style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // Expand: the full asset record inline.
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            tooltip: _expanded ? 'Hide details' : 'Show all details',
-            icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: AppColors.ink2),
-            onPressed: () => setState(() => _expanded = !_expanded),
-          ),
-        ],
-      ),
-          if (_expanded) ...[
-            const SizedBox(height: 6),
-            const Divider(color: AppColors.line, height: 16),
-            _InfoRow('Type', asset.typeLabel),
-            _InfoRow('Category', asset.category.label),
-            if (asset.locationName != null) _InfoRow('Room', asset.locationName!),
-            if (asset.brand != null) _InfoRow('Brand', asset.brand!),
-            if (asset.model != null) _InfoRow('Model', asset.model!),
-            if (asset.serialNo != null) _InfoRow('Serial / reg. no.', asset.serialNo!),
-            if (asset.purchaseDate != null)
-              _InfoRow('Purchase date', DateFormat('d MMM yyyy').format(asset.purchaseDate!)),
-            if (asset.purchasePrice != null)
-              _InfoRow('Purchase price', '₹ ${NumberFormat('#,##0.##').format(asset.purchasePrice)}'),
-            if (asset.store != null) _InfoRow('Store', asset.store!),
-            for (final e in asset.properties.entries) _InfoRow(e.key, e.value),
-            _InfoRow('Reminders tracked', '$reminderCount'),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow(this.label, this.value);
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 128,
-            child: Text(label, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
-          ),
-          Expanded(
-            child: Text(value,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Red "next due" banner highlighting the most urgent reminder.
-class _NextDueBanner extends StatelessWidget {
-  const _NextDueBanner({required this.reminder});
-  final Reminder reminder;
-
-  @override
-  Widget build(BuildContext context) {
-    final phrase = dueCountdown(reminder.daysLeft);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(18)),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('NEXT DUE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 1.2)),
-                const SizedBox(height: 4),
-                Text('${reminder.label} · $phrase',
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white, height: 1.15)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(DateFormat('d MMM yyyy').format(reminder.dueDate),
-                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white)),
-              const SizedBox(height: 4),
-              Text('Reminds ${reminder.offsetsLabel}', style: const TextStyle(fontSize: 11, color: Colors.white70)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReminderRow extends StatelessWidget {
-  const _ReminderRow({required this.reminder, required this.onTap, required this.onAction});
-  final Reminder reminder;
-  final VoidCallback onTap;
-  final ValueChanged<ServiceAction> onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final service = [
-      if (reminder.provider != null) reminder.provider,
-      if (reminder.policyNo != null) reminder.policyNo,
-    ].whereType<String>().join(' · ');
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
-      child: Row(
-        children: [
-          IconBubble(kind: reminder.kind, size: 44),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(reminder.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Text(DateFormat('d MMM yyyy').format(reminder.dueDate), style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.notifications_none, size: 13, color: AppColors.muted),
-                    const SizedBox(width: 3),
-                    Text(reminder.offsetsLabel, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
-                  ],
-                ),
-                if (service.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(service, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          DayPill(daysLeft: reminder.daysLeft),
-          PopupMenuButton<ServiceAction>(
-            padding: EdgeInsets.zero,
-            icon: const Icon(Icons.more_vert, size: 18, color: AppColors.muted),
-            onSelected: onAction,
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: ServiceAction.complete, child: Text('Mark as done')),
-              PopupMenuItem(value: ServiceAction.edit, child: Text('Edit')),
-              PopupMenuItem(
-                  value: ServiceAction.delete,
-                  child: Text('Delete', style: TextStyle(color: AppColors.red))),
-            ],
-          ),
-        ],
-      ),
-      ),
-    );
-  }
-}
-

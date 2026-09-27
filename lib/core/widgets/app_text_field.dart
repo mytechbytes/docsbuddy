@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 /// Labeled text field matching `AuthField` in the design handoff: bold label
 /// above a 52pt white box with a leading icon, optional password visibility
@@ -51,7 +51,7 @@ class _AppTextFieldState extends State<AppTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        Text(widget.label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
         const SizedBox(height: 6),
         TextField(
           controller: widget.controller,
@@ -61,27 +61,27 @@ class _AppTextFieldState extends State<AppTextField> {
           autofillHints: widget.autofillHints,
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text),
           decoration: InputDecoration(
             isDense: true,
             filled: true,
-            fillColor: AppColors.paper,
+            fillColor: context.palette.surface,
             hintText: widget.hint,
-            hintStyle: const TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
+            hintStyle: TextStyle(color: context.palette.placeholder, fontWeight: FontWeight.w400),
             errorText: widget.errorText,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-            prefixIcon: widget.icon == null ? null : Icon(widget.icon, size: 18, color: AppColors.muted),
+            prefixIcon: widget.icon == null ? null : Icon(widget.icon, size: 18, color: context.palette.textMuted),
             prefixIconConstraints: const BoxConstraints(minWidth: 42),
             suffixIcon: widget.obscure
                 ? IconButton(
-                    icon: Icon(_obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: AppColors.eyeIcon),
+                    icon: Icon(_obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: context.palette.eyeIcon),
                     onPressed: () => setState(() => _obscured = !_obscured),
                   )
                 : null,
-            enabledBorder: _border(hasError ? AppColors.red : AppColors.fieldBorder),
-            focusedBorder: _border(hasError ? AppColors.red : AppColors.chipBlue),
-            errorBorder: _border(AppColors.red),
-            focusedErrorBorder: _border(AppColors.red),
+            enabledBorder: _border(hasError ? context.palette.danger : context.palette.fieldBorder),
+            focusedBorder: _border(hasError ? context.palette.danger : context.palette.accent),
+            errorBorder: _border(context.palette.danger),
+            focusedErrorBorder: _border(context.palette.danger),
           ),
         ),
       ],

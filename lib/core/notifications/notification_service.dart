@@ -4,6 +4,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../logging/app_logger.dart';
 import 'local_alert.dart';
 
 /// Schedules OS-level [LocalAlert]s. Feature-agnostic and independent of FCM.
@@ -21,9 +22,10 @@ abstract interface class NotificationService {
 
 /// `flutter_local_notifications` implementation.
 class LocalNotificationService implements NotificationService {
-  LocalNotificationService(this._plugin);
+  LocalNotificationService(this._plugin, {required this._logger});
 
   final FlutterLocalNotificationsPlugin _plugin;
+  final AppLogger _logger;
   bool _ready = false;
 
   static const _details = NotificationDetails(
@@ -46,7 +48,8 @@ class LocalNotificationService implements NotificationService {
       tzdata.initializeTimeZones();
       try {
         tz.setLocalLocation(tz.getLocation(await FlutterTimezone.getLocalTimezone()));
-      } catch (_) {
+      } catch (e) {
+        _logger.warning('Device timezone unavailable; scheduling in UTC', error: e);
         tz.setLocalLocation(tz.UTC);
       }
       await _plugin.initialize(
@@ -57,7 +60,9 @@ class LocalNotificationService implements NotificationService {
         ),
       );
       _ready = true;
-    } catch (_) {/* platform unavailable */}
+    } catch (e, st) {
+      _logger.warning('Local notifications unavailable', error: e, stackTrace: st);
+    }
   }
 
   @override
@@ -69,7 +74,8 @@ class LocalNotificationService implements NotificationService {
       final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
       final iosOk = await ios?.requestPermissions(alert: true, badge: true, sound: true);
       return androidOk ?? iosOk ?? true;
-    } catch (_) {
+    } catch (e, st) {
+      _logger.warning('Notification permission request failed', error: e, stackTrace: st);
       return false;
     }
   }
@@ -92,7 +98,9 @@ class LocalNotificationService implements NotificationService {
           payload: a.payload,
         );
       }
-    } catch (_) {/* no-op on failure */}
+    } catch (e, st) {
+      _logger.warning('Scheduling reminders failed', error: e, stackTrace: st);
+    }
   }
 
   @override
@@ -100,7 +108,9 @@ class LocalNotificationService implements NotificationService {
     try {
       await init();
       await _plugin.show(0, 'DocsBuddy', 'Notifications are working ✅', _details);
-    } catch (_) {/* no-op */}
+    } catch (e, st) {
+      _logger.warning('Test notification failed', error: e, stackTrace: st);
+    }
   }
 }
 

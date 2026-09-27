@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/media/media_picker.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
@@ -16,6 +14,9 @@ import '../domain/catalog_models.dart';
 import '../domain/common_categories.dart';
 import '../domain/property_specs.dart';
 import 'widgets/catalog_widgets.dart';
+import 'widgets/asset_form_fields.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Add / edit asset as a 3-step flow:
 ///   1. Category (responsive grid, includes Other)
@@ -144,26 +145,26 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.paper,
+        backgroundColor: context.palette.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Custom appliance type',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.catalogCustomTypeTitle,
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text)),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
-          decoration: const InputDecoration(
-            hintText: 'e.g. Dishwasher, Inverter, Camera…',
-            hintStyle: TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text),
+          decoration: InputDecoration(
+            hintText: context.l10n.catalogCustomTypeHint,
+            hintStyle: TextStyle(color: context.palette.placeholder, fontWeight: FontWeight.w400),
           ),
           onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.l10n.commonCancel)),
           TextButton(
               onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('Use type', style: TextStyle(fontWeight: FontWeight.w700))),
+              child: Text(context.l10n.catalogUseType, style: TextStyle(fontWeight: FontWeight.w700))),
         ],
       ),
     );
@@ -233,13 +234,13 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     final type = _effectiveType(categories);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
-        title: Text(_isEdit ? 'Edit asset' : 'Add asset',
-            style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        iconTheme: IconThemeData(color: context.palette.text),
+        title: Text(_isEdit ? context.l10n.catalogEditAsset : context.l10n.catalogAddAsset,
+            style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: Column(
         children: [
@@ -261,9 +262,9 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
                 step: _step,
                 busy: saving,
                 nextLabel: switch (_step) {
-                  _stepCategory => 'Next',
-                  _stepType => type == null && _customType == null ? 'Skip' : 'Next',
-                  _ => _isEdit ? 'Save changes' : 'Save asset',
+                  _stepCategory => context.l10n.commonNext,
+                  _stepType => type == null && _customType == null ? context.l10n.commonSkip : context.l10n.commonNext,
+                  _ => _isEdit ? context.l10n.catalogSaveChanges : context.l10n.catalogSaveAsset,
                 },
                 onBack: () => setState(() => _step--),
                 onNext: () {
@@ -284,7 +285,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   // ── Step 1: category ──
   List<Widget> _categoryStep() {
     return [
-      const StepHeader(step: 0, total: 3, title: 'Choose a category', subtitle: 'What kind of thing are you adding?'),
+      StepHeader(step: 0, total: 3, title: context.l10n.catalogChooseCategory, subtitle: context.l10n.catalogChooseCategorySubtitle),
       const SizedBox(height: 18),
       LayoutBuilder(
         builder: (context, constraints) {
@@ -300,7 +301,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
             childAspectRatio: cols == 1 ? 3.4 : 1.55,
             children: [
               for (final c in AssetCategoryKind.values)
-                _CategoryCard(
+                CategoryCard(
                   kind: c,
                   selected: _category == c,
                   onTap: () => setState(() {
@@ -326,26 +327,26 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       StepHeader(
           step: 1,
           total: 3,
-          title: 'Select your appliance',
+          title: context.l10n.catalogSelectAppliance,
           subtitle: forCategory.isEmpty
-              ? 'No preset types for ${_category.label} — use a custom type or skip.'
-              : 'Types in ${_category.label}; pick one or add your own.'),
+              ? context.l10n.catalogNoPresetTypes(_category.displayName(context))
+              : context.l10n.catalogTypesIn(_category.displayName(context))),
       const SizedBox(height: 18),
       Wrap(
         spacing: 8,
         runSpacing: 8,
         children: [
           for (final c in forCategory)
-            _TypeChip(
+            AssetTypeChip(
               icon: c.icon,
               label: c.name,
               selected: _type?.id == c.id,
               onTap: () => _selectType(c),
             ),
           // The custom type escape hatch is always available.
-          _TypeChip(
+          AssetTypeChip(
             icon: _customType == null ? Icons.add_circle_outline : Icons.edit_outlined,
-            label: _customType ?? 'Others',
+            label: _customType ?? context.l10n.catalogOthers,
             selected: _customType != null,
             onTap: _askCustomType,
           ),
@@ -362,16 +363,16 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       StepHeader(
           step: 2,
           total: 3,
-          title: type?.name ?? _customType ?? 'Details',
-          subtitle: 'Only the name is required.'),
+          title: type?.name ?? _customType ?? context.l10n.catalogDetails,
+          subtitle: context.l10n.catalogOnlyNameRequired),
       const SizedBox(height: 16),
-      Center(child: _PhotoPicker(photo: _photo, existingRef: widget.editing?.imageUrl, onTap: _pickPhoto)),
+      Center(child: AssetPhotoPicker(photo: _photo, existingRef: widget.editing?.imageUrl, onTap: _pickPhoto)),
       const SizedBox(height: 18),
-      AppTextField(label: 'Name', controller: _name, icon: Icons.label_outline, hint: 'e.g. Samsung 340L Fridge'),
+      AppTextField(label: context.l10n.catalogName, controller: _name, icon: Icons.label_outline, hint: context.l10n.catalogNameHint),
       const SizedBox(height: 14),
-      const Text('Room (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.catalogRoomOptional, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 6),
-      _RoomDropdown(
+      RoomDropdown(
         rooms: rooms,
         value: _room,
         newRoomSentinel: _newRoomSentinel,
@@ -379,41 +380,41 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       ),
       if (_room == _newRoomSentinel) ...[
         const SizedBox(height: 10),
-        AppTextField(label: '', controller: _newRoom, icon: Icons.place_outlined, hint: 'New room name — e.g. Kitchen'),
+        AppTextField(label: '', controller: _newRoom, icon: Icons.place_outlined, hint: context.l10n.catalogNewRoomHint),
       ],
       const SizedBox(height: 14),
       Row(
         children: [
-          Expanded(child: AppTextField(label: 'Brand', controller: _brand, hint: 'optional')),
+          Expanded(child: AppTextField(label: context.l10n.catalogBrand, controller: _brand, hint: context.l10n.commonOptional)),
           const SizedBox(width: 12),
-          Expanded(child: AppTextField(label: 'Model number', controller: _model, hint: 'optional')),
+          Expanded(child: AppTextField(label: context.l10n.catalogModelNumber, controller: _model, hint: context.l10n.commonOptional)),
         ],
       ),
       const SizedBox(height: 14),
-      AppTextField(label: 'Serial / registration no.', controller: _serialNo, icon: Icons.tag, hint: 'e.g. TN 01 AB 1234'),
+      AppTextField(label: context.l10n.catalogSerialNo, controller: _serialNo, icon: Icons.tag, hint: context.l10n.catalogSerialHint),
       const SizedBox(height: 14),
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: _DateField(label: 'Purchase date', value: _purchaseDate, onTap: () => _pickDate(amc: false))),
+          Expanded(child: DateField(label: context.l10n.catalogPurchaseDate, value: _purchaseDate, onTap: () => _pickDate(amc: false))),
           const SizedBox(width: 12),
           Expanded(
             child: AppTextField(
-              label: 'Purchase price',
+              label: context.l10n.catalogPurchasePrice,
               controller: _price,
-              hint: 'e.g. 42000',
+              hint: context.l10n.catalogPriceHint,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
           ),
         ],
       ),
       const SizedBox(height: 14),
-      AppTextField(label: 'Store', controller: _store, icon: Icons.storefront_outlined, hint: 'e.g. Croma'),
+      AppTextField(label: context.l10n.catalogStore, controller: _store, icon: Icons.storefront_outlined, hint: context.l10n.catalogStoreHint),
 
       // ── Type-specific properties ──
       const SizedBox(height: 20),
-      Text('Details for ${type?.name ?? _customType ?? 'this appliance'}'.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+      Text(context.l10n.catalogDetailsFor(type?.name ?? _customType ?? context.l10n.catalogThisAppliance).toUpperCase(),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
       const SizedBox(height: 10),
       for (final spec in specs) ...[
         AppTextField(
@@ -427,11 +428,11 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$1, hint: 'e.g. Colour')),
+            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$1, hint: context.l10n.catalogPropertyHint)),
             const SizedBox(width: 10),
-            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$2, hint: 'value')),
+            Expanded(child: AppTextField(label: '', controller: _extraProps[i].$2, hint: context.l10n.catalogValueHint)),
             IconButton(
-              icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppColors.muted),
+              icon: Icon(Icons.remove_circle_outline, size: 20, color: context.palette.textMuted),
               onPressed: () => setState(() {
                 final (k, v) = _extraProps.removeAt(i);
                 k.dispose();
@@ -448,16 +449,16 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           onPressed: () =>
               setState(() => _extraProps.add((TextEditingController(), TextEditingController()))),
           icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add property', style: TextStyle(fontWeight: FontWeight.w700)),
+          label: Text(context.l10n.catalogAddProperty, style: const TextStyle(fontWeight: FontWeight.w700)),
         ),
       ),
 
       if (!_isEdit) ...[
         const SizedBox(height: 8),
-        _DateField(label: 'AMC date', value: _amcDate, onTap: () => _pickDate(amc: true)),
+        DateField(label: context.l10n.catalogAmcDate, value: _amcDate, onTap: () => _pickDate(amc: true)),
         const SizedBox(height: 14),
-        const Text('Invoices / receipts',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        Text(context.l10n.catalogInvoices,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
         const SizedBox(height: 8),
         PickedMediaGrid(files: _invoices, onRemove: (i) => setState(() => _invoices.removeAt(i))),
         if (_invoices.isNotEmpty) const SizedBox(height: 10),
@@ -465,256 +466,25 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           onPressed: _pickInvoices,
           style: OutlinedButton.styleFrom(
             minimumSize: const Size.fromHeight(48),
-            side: const BorderSide(color: AppColors.fieldBorder, width: 1.5),
+            side: BorderSide(color: context.palette.fieldBorder, width: 1.5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          icon: const Icon(Icons.upload_file_outlined, size: 18, color: AppColors.ink2),
-          label: const Text('Attach invoice — camera, gallery or files',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+          icon: Icon(Icons.upload_file_outlined, size: 18, color: context.palette.textSecondary),
+          label: Text(context.l10n.catalogAttachInvoice,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.palette.text)),
         ),
         if (type != null && type.defaults.isNotEmpty) ...[
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(12)),
             child: Text(
-              'Will auto-add: ${type.defaults.map((d) => d.label).join(' · ')}',
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
+              context.l10n.catalogWillAutoAdd(type.defaults.map((d) => d.label).join(' · ')),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: context.palette.accent),
             ),
           ),
         ],
       ],
     ];
-  }
-}
-
-/// One selectable category card on step 1.
-class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({required this.kind, required this.selected, required this.onTap});
-  final AssetCategoryKind kind;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.paper,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: selected ? Colors.white.withValues(alpha: 0.12) : AppColors.bg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(kind.icon, size: 22, color: selected ? Colors.white : AppColors.ink2),
-            ),
-            const SizedBox(height: 8),
-            Text(kind.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.ink)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TypeChip extends StatelessWidget {
-  const _TypeChip({required this.icon, required this.label, required this.selected, required this.onTap});
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.paper,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 18, color: selected ? Colors.white : AppColors.ink2),
-            const SizedBox(width: 7),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.ink)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Existing-rooms dropdown: no room (blank) / a room / "New room…".
-class _RoomDropdown extends StatelessWidget {
-  const _RoomDropdown({
-    required this.rooms,
-    required this.value,
-    required this.newRoomSentinel,
-    required this.onChanged,
-  });
-
-  final List<Location> rooms;
-  final String? value;
-  final String newRoomSentinel;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final names = {for (final r in rooms) r.name};
-    // Keep a prefilled value selectable even before it exists as a room.
-    if (value != null && value != newRoomSentinel) names.add(value!);
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.paper,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.fieldBorder, width: 1.5),
-      ),
-      child: DropdownButton<String?>(
-        value: value,
-        isExpanded: true,
-        underline: const SizedBox(),
-        hint: const Text('No room — you can set one later',
-            style: TextStyle(fontSize: 14, color: AppColors.placeholder)),
-        items: [
-          const DropdownMenuItem<String?>(
-              value: null,
-              child: Text('No room', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.muted))),
-          for (final n in names)
-            DropdownMenuItem<String?>(
-              value: n,
-              child: Row(
-                children: [
-                  const Icon(Icons.meeting_room_outlined, size: 18, color: AppColors.ink2),
-                  const SizedBox(width: 8),
-                  Text(n, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink)),
-                ],
-              ),
-            ),
-          DropdownMenuItem<String?>(
-            value: newRoomSentinel,
-            child: const Row(
-              children: [
-                Icon(Icons.add_circle_outline, size: 18, color: AppColors.chipBlue),
-                SizedBox(width: 8),
-                Text('New room…',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
-              ],
-            ),
-          ),
-        ],
-        onChanged: onChanged,
-      ),
-    );
-  }
-}
-
-/// Tappable photo box: the freshly picked image, the asset's existing photo
-/// (edit mode), or an add-photo prompt. Tap → camera / gallery / files sheet.
-class _PhotoPicker extends StatelessWidget {
-  const _PhotoPicker({required this.photo, required this.onTap, this.existingRef});
-  final PickedMedia? photo;
-  final String? existingRef;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final placeholder = const Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
-        SizedBox(height: 6),
-        Text('Add photo', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
-      ],
-    );
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: onTap,
-      child: Container(
-        width: 96,
-        height: 96,
-        decoration: BoxDecoration(
-          color: AppColors.paper,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.fieldBorder, width: 1.5),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: photo != null
-            ? Image.memory(photo!.bytes, fit: BoxFit.cover)
-            : AssetThumb(imageRef: existingRef, size: 96, radius: 18, fallback: placeholder),
-      ),
-    );
-  }
-}
-
-/// Tappable date field styled like [AppTextField].
-class _DateField extends StatelessWidget {
-  const _DateField({required this.label, required this.value, required this.onTap});
-  final String label;
-  final DateTime? value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
-        const SizedBox(height: 6),
-        InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-              color: AppColors.paper,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.fieldBorder, width: 1.5),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.event_outlined, size: 18, color: AppColors.muted),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    value == null ? 'optional' : DateFormat('d MMM yyyy').format(value!),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: value == null ? FontWeight.w400 : FontWeight.w600,
-                      color: value == null ? AppColors.placeholder : AppColors.ink,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }

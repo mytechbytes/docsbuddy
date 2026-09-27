@@ -26,7 +26,6 @@ void main() {
     container = makeContainer(overrides: testOverrides(catalog: catalog, documents: documents));
     // The form watches its controller for the whole save, as here.
     container.listen(assetEditorControllerProvider, (_, _) {});
-    container.listen(reminderEditorControllerProvider, (_, _) {});
   });
 
   PickedMedia file(String name) => PickedMedia(name: name, bytes: Uint8List.fromList([1, 2]));
@@ -80,29 +79,6 @@ void main() {
           .read(assetEditorControllerProvider.notifier)
           .save(draft: const AssetDraft(name: 'Kettle', category: AssetCategoryKind.appliance));
       expect(await container.read(assetsProvider.future), hasLength(initial.length + 1));
-    });
-  });
-
-  group('ReminderEditorController', () {
-    test('saves the service and scopes attachments to it', () async {
-      final asset = (await catalog.assets()).first;
-      final reminder = await container.read(reminderEditorControllerProvider.notifier).save(
-            assetId: asset.id,
-            draft: ReminderDraft(
-              kind: ReminderKind.insurance,
-              dueDate: DateTime.now().add(const Duration(days: 40)),
-              recurrence: Recurrence.yearly,
-              notifyOffsets: const {7, 30},
-              cost: '4,200',
-            ),
-            attachments: [file('policy.pdf')],
-          );
-
-      expect(reminder.notifyOffsets, [30, 7]);
-      expect(reminder.cost, 4200);
-      final doc = (await documents.forAsset(asset.id)).single;
-      expect(doc.assetDateId, reminder.id);
-      expect(doc.kind, DocKind.insurance);
     });
   });
 }

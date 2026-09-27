@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging/app_logger.dart';
 import '../../../core/push/push_messaging_service.dart';
 import '../domain/device_repository.dart';
 
@@ -17,13 +18,17 @@ final deviceRepositoryProvider = Provider<DeviceRepository>(
 final pushRegistrationProvider = FutureProvider<void>((ref) async {
   final push = ref.watch(pushMessagingServiceProvider);
   final devices = ref.watch(deviceRepositoryProvider);
+  final logger = ref.watch(appLoggerProvider);
   final platform = defaultTargetPlatform == TargetPlatform.iOS ? DevicePlatform.ios : DevicePlatform.android;
 
   Future<void> register(String? token) async {
     if (token == null) return;
     try {
       await devices.registerPushToken(token, platform);
-    } catch (_) {/* retried on the next refresh/launch */}
+    } catch (e, st) {
+      // Retried on the next token refresh / launch.
+      logger.warning('Push token registration failed', error: e, stackTrace: st);
+    }
   }
 
   if (!await push.start()) return;

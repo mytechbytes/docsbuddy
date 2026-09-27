@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../application/catalog_providers.dart';
 import '../../domain/catalog_models.dart';
 import 'catalog_style.dart';
+import '../../../../core/l10n/l10n.dart';
+import '../../../../core/theme/app_theme.dart';
 
 export 'catalog_style.dart';
 
@@ -76,11 +78,10 @@ class DayPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color color, String text) = switch (daysLeft) {
-      < 0 => (AppColors.red, 'Overdue'),
-      0 => (AppColors.red, 'Today'),
-      <= 7 => (AppColors.amber, '${daysLeft}d'),
-      <= 30 => (AppColors.green, '${daysLeft}d'),
-      _ => (AppColors.green, '${daysLeft}d'),
+      < 0 => (AppColors.red, context.l10n.pillOverdue),
+      0 => (AppColors.red, context.l10n.pillToday),
+      <= 7 => (AppColors.amber, context.l10n.durationDaysShort(daysLeft)),
+      _ => (AppColors.green, context.l10n.durationDaysShort(daysLeft)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -99,8 +100,8 @@ class CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(999)),
-      child: Text(label, style: const TextStyle(color: AppColors.chipBlue, fontSize: 11, fontWeight: FontWeight.w700)),
+      decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(999)),
+      child: Text(label, style: TextStyle(color: context.palette.accent, fontSize: 11, fontWeight: FontWeight.w700)),
     );
   }
 }

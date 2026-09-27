@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/media/media_picker.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
 import '../../documents/presentation/attachment_widgets.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/domain/notification_prefs.dart';
-import '../application/catalog_providers.dart';
-import '../application/editor_controllers.dart';
-import '../domain/catalog_inputs.dart';
-import '../domain/catalog_models.dart';
-import 'widgets/catalog_widgets.dart';
+import '../../catalog/application/catalog_providers.dart';
+import '../../catalog/domain/catalog_inputs.dart';
+import '../../catalog/domain/catalog_models.dart';
+import '../../catalog/presentation/widgets/catalog_widgets.dart';
+import '../application/reminder_editor_controller.dart';
+import 'widgets/reminder_kind_tile.dart';
+import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Design screen 08 — Add Reminder as a 4-step flow:
 ///   1. Reminder type
@@ -58,7 +59,12 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   @override
   void initState() {
     super.initState();
-    if (!_isEdit) _label.text = _kind.label;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isEdit && _label.text.isEmpty) _label.text = _kind.displayName(context);
   }
 
   @override
@@ -114,21 +120,22 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   @override
   Widget build(BuildContext context) {
     final asset = ref.watch(assetProvider(widget.assetId)).value;
-    final offsets = _offsets ?? {...ref.watch(defaultNotifyOffsetsProvider)};
+    final defaultOffsets = ref.watch(defaultNotifyOffsetsProvider);
+    final offsets = _offsets ?? defaultOffsets.toSet();
     final saving = ref.watch(reminderEditorControllerProvider).isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: context.palette.text),
         title: Text(
-          _isEdit ? 'Edit Reminder' : 'Add Reminder',
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink),
+          _isEdit ? context.l10n.reminderEditTitle : context.l10n.reminderAddTitle,
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.close, color: AppColors.ink), onPressed: () => Navigator.of(context).pop()),
+          IconButton(icon: Icon(Icons.close, color: context.palette.text), onPressed: () => Navigator.of(context).pop()),
         ],
       ),
       body: Column(
@@ -139,10 +146,10 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text.rich(
-                  TextSpan(text: 'For ', children: [
-                    TextSpan(text: asset.name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  TextSpan(text: context.l10n.reminderFor, children: [
+                    TextSpan(text: asset.name, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
                   ]),
-                  style: const TextStyle(fontSize: 13, color: AppColors.muted),
+                  style: TextStyle(fontSize: 13, color: context.palette.textMuted),
                 ),
               ),
             ),
@@ -164,7 +171,9 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
               child: StepNav(
                 step: _step,
                 busy: saving,
-                nextLabel: _step < _stepAttach ? 'Next' : (_isEdit ? 'Save Changes' : 'Save Reminder'),
+                nextLabel: _step < _stepAttach
+                    ? context.l10n.commonNext
+                    : (_isEdit ? context.l10n.reminderSaveChanges : context.l10n.reminderSave),
                 onBack: () => setState(() => _step--),
                 onNext: () {
                   if (_step < _stepAttach) {
@@ -184,7 +193,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   // ── Step 1: reminder type ──
   List<Widget> _typeStep() {
     return [
-      const StepHeader(step: 0, total: _total, title: 'Reminder type', subtitle: 'What should we track?'),
+      StepHeader(step: 0, total: _total, title: context.l10n.reminderTypeTitle, subtitle: context.l10n.reminderTypeSubtitle),
       const SizedBox(height: 16),
       GridView.count(
         crossAxisCount: 4,
@@ -195,13 +204,13 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         childAspectRatio: 0.92,
         children: [
           for (final k in ReminderKind.values.where((k) => k != ReminderKind.other))
-            _TypeTile(
+            ReminderKindTile(
               kind: k,
               selected: _kind == k,
               onTap: () => setState(() {
                 if (_kind != k) {
                   _kind = k;
-                  _label.text = k.label;
+                  _label.text = k.displayName(context);
                 }
                 _step = _stepDetails;
               }),
@@ -214,11 +223,16 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   // ── Step 2: details ──
   List<Widget> _detailsStep() {
     return [
-      StepHeader(step: 1, total: _total, title: '${_kind.label} details', subtitle: 'When is it due?'),
+      StepHeader(
+          step: 1,
+          total: _total,
+          title: context.l10n.reminderDetailsTitle(_kind.displayName(context)),
+          subtitle: context.l10n.reminderDetailsSubtitle),
       const SizedBox(height: 16),
-      AppTextField(label: 'Label', controller: _label, icon: Icons.label_outline, hint: _kind.label),
+      AppTextField(
+          label: context.l10n.reminderLabel, controller: _label, icon: Icons.label_outline, hint: _kind.displayName(context)),
       const SizedBox(height: 14),
-      const Text('Due Date', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.reminderDueDate, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 6),
       InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -227,28 +241,28 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: AppColors.paper,
+            color: context.palette.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+            border: Border.all(color: context.palette.fieldBorder, width: 1.5),
           ),
           child: Row(
             children: [
-              const Icon(Icons.event_outlined, size: 18, color: AppColors.muted),
+              Icon(Icons.event_outlined, size: 18, color: context.palette.textMuted),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(DateFormat('dd / MM / yyyy').format(_due),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                child: Text(context.formatNumericDate(_due),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.palette.text)),
               ),
               Text(
-                relativeDays(calendarDaysBetween(DateTime.now(), _due)),
-                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                relativeDays(context.l10n, calendarDaysBetween(DateTime.now(), _due)),
+                style: TextStyle(fontSize: 12, color: context.palette.textMuted),
               ),
             ],
           ),
         ),
       ),
       const SizedBox(height: 16),
-      const Text('Repeats', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.reminderRepeats, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -258,27 +272,27 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
             ChoiceChip(
               selected: _recurrence == r,
               onSelected: (_) => setState(() => _recurrence = r),
-              label: Text(r == Recurrence.none ? 'Never' : r.label),
+              label: Text(r == Recurrence.none ? context.l10n.recurrenceNever : r.displayName(context)),
               labelStyle: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
-                  color: _recurrence == r ? Colors.white : AppColors.ink2),
-              selectedColor: AppColors.ink,
-              backgroundColor: AppColors.paper,
+                  color: _recurrence == r ? context.palette.onInverse : context.palette.textSecondary),
+              selectedColor: context.palette.inverseSurface,
+              backgroundColor: context.palette.surface,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999), side: const BorderSide(color: AppColors.line)),
+                  borderRadius: BorderRadius.circular(999), side: BorderSide(color: context.palette.border)),
             ),
         ],
       ),
       const SizedBox(height: 16),
-      const Text('Service details (optional)',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.reminderServiceDetails,
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 8),
       Row(
         children: [
-          Expanded(child: AppTextField(label: 'Provider', controller: _provider, hint: 'e.g. Acko')),
+          Expanded(child: AppTextField(label: context.l10n.catalogProvider, controller: _provider, hint: context.l10n.reminderProviderHint)),
           const SizedBox(width: 12),
-          Expanded(child: AppTextField(label: 'Policy / contract no.', controller: _policyNo, hint: 'optional')),
+          Expanded(child: AppTextField(label: context.l10n.reminderPolicyNo, controller: _policyNo, hint: context.l10n.commonOptional)),
         ],
       ),
       const SizedBox(height: 12),
@@ -286,14 +300,14 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         children: [
           Expanded(
             child: AppTextField(
-              label: 'Cost',
+              label: context.l10n.catalogCost,
               controller: _cost,
-              hint: 'e.g. 4200',
+              hint: context.l10n.reminderCostHint,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(flex: 2, child: AppTextField(label: 'Notes', controller: _notes, hint: 'optional')),
+          Expanded(flex: 2, child: AppTextField(label: context.l10n.catalogNotes, controller: _notes, hint: context.l10n.commonOptional)),
         ],
       ),
     ];
@@ -302,13 +316,13 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   // ── Step 3: notification settings ──
   List<Widget> _notifyStep(Set<int> offsets) {
     return [
-      const StepHeader(
+      StepHeader(
           step: 2,
           total: _total,
-          title: 'Notification settings',
-          subtitle: 'Push notification & reminder to all family members.'),
+          title: context.l10n.reminderNotifyTitle,
+          subtitle: context.l10n.reminderNotifySubtitle),
       const SizedBox(height: 16),
-      const Text('Notify me', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.reminderNotifyMe, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -322,28 +336,28 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
                 v ? next.add(d) : next.remove(d);
                 _offsets = next;
               }),
-              label: Text('${d}d before'),
+              label: Text(context.l10n.settingsDaysBefore(d)),
               labelStyle: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
-                  color: offsets.contains(d) ? Colors.white : AppColors.ink2),
-              selectedColor: AppColors.chipBlue,
+                  color: offsets.contains(d) ? Colors.white : context.palette.textSecondary),
+              selectedColor: context.palette.accent,
               checkmarkColor: Colors.white,
-              backgroundColor: AppColors.paper,
+              backgroundColor: context.palette.surface,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999), side: const BorderSide(color: AppColors.line)),
+                  borderRadius: BorderRadius.circular(999), side: BorderSide(color: context.palette.border)),
             ),
         ],
       ),
       const SizedBox(height: 14),
       Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: const Color(0xFFEEF3FB), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(12)),
         child: Text(
           offsets.isEmpty
-              ? 'No reminders will fire for this service — pick at least one offset to be notified.'
-              : 'You\'ll be reminded ${sortedOffsets(offsets).map((d) => '${d}d').join(', ')} before the due date, on your enabled channels (see Settings).',
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
+              ? context.l10n.reminderNoOffsets
+              : context.l10n.reminderOffsetsSummary(sortedOffsets(offsets).map(context.l10n.durationDaysShort).join(', ')),
+          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: context.palette.accent),
         ),
       ),
     ];
@@ -352,11 +366,11 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
   // ── Step 4: attachments ──
   List<Widget> _attachStep() {
     return [
-      const StepHeader(
+      StepHeader(
           step: 3,
           total: _total,
-          title: 'Attachments',
-          subtitle: 'Policy PDF, receipt, photos… attach now or later from the asset page.'),
+          title: context.l10n.reminderAttachTitle,
+          subtitle: context.l10n.reminderAttachSubtitle),
       const SizedBox(height: 16),
       PickedMediaGrid(files: _attachments, onRemove: (i) => setState(() => _attachments.removeAt(i))),
       if (_attachments.isNotEmpty) const SizedBox(height: 12),
@@ -364,51 +378,13 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         onPressed: _pickAttachment,
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          side: const BorderSide(color: AppColors.fieldBorder, width: 1.5),
+          side: BorderSide(color: context.palette.fieldBorder, width: 1.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        icon: const Icon(Icons.attach_file, size: 18, color: AppColors.ink2),
-        label: const Text('Attach documents — camera, gallery or files',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+        icon: Icon(Icons.attach_file, size: 18, color: context.palette.textSecondary),
+        label: Text(context.l10n.reminderAttachDocs,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.palette.text)),
       ),
     ];
-  }
-}
-
-class _TypeTile extends StatelessWidget {
-  const _TypeTile({required this.kind, required this.selected, required this.onTap});
-  final ReminderKind kind;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.paper,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: selected ? AppColors.chipBlue : AppColors.line, width: selected ? 2 : 1),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(color: kind.bg, borderRadius: BorderRadius.circular(10)),
-              child: Icon(kind.icon, size: 18, color: kind.fg),
-            ),
-            const SizedBox(height: 6),
-            Text(kind.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
-          ],
-        ),
-      ),
-    );
   }
 }

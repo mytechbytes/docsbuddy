@@ -1,4 +1,5 @@
 import 'package:docsbuddy/features/onboarding/presentation/onboarding_page.dart';
+import 'package:docsbuddy/core/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,7 +18,11 @@ Widget _harness(InMemoryOnboardingStore store) {
   );
   return ProviderScope(
     overrides: testOverrides(onboarding: store),
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ),
   );
 }
 

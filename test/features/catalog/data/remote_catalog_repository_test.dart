@@ -8,6 +8,8 @@ import 'package:docsbuddy/features/catalog/domain/catalog_inputs.dart';
 import 'package:docsbuddy/features/catalog/domain/catalog_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/test_app.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockRemote extends Mock implements CatalogRemoteDataSource {}
@@ -22,6 +24,7 @@ void main() {
   late _MockRemote remote;
   late _MockFiles files;
   late RemoteCatalogRepository repo;
+  late RecordingLogger logger;
   final now = DateTime(2026, 1, 1, 9);
 
   setUpAll(() {
@@ -32,7 +35,8 @@ void main() {
   setUp(() {
     remote = _MockRemote();
     files = _MockFiles();
-    repo = RemoteCatalogRepository(remote, files, clock: () => now);
+    logger = RecordingLogger();
+    repo = RemoteCatalogRepository(remote, files, logger: logger, clock: () => now);
     when(() => remote.currentUserId).thenReturn('u1');
     when(() => remote.firstFamilyId()).thenAnswer((_) async => 'fam1');
   });
@@ -151,6 +155,7 @@ void main() {
     expect(await repo.resolveImageUrl('p/x.jpg'), 'signed');
     expect(await repo.resolveImageUrl('https://cdn/x.jpg'), 'https://cdn/x.jpg');
     expect(await repo.resolveImageUrl('missing'), isNull);
+    expect(logger.warnings.single, contains('missing')); // reported, not silent
     expect(await repo.resolveImageUrl(null), isNull);
   });
 }

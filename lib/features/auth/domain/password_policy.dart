@@ -55,12 +55,12 @@ const _hints = [
 /// (8+ chars, an uppercase letter, a number) and matches [confirmation].
 void validateResetPassword(String password, String confirmation) {
   final c = checkPassword(password);
-  if (!(c.length && c.upper && c.number)) throw const ValidationFailure('Please meet the password requirements.');
-  if (password != confirmation) throw const ValidationFailure('Passwords do not match.');
+  if (!(c.length && c.upper && c.number)) throw const ValidationFailure('Please meet the password requirements.', reason: FailureReason.passwordRequirements);
+  if (password != confirmation) throw const ValidationFailure('Passwords do not match.', reason: FailureReason.passwordMismatch);
 }
 
 /// Throws [ValidationFailure] unless the change-password inputs are usable.
 void validateNewPassword(String password, String confirmation) {
-  if (password.length < 8) throw const ValidationFailure('New password must be at least 8 characters.');
-  if (password != confirmation) throw const ValidationFailure('Passwords don\'t match.');
+  if (password.length < 8) throw const ValidationFailure('New password must be at least 8 characters.', reason: FailureReason.newPasswordTooShort);
+  if (password != confirmation) throw const ValidationFailure('Passwords don\'t match.', reason: FailureReason.passwordMismatch);
 }

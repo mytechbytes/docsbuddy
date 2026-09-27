@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/l10n/l10n.dart';
 
 // ─── Shared illustration primitives ──────────────────────────────────────────
 
@@ -113,13 +114,13 @@ class _ImgPlaceholder extends StatelessWidget {
       height: 36,
       alignment: Alignment.center,
       decoration: BoxDecoration(color: tint, borderRadius: BorderRadius.circular(6)),
-      child: Text(label, style: const TextStyle(fontSize: 8, color: Color(0xFF7A6A53), fontWeight: FontWeight.w600)),
+      child: Text(label, style: const TextStyle(fontSize: 8, color: AppColors.illustrationLabel, fontWeight: FontWeight.w600)),
     );
   }
 }
 
 BoxShadow get _softShadow =>
-    BoxShadow(color: const Color(0xFF0F1E37).withValues(alpha: 0.14), blurRadius: 18, offset: const Offset(0, 6));
+    BoxShadow(color: AppColors.shadow.withValues(alpha: 0.14), blurRadius: 18, offset: const Offset(0, 6));
 
 double _rad(double deg) => deg * math.pi / 180;
 
@@ -131,7 +132,7 @@ class IlloWelcome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IlloStage(
-      tint: const Color(0xFFEAF0FB),
+      tint: AppColors.tintBlue,
       child: SizedBox(
         width: 230,
         height: 200,
@@ -147,9 +148,9 @@ class IlloWelcome extends StatelessWidget {
                   gradient: AppColors.cardNavy,
                   width: 150,
                   height: 110,
-                  label: 'Active Invoices',
+                  label: context.l10n.illoActiveInvoices,
                   value: '23',
-                  trailing: const Icon(Icons.description_outlined, size: 16, color: Colors.white),
+                  trailing: Icon(Icons.description_outlined, size: 16, color: Colors.white),
                 ),
               ),
             ),
@@ -163,7 +164,7 @@ class IlloWelcome extends StatelessWidget {
                   gradient: AppColors.cardTeal,
                   width: 130,
                   height: 100,
-                  label: 'Secured',
+                  label: context.l10n.filterSecured,
                   value: '14',
                 ),
               ),
@@ -182,22 +183,22 @@ class IlloWelcome extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const _IconBubble(
+                    _IconBubble(
                       bg: AppColors.insuranceBg,
                       fg: AppColors.insuranceFg,
                       icon: Icons.shield_outlined,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Text('Insurance', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                        Text('in 25 days', style: TextStyle(fontSize: 9.5, color: AppColors.muted)),
+                      children: [
+                        Text(context.l10n.kindInsurance, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                        Text(context.l10n.relativeInDays(25), style: const TextStyle(fontSize: 9.5, color: AppColors.muted)),
                       ],
                     ),
-                    const SizedBox(width: 8),
-                    const _DayPill(days: 25),
+                    SizedBox(width: 8),
+                    _DayPill(days: 25),
                   ],
                 ),
               ),
@@ -239,7 +240,7 @@ class _StatCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: gradient,
         ),
-        boxShadow: [BoxShadow(color: const Color(0xFF0F1E37).withValues(alpha: 0.18), blurRadius: 24, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: AppColors.shadow.withValues(alpha: 0.18), blurRadius: 24, offset: const Offset(0, 10))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,16 +263,16 @@ class IlloAssets extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IlloStage(
-      tint: const Color(0xFFE7F4EC),
+      tint: AppColors.tintGreen,
       child: SizedBox(
         width: 240,
         height: 180,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            _assetRow('kitchen', 'Samsung 340L Fridge', 'Kitchen', const Color(0xFFE8D9C4), -66, -4),
-            _assetRow('phone', 'iPhone 15 Pro', 'Smartphone', const Color(0xFFDEE2EA), -12, 0),
-            _assetRow('bike', 'Royal Enfield Classic', 'Vehicles', const Color(0xFFDDE9E2), 42, 4),
+            _assetRow('kitchen', 'Samsung 340L Fridge', context.l10n.illoKitchen, AppColors.tileSand, -66, -4),
+            _assetRow('phone', 'iPhone 15 Pro', context.l10n.illoSmartphone, AppColors.tileSlate, -12, 0),
+            _assetRow('bike', 'Royal Enfield Classic', context.l10n.illoVehicles, AppColors.tileSage, 42, 4),
           ],
         ),
       ),
@@ -289,8 +290,8 @@ class IlloAssets extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEEF2F8)),
-            boxShadow: [BoxShadow(color: const Color(0xFF0F1E37).withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 6))],
+            border: Border.all(color: AppColors.lineSoft),
+            boxShadow: [BoxShadow(color: AppColors.shadow.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 6))],
           ),
           child: Row(
             children: [
@@ -323,14 +324,14 @@ class IlloReminders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const markers = [
-      (0.06, '−30d'),
-      (0.40, '−7d'),
-      (0.76, '−1d'),
-      (0.94, 'Due'),
+    final markers = [
+      (0.06, '−${context.l10n.durationDaysShort(30)}'),
+      (0.40, '−${context.l10n.durationDaysShort(7)}'),
+      (0.76, '−${context.l10n.durationDaysShort(1)}'),
+      (0.94, context.l10n.catalogDue),
     ];
     return IlloStage(
-      tint: const Color(0xFFFDEBEC),
+      tint: AppColors.redSoft,
       child: SizedBox(
         width: 240,
         height: 200,
@@ -350,19 +351,19 @@ class IlloReminders extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const _IconBubble(bg: AppColors.pollutionBg, fg: AppColors.pollutionFg, icon: Icons.eco_outlined, size: 36),
-                    const SizedBox(width: 10),
-                    const Expanded(
+                    _IconBubble(bg: AppColors.pollutionBg, fg: AppColors.pollutionFg, icon: Icons.eco_outlined, size: 36),
+                    SizedBox(width: 10),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Pollution due', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                          Text('07 Jun · Bike', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                          Text(context.l10n.illoPollutionDue, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                          Text(context.l10n.illoBikeSample(context.formatShortDate(DateTime(2026, 6, 7))), style: const TextStyle(fontSize: 10, color: AppColors.muted)),
                         ],
                       ),
                     ),
-                    const _DayPill(days: 15),
+                    _DayPill(days: 15),
                   ],
                 ),
               ),
@@ -377,7 +378,7 @@ class IlloReminders extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
                   gradient: const LinearGradient(
-                    colors: [AppColors.red, Color(0xFFFBD58A), AppColors.green],
+                    colors: [AppColors.red, AppColors.amberLight, AppColors.green],
                     stops: [0, 0.6, 1],
                   ),
                 ),
@@ -415,7 +416,7 @@ class IlloReminders extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.ink,
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: const Color(0xFF0F1E37).withValues(alpha: 0.3), blurRadius: 22, offset: const Offset(0, 10))],
+                  boxShadow: [BoxShadow(color: AppColors.shadow.withValues(alpha: 0.3), blurRadius: 22, offset: const Offset(0, 10))],
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -454,7 +455,7 @@ class IlloFamily extends StatelessWidget {
   Widget build(BuildContext context) {
     const positions = [Alignment(0, -1), Alignment(1, 0), Alignment(0, 1), Alignment(-1, 0)];
     return IlloStage(
-      tint: const Color(0xFFEEF3FB),
+      tint: AppColors.blueSoft,
       child: SizedBox(
         width: 220,
         height: 200,
@@ -482,9 +483,9 @@ class IlloFamily extends StatelessWidget {
                     child: const Icon(Icons.notifications_outlined, size: 16, color: Colors.white),
                   ),
                   const SizedBox(height: 6),
-                  const Text('Shared with family', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                  Text(context.l10n.illoSharedWithFamily, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
                   const SizedBox(height: 2),
-                  const Text('Insurance · 25 d', style: TextStyle(fontSize: 9.5, color: AppColors.muted)),
+                  Text('${context.l10n.kindInsurance} · ${context.l10n.durationDaysShort(25)}', style: const TextStyle(fontSize: 9.5, color: AppColors.muted)),
                 ],
               ),
             ),
@@ -503,7 +504,7 @@ class IlloFamily extends StatelessWidget {
                       colors: AppColors.familyAvatars[i],
                     ),
                     border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [BoxShadow(color: const Color(0xFF0F1E37).withValues(alpha: 0.18), blurRadius: 10, offset: const Offset(0, 4))],
+                    boxShadow: [BoxShadow(color: AppColors.shadow.withValues(alpha: 0.18), blurRadius: 10, offset: const Offset(0, 4))],
                   ),
                 ),
               ),
@@ -520,7 +521,7 @@ class _DashedCirclePainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
-      ..color = const Color(0xFF0F1E37).withValues(alpha: 0.18);
+      ..color = AppColors.shadow.withValues(alpha: 0.18);
     final center = size.center(Offset.zero);
     final radius = size.width / 2;
     const dashCount = 40;
