@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/l10n/l10n.dart';
 import 'core/theme/app_theme.dart';
 import 'routing/app_router.dart';
 
@@ -13,6 +14,8 @@ class DocsBuddyApp extends ConsumerWidget {
       title: 'DocsBuddy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
     );
   }

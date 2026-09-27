@@ -9,6 +9,7 @@ import '../application/auth_controller.dart';
 import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -63,13 +64,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     return AuthScaffold(
       children: [
         const SizedBox(height: 4),
-        const AuthHero(title: 'Create your account', subtitle: 'Track warranties, bills and renewals with your family — never miss a due date.'),
+        AuthHero(title: context.l10n.authSignUpTitle, subtitle: context.l10n.authSignUpSubtitle),
         const SizedBox(height: 20),
-        AppTextField(label: 'Full Name', controller: _name, icon: Icons.person_outline, hint: 'Your name', textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.name]),
+        AppTextField(label: context.l10n.authFullName, controller: _name, icon: Icons.person_outline, hint: context.l10n.authFullNameHint, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.name]),
         const SizedBox(height: 14),
-        AppTextField(label: 'Email', controller: _email, icon: Icons.mail_outline, hint: 'you@example.com', keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.email]),
+        AppTextField(label: context.l10n.commonEmail, controller: _email, icon: Icons.mail_outline, hint: context.l10n.commonEmailHint, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.email]),
         const SizedBox(height: 14),
-        AppTextField(label: 'Password', controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, autofillHints: const [AutofillHints.newPassword]),
+        AppTextField(label: context.l10n.commonPassword, controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, autofillHints: const [AutofillHints.newPassword]),
         const SizedBox(height: 10),
         _StrengthBar(strength: strength),
         const SizedBox(height: 6),
@@ -77,13 +78,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         const SizedBox(height: 14),
         _TermsRow(value: _agreed, onChanged: (v) => setState(() => _agreed = v)),
         const SizedBox(height: 16),
-        PrimaryButton(label: 'Create Account', isLoading: loading, onPressed: _submit),
+        PrimaryButton(label: context.l10n.authCreateAccountCta, isLoading: loading, onPressed: _submit),
         const OrDivider(),
         SocialButton(provider: SocialProvider.google, onPressed: _google),
         const SizedBox(height: 10),
         SocialButton(provider: SocialProvider.apple, onPressed: _apple),
         const SizedBox(height: 22),
-        InlineLink(lead: 'Already have an account? ', action: 'Sign in', onTap: () => context.go(AppRoutes.signIn)),
+        InlineLink(lead: context.l10n.authHaveAccountLead, action: context.l10n.commonSignIn, onTap: () => context.go(AppRoutes.signIn)),
       ],
     );
   }
@@ -142,16 +143,16 @@ class _TermsRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        const Expanded(
+        Expanded(
           child: Text.rich(
             TextSpan(
-              style: TextStyle(fontSize: 12, height: 1.45, color: AppColors.ink2),
+              style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.ink2),
               children: [
-                TextSpan(text: 'I agree to the '),
-                TextSpan(text: 'Terms of Service', style: TextStyle(color: AppColors.chipBlue, fontWeight: FontWeight.w700)),
-                TextSpan(text: ' and '),
-                TextSpan(text: 'Privacy Policy', style: TextStyle(color: AppColors.chipBlue, fontWeight: FontWeight.w700)),
-                TextSpan(text: '.'),
+                TextSpan(text: context.l10n.authTermsLead),
+                TextSpan(text: context.l10n.authTermsOfService, style: const TextStyle(color: AppColors.chipBlue, fontWeight: FontWeight.w700)),
+                TextSpan(text: context.l10n.authTermsAnd),
+                TextSpan(text: context.l10n.authPrivacyPolicy, style: const TextStyle(color: AppColors.chipBlue, fontWeight: FontWeight.w700)),
+                const TextSpan(text: '.'),
               ],
             ),
           ),

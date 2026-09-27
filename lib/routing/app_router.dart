@@ -69,7 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.resetPassword, builder: (_, _) => const ResetPasswordPage()),
 
       // ── App ──
-      GoRoute(path: AppRoutes.dashboard, builder: (_, _) => const HomeShell()),
+      GoRoute(path: AppRoutes.dashboard, builder: (_, _) => HomeShell()),
       GoRoute(
         path: AppRoutes.appliancePickerPattern,
         builder: (_, state) => AppliancePickerPage(locationName: state.uri.queryParameters[AppRoutes.locationQuery]),

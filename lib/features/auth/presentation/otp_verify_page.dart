@@ -10,6 +10,7 @@ import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 class OtpVerifyPage extends ConsumerStatefulWidget {
   const OtpVerifyPage({super.key, required this.email});
@@ -83,7 +84,7 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
         const SizedBox(height: 14),
         const Center(child: HeroBadge(background: AppColors.greenSoft, foreground: AppColors.green, icon: Icons.mail_outline)),
         const SizedBox(height: 22),
-        AuthHero(title: 'Check your inbox', subtitle: 'We sent a 6-digit code to ${widget.email}. Enter it below to continue.'),
+        AuthHero(title: context.l10n.authOtpTitle, subtitle: context.l10n.authOtpSubtitle(widget.email)),
         const SizedBox(height: 22),
         // Hidden input overlaying the visual cells.
         Stack(
@@ -112,18 +113,18 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
           ],
         ),
         const SizedBox(height: 22),
-        PrimaryButton(label: 'Verify', isLoading: loading, onPressed: _verify),
+        PrimaryButton(label: context.l10n.authOtpVerify, isLoading: loading, onPressed: _verify),
         const SizedBox(height: 18),
         Center(
           child: _secondsLeft > 0
               ? Text.rich(TextSpan(
                   style: const TextStyle(fontSize: 13, color: AppColors.muted),
                   children: [
-                    const TextSpan(text: "Didn't receive it? Resend in "),
+                    TextSpan(text: context.l10n.authOtpResendIn),
                     TextSpan(text: _countdownText, style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
                   ],
                 ))
-              : InlineLink(lead: "Didn't receive it? ", action: 'Resend code', onTap: _resend),
+              : InlineLink(lead: context.l10n.authOtpNotReceivedLead, action: context.l10n.authOtpResend, onTap: _resend),
         ),
       ],
     );

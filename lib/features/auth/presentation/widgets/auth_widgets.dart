@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/feedback.dart';
 import '../../../../core/widgets/db_logo.dart';
 import '../../application/auth_controller.dart';
+import '../../../../core/l10n/l10n.dart';
 
 /// Wire this in a page's `build` to surface [AuthController] failures as a
 /// SnackBar. Safe to call once per build (ref.listen dedupes).
@@ -117,8 +118,10 @@ class HeroBadge extends StatelessWidget {
 
 /// "OR CONTINUE WITH" divider.
 class OrDivider extends StatelessWidget {
-  const OrDivider({super.key, this.label = 'or continue with'});
-  final String label;
+  const OrDivider({super.key, this.label});
+
+  /// Defaults to the localized "or continue with".
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +132,8 @@ class OrDivider extends StatelessWidget {
           const Expanded(child: Divider(color: AppColors.hairline, height: 1)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(label.toUpperCase(), style: const TextStyle(fontSize: 11, color: AppColors.muted, letterSpacing: 1.2)),
+            child: Text((label ?? context.l10n.authOrContinueWith).toUpperCase(),
+                style: const TextStyle(fontSize: 11, color: AppColors.muted, letterSpacing: 1.2)),
           ),
           const Expanded(child: Divider(color: AppColors.hairline, height: 1)),
         ],
@@ -157,7 +161,7 @@ class SocialButton extends StatelessWidget {
         icon: isApple
             ? const Icon(Icons.apple, size: 22, color: Colors.black)
             : const Icon(Icons.g_mobiledata, size: 30, color: AppColors.chipBlue),
-        label: Text('Continue with ${isApple ? 'Apple' : 'Google'}'),
+        label: Text(isApple ? context.l10n.authContinueWithApple : context.l10n.authContinueWithGoogle),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.ink,
           backgroundColor: AppColors.paper,

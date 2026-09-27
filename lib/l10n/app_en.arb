@@ -1,0 +1,108 @@
+{
+  "@@locale": "en",
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonOn": "On",
+  "commonOff": "Off",
+  "commonEmail": "Email",
+  "commonPassword": "Password",
+  "commonEmailHint": "you@example.com",
+  "commonSignIn": "Sign in",
+  "commonSignOut": "Sign out",
+  "commonSettings": "Settings",
+  "commonFamily": "Family",
+  "commonNotifications": "Notifications",
+  "commonChangePassword": "Change password",
+  "commonForgotPassword": "Forgot password?",
+  "navHome": "Home",
+  "navRooms": "Rooms",
+  "navAssets": "Assets",
+  "authSignInTitle": "Welcome back",
+  "authSignInSubtitle": "Sign in to keep your assets and reminders in sync.",
+  "authSignInCta": "Sign In",
+  "authNoAccountLead": "Don't have an account? ",
+  "authSignUpAction": "Sign up",
+  "authOrContinueWith": "or continue with",
+  "authContinueWithGoogle": "Continue with Google",
+  "authContinueWithApple": "Continue with Apple",
+  "authSignUpTitle": "Create your account",
+  "authSignUpSubtitle": "Track warranties, bills and renewals with your family — never miss a due date.",
+  "authFullName": "Full Name",
+  "authFullNameHint": "Your name",
+  "authCreateAccountCta": "Create Account",
+  "authHaveAccountLead": "Already have an account? ",
+  "authTermsLead": "I agree to the ",
+  "authTermsOfService": "Terms of Service",
+  "authTermsAnd": " and ",
+  "authPrivacyPolicy": "Privacy Policy",
+  "authForgotSendCode": "Send Verification Code",
+  "authRememberLead": "Remember it? ",
+  "authBackToSignIn": "Back to sign in",
+  "authOtpTitle": "Check your inbox",
+  "authOtpSubtitle": "We sent a 6-digit code to {email}. Enter it below to continue.",
+  "@authOtpSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpVerify": "Verify",
+  "authOtpResendIn": "Didn't receive it? Resend in ",
+  "authOtpNotReceivedLead": "Didn't receive it? ",
+  "authOtpResend": "Resend code",
+  "authResetTitle": "Set a new password",
+  "authNewPassword": "New Password",
+  "authConfirmPassword": "Confirm Password",
+  "authResetCta": "Reset Password",
+  "authPasswordMustHave": "Password must have",
+  "authRuleLength": "At least 8 characters",
+  "authRuleUpper": "One uppercase letter",
+  "authRuleNumber": "One number",
+  "authRuleSpecial": "One special character (!@#$…)",
+  "authResetDone": "Password updated. Please sign in.",
+  "settingsSectionAccount": "Account",
+  "settingsPersonalInfo": "Personal information",
+  "settingsSecurity": "Security & 2FA",
+  "settingsPush": "Push notifications",
+  "settingsEmailReminders": "Email reminders",
+  "settingsWhatsappReminders": "WhatsApp reminders",
+  "settingsDefaultOffsets": "Default offsets",
+  "settingsQuietHours": "Quiet hours",
+  "settingsQuietHoursStart": "Quiet hours start",
+  "settingsQuietHoursEnd": "Quiet hours end",
+  "settingsManageFamily": "Manage family",
+  "settingsMemberCount": "{count, plural, =1{1 member} other{{count} members}}",
+  "@settingsMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSectionApp": "App",
+  "settingsBackend": "Backend",
+  "settingsTestNotification": "Send test notification",
+  "settingsTestNotificationSent": "Sent a test notification.",
+  "settingsNotificationsBlocked": "Notifications are blocked in system settings.",
+  "settingsPending": "What's pending",
+  "settingsReplayOnboarding": "Replay onboarding",
+  "settingsOffsetsTitle": "Default reminder offsets",
+  "settingsOffsetsSubtitle": "Days before a due date to notify — used for new reminders.",
+  "settingsDaysBefore": "{days}d before",
+  "@settingsDaysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "changePasswordTitle": "Change Password",
+  "changePasswordCurrent": "Current Password",
+  "changePasswordConfirm": "Confirm New Password",
+  "changePasswordCta": "Update Password",
+  "changePasswordDone": "Password updated.",
+  "authForgotSubtitle": "No worries. Enter your email and we'll send you a 6-digit code to reset it.",
+  "authResetSubtitle": "Choose a strong password you haven't used here before.",
+  "changePasswordNotice": "For your security, you'll be signed out of other devices after changing your password."
+}

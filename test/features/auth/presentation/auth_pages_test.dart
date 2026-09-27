@@ -2,6 +2,7 @@ import 'package:docsbuddy/features/auth/presentation/forgot_password_page.dart';
 import 'package:docsbuddy/features/auth/presentation/reset_password_page.dart';
 import 'package:docsbuddy/features/auth/presentation/sign_in_page.dart';
 import 'package:docsbuddy/features/auth/presentation/sign_up_page.dart';
+import 'package:docsbuddy/core/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +21,11 @@ Widget _harness() {
       GoRoute(path: '/dashboard', builder: (_, _) => const Scaffold(body: Text('DASH'))),
     ],
   );
-  return ProviderScope(overrides: testOverrides(), retry: noRetry, child: MaterialApp.router(routerConfig: router));
+  return ProviderScope(overrides: testOverrides(), retry: noRetry, child: MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ));
 }
 
 void main() {

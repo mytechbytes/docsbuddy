@@ -7,7 +7,6 @@ import '../../../core/providers/core_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../auth/application/auth_controller.dart';
-import '../../../core/widgets/formatters.dart';
 import '../../family/application/family_controller.dart';
 import '../../onboarding/application/onboarding_controller.dart';
 import '../../profile/application/profile_providers.dart';
@@ -16,6 +15,7 @@ import '../application/settings_providers.dart';
 import '../domain/notification_prefs.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/widgets/settings_list.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Design screen 15 — Settings: Account / Notifications / Family sections
 /// (notification toggles + default offsets are backed by
@@ -38,64 +38,64 @@ class SettingsPage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.commonSettings, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          const SectionLabel('Account'),
+          SectionLabel(context.l10n.settingsSectionAccount),
           SettingsCard(children: [
             SettingsRow(
               icon: Icons.person_outline,
-              title: 'Personal information',
+              title: context.l10n.settingsPersonalInfo,
               onTap: () => context.push(AppRoutes.profile),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             SettingsRow(
               icon: Icons.mail_outline,
-              title: 'Email',
+              title: context.l10n.commonEmail,
               trailing: Text(profile?.email ?? '—',
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
             SettingsRow(
               icon: Icons.lock_outline,
-              title: 'Change password',
+              title: context.l10n.commonChangePassword,
               onTap: () => context.push(AppRoutes.changePassword),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             SettingsRow(
               icon: Icons.shield_outlined,
-              title: 'Security & 2FA',
+              title: context.l10n.settingsSecurity,
               onTap: () => context.push(AppRoutes.security),
               trailing: Text(
-                ref.watch(securityStatusProvider).value?.totpEnabled == true ? 'On' : 'Off',
+                ref.watch(securityStatusProvider).value?.totpEnabled == true ? context.l10n.commonOn : context.l10n.commonOff,
                 style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
           ]),
-          const SectionLabel('Notifications'),
+          SectionLabel(context.l10n.commonNotifications),
           SettingsCard(children: [
             SettingsToggleRow(
               icon: Icons.notifications_active_outlined,
-              title: 'Push notifications',
+              title: context.l10n.settingsPush,
               value: prefs.has(NotificationChannel.push),
               onChanged: (v) => setChannel(NotificationChannel.push, v),
             ),
             SettingsToggleRow(
               icon: Icons.mail_outline,
-              title: 'Email reminders',
+              title: context.l10n.settingsEmailReminders,
               value: prefs.has(NotificationChannel.email),
               onChanged: (v) => setChannel(NotificationChannel.email, v),
             ),
             SettingsToggleRow(
               icon: Icons.chat_outlined,
-              title: 'WhatsApp reminders',
+              title: context.l10n.settingsWhatsappReminders,
               value: prefs.has(NotificationChannel.whatsapp),
               onChanged: (v) => setChannel(NotificationChannel.whatsapp, v),
             ),
             SettingsRow(
               icon: Icons.update_outlined,
-              title: 'Default offsets',
+              title: context.l10n.settingsDefaultOffsets,
               onTap: () => _editOffsets(context, ref, prefs),
               trailing: Text(
                 '${prefs.defaultOffsets.join(' · ')}d',
@@ -104,7 +104,7 @@ class SettingsPage extends ConsumerWidget {
             ),
             SettingsRow(
               icon: Icons.bedtime_outlined,
-              title: 'Quiet hours',
+              title: context.l10n.settingsQuietHours,
               onTap: () => _editQuietHours(context, ref, prefs),
               trailing: Text(
                 '${prefs.quietStart} – ${prefs.quietEnd}',
@@ -112,45 +112,45 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
           ]),
-          const SectionLabel('Family'),
+          SectionLabel(context.l10n.commonFamily),
           SettingsCard(children: [
             SettingsRow(
               icon: Icons.groups_outlined,
-              title: 'Manage family',
+              title: context.l10n.settingsManageFamily,
               onTap: () => context.push(AppRoutes.familyManage),
-              trailing: Text(plural(members.length, 'member'),
+              trailing: Text(context.l10n.settingsMemberCount(members.length),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
           ]),
-          const SectionLabel('App'),
+          SectionLabel(context.l10n.settingsSectionApp),
           SettingsCard(children: [
             SettingsRow(
               icon: Icons.cloud_outlined,
-              title: 'Backend',
+              title: context.l10n.settingsBackend,
               trailing: Text(ref.watch(backendLabelProvider),
                   style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
             SettingsRow(
               icon: Icons.notification_add_outlined,
-              title: 'Send test notification',
+              title: context.l10n.settingsTestNotification,
               onTap: () async {
                 final ok = await ref.read(sendTestNotificationProvider)();
                 if (!context.mounted) return;
                 ok
-                    ? context.showSuccess('Sent a test notification.')
-                    : context.showFailure(const UnavailableFailure('Notifications are blocked in system settings.'));
+                    ? context.showSuccess(context.l10n.settingsTestNotificationSent)
+                    : context.showFailure(UnavailableFailure(context.l10n.settingsNotificationsBlocked));
               },
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             SettingsRow(
               icon: Icons.checklist_outlined,
-              title: "What's pending",
+              title: context.l10n.settingsPending,
               onTap: () => context.push(AppRoutes.roadmap),
               trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
             ),
             SettingsRow(
               icon: Icons.replay_outlined,
-              title: 'Replay onboarding',
+              title: context.l10n.settingsReplayOnboarding,
               onTap: () async {
                 await ref.read(onboardingControllerProvider.notifier).reset();
                 if (context.mounted) context.go(AppRoutes.onboarding);
@@ -162,7 +162,7 @@ class SettingsPage extends ConsumerWidget {
           SettingsCard(children: [
             SettingsRow(
               icon: Icons.logout,
-              title: 'Sign out',
+              title: context.l10n.commonSignOut,
               danger: true,
               onTap: loading
                   ? null
@@ -193,11 +193,11 @@ class SettingsPage extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Default reminder offsets',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                Text(context.l10n.settingsOffsetsTitle,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
                 const SizedBox(height: 4),
-                const Text('Days before a due date to notify — used for new reminders.',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                Text(context.l10n.settingsOffsetsSubtitle,
+                    style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 8,
@@ -207,7 +207,7 @@ class SettingsPage extends ConsumerWidget {
                       FilterChip(
                         selected: selected.contains(d),
                         onSelected: (v) => setState(() => v ? selected.add(d) : selected.remove(d)),
-                        label: Text('${d}d before'),
+                        label: Text(context.l10n.settingsDaysBefore(d)),
                         labelStyle: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
@@ -227,7 +227,7 @@ class SettingsPage extends ConsumerWidget {
                   child: FilledButton(
                     style: FilledButton.styleFrom(backgroundColor: AppColors.ink),
                     onPressed: selected.isEmpty ? null : () => Navigator.of(context).pop(true),
-                    child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(context.l10n.commonSave, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -252,13 +252,13 @@ Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPr
 
   final start = await showTimePicker(
     context: context,
-    helpText: 'Quiet hours start',
+    helpText: context.l10n.settingsQuietHoursStart,
     initialTime: toTimeOfDay(prefs.quietStart, (hour: 22, minute: 0)),
   );
   if (start == null || !context.mounted) return;
   final end = await showTimePicker(
     context: context,
-    helpText: 'Quiet hours end',
+    helpText: context.l10n.settingsQuietHoursEnd,
     initialTime: toTimeOfDay(prefs.quietEnd, (hour: 7, minute: 0)),
   );
   if (end == null || !context.mounted) return;

@@ -143,13 +143,13 @@ class IlloWelcome extends StatelessWidget {
               top: 18,
               child: Transform.rotate(
                 angle: _rad(-6),
-                child: _StatCard(
+                child: const _StatCard(
                   gradient: AppColors.cardNavy,
                   width: 150,
                   height: 110,
                   label: 'Active Invoices',
                   value: '23',
-                  trailing: const Icon(Icons.description_outlined, size: 16, color: Colors.white),
+                  trailing: Icon(Icons.description_outlined, size: 16, color: Colors.white),
                 ),
               ),
             ),
@@ -159,7 +159,7 @@ class IlloWelcome extends StatelessWidget {
               top: 0,
               child: Transform.rotate(
                 angle: _rad(8),
-                child: _StatCard(
+                child: const _StatCard(
                   gradient: AppColors.cardTeal,
                   width: 130,
                   height: 100,
@@ -179,25 +179,25 @@ class IlloWelcome extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [_softShadow],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const _IconBubble(
+                    _IconBubble(
                       bg: AppColors.insuranceBg,
                       fg: AppColors.insuranceFg,
                       icon: Icons.shield_outlined,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Text('Insurance', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
                         Text('in 25 days', style: TextStyle(fontSize: 9.5, color: AppColors.muted)),
                       ],
                     ),
-                    const SizedBox(width: 8),
-                    const _DayPill(days: 25),
+                    SizedBox(width: 8),
+                    _DayPill(days: 25),
                   ],
                 ),
               ),
@@ -348,11 +348,11 @@ class IlloReminders extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [_softShadow],
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const _IconBubble(bg: AppColors.pollutionBg, fg: AppColors.pollutionFg, icon: Icons.eco_outlined, size: 36),
-                    const SizedBox(width: 10),
-                    const Expanded(
+                    _IconBubble(bg: AppColors.pollutionBg, fg: AppColors.pollutionFg, icon: Icons.eco_outlined, size: 36),
+                    SizedBox(width: 10),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -362,7 +362,7 @@ class IlloReminders extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const _DayPill(days: 15),
+                    _DayPill(days: 15),
                   ],
                 ),
               ),

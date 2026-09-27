@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:docsbuddy/bootstrap/backends/fake_backend.dart';
 import 'package:docsbuddy/bootstrap/dependencies.dart';
+import 'package:docsbuddy/core/l10n/l10n.dart';
 import 'package:docsbuddy/core/logging/app_logger.dart';
 import 'package:docsbuddy/core/notifications/local_alert.dart';
 import 'package:docsbuddy/core/notifications/notification_service.dart';
@@ -162,7 +163,11 @@ ProviderContainer makeContainer({List<Override> overrides = const []}) =>
 Widget testApp(Widget child, {List<Override>? overrides}) => ProviderScope(
       overrides: overrides ?? testOverrides(),
       retry: noRetry,
-      child: MaterialApp(home: child),
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: child,
+      ),
     );
 
 /// Elapses the fakes' simulated latency (timers, not frames) and settles.

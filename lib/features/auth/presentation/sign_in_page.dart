@@ -8,6 +8,7 @@ import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/l10n.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -51,27 +52,27 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       showBack: false,
       children: [
         const SizedBox(height: 8),
-        const AuthHero(title: 'Welcome back', subtitle: 'Sign in to keep your assets and reminders in sync.', big: true),
+        AuthHero(title: context.l10n.authSignInTitle, subtitle: context.l10n.authSignInSubtitle, big: true),
         const SizedBox(height: 22),
-        AppTextField(label: 'Email', controller: _email, icon: Icons.mail_outline, hint: 'you@example.com', keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.email]),
+        AppTextField(label: context.l10n.commonEmail, controller: _email, icon: Icons.mail_outline, hint: context.l10n.commonEmailHint, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.email]),
         const SizedBox(height: 14),
-        AppTextField(label: 'Password', controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, textInputAction: TextInputAction.done, onSubmitted: (_) => _submit()),
+        AppTextField(label: context.l10n.commonPassword, controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, textInputAction: TextInputAction.done, onSubmitted: (_) => _submit()),
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerRight,
           child: GestureDetector(
             onTap: () => context.push(AppRoutes.forgotPassword),
-            child: const Text('Forgot password?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
+            child: Text(context.l10n.commonForgotPassword, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
           ),
         ),
         const SizedBox(height: 16),
-        PrimaryButton(label: 'Sign In', isLoading: loading, onPressed: _submit),
+        PrimaryButton(label: context.l10n.authSignInCta, isLoading: loading, onPressed: _submit),
         const OrDivider(),
         SocialButton(provider: SocialProvider.google, onPressed: _google),
         const SizedBox(height: 10),
         SocialButton(provider: SocialProvider.apple, onPressed: _apple),
         const SizedBox(height: 22),
-        InlineLink(lead: "Don't have an account? ", action: 'Sign up', onTap: () => context.push(AppRoutes.signUp)),
+        InlineLink(lead: context.l10n.authNoAccountLead, action: context.l10n.authSignUpAction, onTap: () => context.push(AppRoutes.signUp)),
       ],
     );
   }
