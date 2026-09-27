@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/media/media_picker.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../documents/presentation/asset_documents_section.dart';
@@ -16,6 +15,7 @@ import 'widgets/asset_detail_widgets.dart';
 import '../../profile/presentation/widgets/profile_avatar_button.dart';
 import '../../../core/l10n/l10n.dart';
 import 'widgets/catalog_widgets.dart';
+import '../../../core/theme/app_theme.dart';
 
 class AssetDetailPage extends ConsumerWidget {
   const AssetDetailPage({super.key, required this.assetId});
@@ -29,21 +29,21 @@ class AssetDetailPage extends ConsumerWidget {
     final next = services.value?.next;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: context.palette.text),
         title: const DbLogo(size: 18),
         actions: [
           IconButton(
             onPressed: () => context.push(AppRoutes.notifications),
-            icon: const Icon(Icons.notifications_none, color: AppColors.ink2, size: 22),
+            icon: Icon(Icons.notifications_none, color: context.palette.textSecondary, size: 22),
           ),
           const ProfileAvatarButton(size: 30),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: AppColors.ink2, size: 22),
+            icon: Icon(Icons.more_vert, color: context.palette.textSecondary, size: 22),
             onSelected: (v) {
               final a = asset.value;
               if (a == null) return;
@@ -51,7 +51,7 @@ class AssetDetailPage extends ConsumerWidget {
             },
             itemBuilder: (_) => [
               PopupMenuItem(value: 'edit', child: Text(context.l10n.catalogEditAsset)),
-              PopupMenuItem(value: 'delete', child: Text(context.l10n.catalogDeleteAsset, style: const TextStyle(color: AppColors.red))),
+              PopupMenuItem(value: 'delete', child: Text(context.l10n.catalogDeleteAsset, style: TextStyle(color: context.palette.danger))),
             ],
           ),
           const SizedBox(width: 8),
@@ -73,7 +73,7 @@ class AssetDetailPage extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(context.l10n.catalogAllReminders(list.length),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
                 AddPill(onTap: () => _addReminder(context, ref, a)),
               ],
             ),
@@ -82,7 +82,7 @@ class AssetDetailPage extends ConsumerWidget {
               loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
               error: (e, _) => Text(context.failureText(e)),
               data: (s) => s.all.isEmpty
-                  ? Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text(context.l10n.catalogNoRemindersForAsset, style: const TextStyle(color: AppColors.muted))))
+                  ? Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text(context.l10n.catalogNoRemindersForAsset, style: TextStyle(color: context.palette.textMuted))))
                   : Column(children: [
                       for (final r in s.all)
                         ServiceRow(
@@ -118,7 +118,7 @@ class AssetDetailPage extends ConsumerWidget {
           ? context.l10n.catalogMarkDoneOneOff(r.label)
           : context.l10n.catalogMarkDoneRecurring(r.label, r.recurrence.displayName(context).toLowerCase()),
       action: context.l10n.catalogMarkDone,
-      color: AppColors.green,
+      color: context.palette.success,
     );
     if (!confirmed || !context.mounted) return;
     await runAction(
@@ -151,7 +151,7 @@ class AssetDetailPage extends ConsumerWidget {
           title: context.l10n.catalogDeleteReminderTitle,
           message: context.l10n.catalogDeleteReminderMessage(r.label),
           action: context.l10n.commonDelete,
-          color: AppColors.red,
+          color: context.palette.danger,
         );
         if (confirmed && context.mounted) await runAction(context, () => _actions(ref).deleteService(r));
     }
@@ -167,7 +167,7 @@ class AssetDetailPage extends ConsumerWidget {
       title: context.l10n.catalogDeleteAssetTitle,
       message: context.l10n.catalogDeleteAssetMessage(asset.name),
       action: context.l10n.commonDelete,
-      color: AppColors.red,
+      color: context.palette.danger,
     );
     if (!confirmed || !context.mounted) return;
     final ok = await runAction(context, () => _actions(ref).deleteAsset());
@@ -184,7 +184,7 @@ class AssetDetailPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.paper,
+        backgroundColor: context.palette.surface,
         title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         content: Text(message),
         actions: [

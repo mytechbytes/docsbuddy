@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/security_providers.dart';
@@ -9,6 +8,7 @@ import '../domain/security_models.dart';
 import 'widgets/security_widgets.dart';
 import '../../../core/widgets/settings_list.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Design screen 17 — Security: biometric login, TOTP 2FA (QR + copy key),
 /// recovery codes, app lock with auto-lock, and session control.
@@ -22,13 +22,13 @@ class SecurityPage extends ConsumerWidget {
     final bioAvailable = ref.watch(biometricsAvailableProvider).value ?? false;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: AppColors.ink),
-        title: Text(context.l10n.securityTitle, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        iconTheme: IconThemeData(color: context.palette.text),
+        title: Text(context.l10n.securityTitle, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -54,7 +54,7 @@ class SecurityPage extends ConsumerWidget {
             error: (e, _) => SettingsCard(children: [
               Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(context.failureText(e), style: const TextStyle(color: AppColors.muted))),
+                  child: Text(context.failureText(e), style: TextStyle(color: context.palette.textMuted))),
             ]),
             data: (s) => SettingsCard(children: [
               SettingsToggleRow(
@@ -84,13 +84,13 @@ class SecurityPage extends ConsumerWidget {
               title: context.l10n.securityAutoLock,
               onTap: () => _pickAutoLock(context, ref, prefs.autoLockMinutes),
               trailing: Text(context.l10n.securityMinutesShort(prefs.autoLockMinutes),
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
             SettingsRow(
               icon: Icons.devices_outlined,
               title: context.l10n.securityActiveSessions,
               onTap: () => _sessions(context, ref),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
           ]),
         ],
@@ -106,7 +106,7 @@ class SecurityPage extends ConsumerWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => TotpEnrollSheet(enrollment: enrollment!),
     );
@@ -117,14 +117,14 @@ class SecurityPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.paper,
+        backgroundColor: context.palette.surface,
         title: Text(context.l10n.securityDisable2faTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         content: Text(context.l10n.securityDisable2faMessage),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.l10n.commonCancel)),
           TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(context.l10n.securityDisable, style: const TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
+              child: Text(context.l10n.securityDisable, style: TextStyle(color: context.palette.danger, fontWeight: FontWeight.w700))),
         ],
       ),
     );
@@ -135,7 +135,7 @@ class SecurityPage extends ConsumerWidget {
   Future<void> _pickAutoLock(BuildContext context, WidgetRef ref, int current) async {
     final minutes = await showModalBottomSheet<int>(
       context: context,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => SafeArea(
         child: Column(
@@ -144,8 +144,8 @@ class SecurityPage extends ConsumerWidget {
             for (final m in autoLockOptions)
               ListTile(
                 title: Text(context.l10n.securityMinutes(m),
-                    style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
-                trailing: m == current ? const Icon(Icons.check, color: AppColors.green) : null,
+                    style: TextStyle(fontWeight: FontWeight.w600, color: context.palette.text)),
+                trailing: m == current ? Icon(Icons.check, color: context.palette.success) : null,
                 onTap: () => Navigator.of(context).pop(m),
               ),
           ],
@@ -160,7 +160,7 @@ class SecurityPage extends ConsumerWidget {
     if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => SafeArea(
         child: Padding(
@@ -170,26 +170,26 @@ class SecurityPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(context.l10n.securityActiveSessions,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
               const SizedBox(height: 12),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.smartphone, color: AppColors.ink),
+                leading: Icon(Icons.smartphone, color: context.palette.text),
                 title: Text(session.device,
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.ink)),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: context.palette.text)),
                 subtitle: Text(
                   session.lastSignIn == null
                       ? context.l10n.securityCurrentSession
                       : context.l10n.securitySignedInAt(
                           '${context.formatDate(session.lastSignIn!.toLocal())}, ${TimeOfDay.fromDateTime(session.lastSignIn!.toLocal()).format(context)}'),
-                  style: const TextStyle(fontSize: 12.5, color: AppColors.muted),
+                  style: TextStyle(fontSize: 12.5, color: context.palette.textMuted),
                 ),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration:
-                      BoxDecoration(color: AppColors.greenSoft, borderRadius: BorderRadius.circular(999)),
+                      BoxDecoration(color: context.palette.successSoft, borderRadius: BorderRadius.circular(999)),
                   child: Text(context.l10n.securityThisDevice,
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.greenLeaf)),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.successStrong)),
                 ),
               ),
               const SizedBox(height: 8),

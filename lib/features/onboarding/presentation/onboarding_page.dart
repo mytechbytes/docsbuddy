@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../application/onboarding_controller.dart';
 import 'widgets/onboarding_illustrations.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// First-launch walkthrough — 4 swipeable slides (`Onboarding.jsx` in the
 /// design handoff). Shown only when onboarding has not been completed on this
@@ -56,7 +56,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -70,7 +70,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   if (_index < _slideCount - 1)
                     GestureDetector(
                       onTap: () => _finish(AppRoutes.signIn),
-                      child: Text(context.l10n.commonSkip, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                      child: Text(context.l10n.commonSkip, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.textMuted)),
                     )
                   else
                     const SizedBox(width: 28),
@@ -167,7 +167,7 @@ class _Slide extends StatelessWidget {
                             height: 6,
                             width: i == index ? 22 : 6,
                             decoration: BoxDecoration(
-                              color: i == index ? AppColors.ink : AppColors.indicatorIdle,
+                              color: i == index ? context.palette.text : context.palette.indicatorIdle,
                               borderRadius: BorderRadius.circular(999),
                             ),
                           ),
@@ -181,23 +181,23 @@ class _Slide extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(999)),
+                            decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(999)),
                             child: Text(
                               data.eyebrow.toUpperCase(),
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.chipBlue, letterSpacing: 0.66),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.accent, letterSpacing: 0.66),
                             ),
                           ),
                           const SizedBox(height: 10),
                           Text(
                             data.title,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: AppColors.ink),
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: context.palette.text),
                           ),
                           const SizedBox(height: 10),
                           Text(
                             data.subtitle,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
+                            style: TextStyle(fontSize: 14, height: 1.5, color: context.palette.textMuted),
                           ),
                         ],
                       ),
@@ -238,10 +238,10 @@ class _SignInFooter extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(context.l10n.onboardingAlreadyWithUs, style: const TextStyle(fontSize: 13, color: AppColors.ink2)),
+        Text(context.l10n.onboardingAlreadyWithUs, style: TextStyle(fontSize: 13, color: context.palette.textSecondary)),
         GestureDetector(
           onTap: onTap,
-          child: Text(context.l10n.commonSignIn, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
+          child: Text(context.l10n.commonSignIn, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),
         ),
       ],
     );

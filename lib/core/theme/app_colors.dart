@@ -36,6 +36,10 @@ abstract final class AppColors {
   static const cardNavy = [Color(0xFF1F3A5F), Color(0xFF2A4A6E)];
   static const cardTeal = [Color(0xFF2A7F9E), Color(0xFF3AA1BB)];
 
+  // Inverse: dark fills (primary buttons, selected chips) and what sits on them
+  static const inverseSurface = ink;
+  static const onInverse = paper;
+
   // Surfaces & accents
   static const blueSoft = Color(0xFFEEF3FB); // icon tiles, chips, info banners, nav indicator
   static const lineSoft = Color(0xFFEEF2F8); // subtle card borders

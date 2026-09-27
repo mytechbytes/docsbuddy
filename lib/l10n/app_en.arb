@@ -674,5 +674,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settingsAppearance": "Appearance",
+  "appearanceSystem": "System",
+  "appearanceLight": "Light",
+  "appearanceDark": "Dark"
 }

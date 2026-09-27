@@ -1385,4 +1385,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String illoBikeSample(String date) {
     return '$date · Bike';
   }
+
+  @override
+  String get settingsAppearance => 'Appearance';
+
+  @override
+  String get appearanceSystem => 'System';
+
+  @override
+  String get appearanceLight => 'Light';
+
+  @override
+  String get appearanceDark => 'Dark';
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
@@ -10,6 +9,7 @@ import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -74,7 +74,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         const SizedBox(height: 10),
         _StrengthBar(strength: strength),
         const SizedBox(height: 6),
-        Text(strengthHint, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+        Text(strengthHint, style: TextStyle(fontSize: 11, color: context.palette.textMuted)),
         const SizedBox(height: 14),
         _TermsRow(value: _agreed, onChanged: (v) => setState(() => _agreed = v)),
         const SizedBox(height: 16),
@@ -97,11 +97,11 @@ class _StrengthBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color colorFor(int i) {
-      if (i >= strength) return AppColors.hairline;
+      if (i >= strength) return context.palette.hairline;
       return switch (strength) {
-        1 => AppColors.red,
-        2 => AppColors.amber,
-        _ => AppColors.green,
+        1 => context.palette.danger,
+        2 => context.palette.warning,
+        _ => context.palette.success,
       };
     }
 
@@ -135,9 +135,9 @@ class _TermsRow extends StatelessWidget {
             height: 20,
             margin: const EdgeInsets.only(top: 1),
             decoration: BoxDecoration(
-              color: value ? AppColors.chipBlue : AppColors.paper,
+              color: value ? context.palette.accent : context.palette.surface,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: value ? AppColors.chipBlue : AppColors.fieldBorder, width: 1.5),
+              border: Border.all(color: value ? context.palette.accent : context.palette.fieldBorder, width: 1.5),
             ),
             child: value ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
           ),
@@ -146,12 +146,12 @@ class _TermsRow extends StatelessWidget {
         Expanded(
           child: Text.rich(
             TextSpan(
-              style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.ink2),
+              style: TextStyle(fontSize: 12, height: 1.45, color: context.palette.textSecondary),
               children: [
                 TextSpan(text: context.l10n.authTermsLead),
-                TextSpan(text: context.l10n.authTermsOfService, style: const TextStyle(color: AppColors.chipBlue, fontWeight: FontWeight.w700)),
+                TextSpan(text: context.l10n.authTermsOfService, style: TextStyle(color: context.palette.accent, fontWeight: FontWeight.w700)),
                 TextSpan(text: context.l10n.authTermsAnd),
-                TextSpan(text: context.l10n.authPrivacyPolicy, style: const TextStyle(color: AppColors.chipBlue, fontWeight: FontWeight.w700)),
+                TextSpan(text: context.l10n.authPrivacyPolicy, style: TextStyle(color: context.palette.accent, fontWeight: FontWeight.w700)),
                 const TextSpan(text: '.'),
               ],
             ),

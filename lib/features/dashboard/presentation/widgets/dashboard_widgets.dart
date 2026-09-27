@@ -7,6 +7,7 @@ import '../../../catalog/domain/catalog_models.dart';
 import '../../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../../reminders/domain/reminder_filters.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class AppBarIconButton extends StatelessWidget {
   const AppBarIconButton(this.icon, {super.key, this.dot = false, this.onTap});
@@ -23,7 +24,7 @@ class AppBarIconButton extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          Icon(icon, color: AppColors.ink2, size: 23),
+          Icon(icon, color: context.palette.textSecondary, size: 23),
           if (dot)
             Positioned(
               right: 1,
@@ -32,9 +33,9 @@ class AppBarIconButton extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: AppColors.red,
+                  color: context.palette.danger,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.bg, width: 1.5),
+                  border: Border.all(color: context.palette.background, width: 1.5),
                 ),
               ),
             ),
@@ -167,21 +168,21 @@ class AppliancesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.line)),
+      decoration: BoxDecoration(color: context.palette.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: context.palette.border)),
       child: Row(
         children: [
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.kitchen_outlined, color: AppColors.chipBlue, size: 20),
+            decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(12)),
+            child: Icon(Icons.kitchen_outlined, color: context.palette.accent, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(context.l10n.dashboardTotalAppliances,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
           ),
-          Text('$count', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.ink)),
+          Text('$count', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: context.palette.text)),
         ],
       ),
     );
@@ -200,7 +201,7 @@ class UpcomingReminderTile extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+        decoration: BoxDecoration(color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
         child: Row(
           children: [
             AssetThumb(
@@ -213,9 +214,9 @@ class UpcomingReminderTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(reminder.assetName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.15)),
+                  Text(reminder.assetName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text, height: 1.15)),
                   const SizedBox(height: 3),
-                  Text('${reminder.label} · ${context.formatShortDate(reminder.dueDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                  Text('${reminder.label} · ${context.formatShortDate(reminder.dueDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
                 ],
               ),
             ),
@@ -241,7 +242,7 @@ class AssetGroupCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+          color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
       child: Column(
         children: [
           InkWell(
@@ -257,9 +258,9 @@ class AssetGroupCard extends StatelessWidget {
                     fallback: Container(
                       width: 46,
                       height: 46,
-                      decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(14)),
                       child: Icon(asset?.category.icon ?? Icons.category_outlined,
-                          size: 22, color: AppColors.ink2),
+                          size: 22, color: context.palette.textSecondary),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -270,11 +271,11 @@ class AssetGroupCard extends StatelessWidget {
                         Text(first.assetName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.15)),
+                            style: TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text, height: 1.15)),
                         const SizedBox(height: 3),
                         Text(asset?.typeName(context) ?? context.l10n.dashboardAsset,
-                            style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                            style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                       ],
                     ),
                   ),
@@ -284,7 +285,7 @@ class AssetGroupCard extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(height: 1, color: AppColors.line),
+          Divider(height: 1, color: context.palette.border),
           for (final r in reminders)
             InkWell(
               onTap: () => context.push(AppRoutes.asset(r.assetId)),
@@ -298,7 +299,7 @@ class AssetGroupCard extends StatelessWidget {
                       child: Text('${r.label} · ${context.formatShortDate(r.dueDate)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                          style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: context.palette.text)),
                     ),
                     DayPill(daysLeft: r.daysLeft),
                   ],

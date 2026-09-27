@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../catalog/domain/catalog_models.dart';
 import '../../../catalog/presentation/widgets/catalog_widgets.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class ReminderKindTile extends StatelessWidget {
   const ReminderKindTile({super.key, required this.kind, required this.selected, required this.onTap});
@@ -17,9 +17,9 @@ class ReminderKindTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.paper,
+          color: context.palette.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: selected ? AppColors.chipBlue : AppColors.line, width: selected ? 2 : 1),
+          border: Border.all(color: selected ? context.palette.accent : context.palette.border, width: selected ? 2 : 1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -34,7 +34,7 @@ class ReminderKindTile extends StatelessWidget {
             Text(kind.displayName(context),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.text)),
           ],
         ),
       ),

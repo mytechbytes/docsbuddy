@@ -10,6 +10,7 @@ import '../../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../domain/family_models.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../family_names.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class FamilyEmptyState extends StatelessWidget {
   const FamilyEmptyState({super.key, required this.onCreate, required this.onJoin});
@@ -27,16 +28,16 @@ class FamilyEmptyState extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: const BoxDecoration(color: AppColors.blueSoft, shape: BoxShape.circle),
-              child: const Icon(Icons.groups_outlined, size: 34, color: AppColors.chipBlue),
+              decoration: BoxDecoration(color: context.palette.accentSoft, shape: BoxShape.circle),
+              child: Icon(Icons.groups_outlined, size: 34, color: context.palette.accent),
             ),
             const SizedBox(height: 20),
-            Text(context.l10n.familyEmptyTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            Text(context.l10n.familyEmptyTitle, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
             const SizedBox(height: 8),
             Text(
               context.l10n.familyEmptyBody,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
+              style: TextStyle(fontSize: 14, height: 1.5, color: context.palette.textMuted),
             ),
             const SizedBox(height: 28),
             PrimaryButton(label: context.l10n.familyCreateTitle, onPressed: onCreate),
@@ -73,9 +74,9 @@ class FamilyOverview extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: AppColors.paper,
+            color: context.palette.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.line),
+            border: Border.all(color: context.palette.border),
           ),
           child: Row(
             children: [
@@ -90,8 +91,8 @@ class FamilyOverview extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(family.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                    Text(context.l10n.memberCount(members.length), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                    Text(family.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text)),
+                    Text(context.l10n.memberCount(members.length), style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
                   ],
                 ),
               ),
@@ -101,7 +102,7 @@ class FamilyOverview extends StatelessWidget {
         const SizedBox(height: 22),
         Padding(
           padding: EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(context.l10n.familyMembers, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+          child: Text(context.l10n.familyMembers, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
         ),
         for (final m in members)
           MemberTile(
@@ -115,7 +116,7 @@ class FamilyOverview extends StatelessWidget {
         const SizedBox(height: 8),
         TextButton(
           onPressed: onLeave,
-          child: Text(context.l10n.familyLeaveFamily, style: const TextStyle(color: AppColors.red, fontWeight: FontWeight.w700)),
+          child: Text(context.l10n.familyLeaveFamily, style: TextStyle(color: context.palette.danger, fontWeight: FontWeight.w700)),
         ),
       ],
     );
@@ -147,9 +148,9 @@ class MemberTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.paper,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.line),
+        border: Border.all(color: context.palette.border),
       ),
       child: Row(
         children: [
@@ -161,8 +162,8 @@ class MemberTile extends StatelessWidget {
               width: 40,
               height: 40,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(color: AppColors.greenSoft, shape: BoxShape.circle),
-              child: Text(member.initial, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.greenLeaf)),
+              decoration: BoxDecoration(color: context.palette.successSoft, shape: BoxShape.circle),
+              child: Text(member.initial, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.successStrong)),
             ),
           ),
           const SizedBox(width: 12),
@@ -173,14 +174,14 @@ class MemberTile extends StatelessWidget {
                 Text(member.displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.palette.text)),
                 if (phone != null) ...[
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.phone_outlined, size: 12, color: AppColors.muted),
+                      Icon(Icons.phone_outlined, size: 12, color: context.palette.textMuted),
                       const SizedBox(width: 4),
-                      Text(phone, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                      Text(phone, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                     ],
                   ),
                 ],
@@ -191,29 +192,29 @@ class MemberTile extends StatelessWidget {
             IconButton(
               visualDensity: VisualDensity.compact,
               onPressed: () => _launch(context, Uri.parse('tel:$phone')),
-              icon: const Icon(Icons.call_outlined, size: 18, color: AppColors.chipBlue),
+              icon: Icon(Icons.call_outlined, size: 18, color: context.palette.accent),
               tooltip: context.l10n.familyCall,
             ),
             IconButton(
               visualDensity: VisualDensity.compact,
               onPressed: () => _launch(context, Uri.parse('https://wa.me/$waDigits')),
-              icon: const Icon(Icons.chat_outlined, size: 18, color: AppColors.greenLeaf),
+              icon: Icon(Icons.chat_outlined, size: 18, color: context.palette.successStrong),
               tooltip: context.l10n.familyWhatsapp,
             ),
           ],
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(999)),
-            child: Text(member.role.displayName(context), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink2)),
+            decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(999)),
+            child: Text(member.role.displayName(context), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.palette.textSecondary)),
           ),
           if (canManage)
             PopupMenuButton<String>(
               padding: EdgeInsets.zero,
-              icon: Icon(Icons.more_vert, size: 18, color: AppColors.muted),
+              icon: Icon(Icons.more_vert, size: 18, color: context.palette.textMuted),
               onSelected: (v) => v == 'role' ? onChangeRole() : onRemove(),
               itemBuilder: (_) => [
                 PopupMenuItem(value: 'role', child: Text(context.l10n.familyChangeRole)),
-                PopupMenuItem(value: 'remove', child: Text(context.l10n.familyRemoveFromFamily, style: const TextStyle(color: AppColors.red))),
+                PopupMenuItem(value: 'remove', child: Text(context.l10n.familyRemoveFromFamily, style: TextStyle(color: context.palette.danger))),
               ],
             ),
         ],
@@ -234,25 +235,25 @@ class InviteSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(999))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: context.palette.border, borderRadius: BorderRadius.circular(999))),
             const SizedBox(height: 18),
-            Text(context.l10n.familyInviteTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            Text(context.l10n.familyInviteTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: context.palette.text)),
             const SizedBox(height: 6),
             Text(context.l10n.familyInviteBody(invite.role.displayName(context)),
-                textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color: AppColors.bg,
+                color: context.palette.background,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.fieldBorder),
+                border: Border.all(color: context.palette.fieldBorder),
               ),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   invite.code,
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 6, color: AppColors.ink),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 6, color: context.palette.text),
                 ),
               ),
             ),
@@ -287,9 +288,9 @@ class FamilyErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: AppColors.red, size: 36),
+            Icon(Icons.error_outline, color: context.palette.danger, size: 36),
             const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.muted)),
+            Text(message, textAlign: TextAlign.center, style: TextStyle(color: context.palette.textMuted)),
             const SizedBox(height: 16),
             TextButton(onPressed: onRetry, child: Text(context.l10n.commonRetry)),
           ],

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/feedback.dart';
 import '../../../../core/widgets/db_logo.dart';
 import '../../application/auth_controller.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// Wire this in a page's `build` to surface [AuthController] failures as a
 /// SnackBar. Safe to call once per build (ref.listen dedupes).
@@ -34,7 +34,7 @@ class AuthScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -48,7 +48,7 @@ class AuthScaffold extends StatelessWidget {
                         ? IconButton(
                             padding: EdgeInsets.zero,
                             alignment: Alignment.centerLeft,
-                            icon: const Icon(Icons.arrow_back, size: 22, color: AppColors.ink),
+                            icon: Icon(Icons.arrow_back, size: 22, color: context.palette.text),
                             onPressed: () => Navigator.of(context).maybePop(),
                           )
                         : null,
@@ -87,10 +87,10 @@ class AuthHero extends StatelessWidget {
     return Column(
       crossAxisAlignment: align,
       children: [
-        Text(title, textAlign: textAlign, style: TextStyle(fontSize: big ? 30 : 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: AppColors.ink)),
+        Text(title, textAlign: textAlign, style: TextStyle(fontSize: big ? 30 : 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: context.palette.text)),
         if (subtitle != null) ...[
           const SizedBox(height: 8),
-          Text(subtitle!, textAlign: textAlign, style: const TextStyle(fontSize: 14, height: 1.45, color: AppColors.muted)),
+          Text(subtitle!, textAlign: textAlign, style: TextStyle(fontSize: 14, height: 1.45, color: context.palette.textMuted)),
         ],
       ],
     );
@@ -129,13 +129,13 @@ class OrDivider extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(0, 22, 0, 18),
       child: Row(
         children: [
-          const Expanded(child: Divider(color: AppColors.hairline, height: 1)),
+          Expanded(child: Divider(color: context.palette.hairline, height: 1)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text((label ?? context.l10n.authOrContinueWith).toUpperCase(),
-                style: const TextStyle(fontSize: 11, color: AppColors.muted, letterSpacing: 1.2)),
+                style: TextStyle(fontSize: 11, color: context.palette.textMuted, letterSpacing: 1.2)),
           ),
-          const Expanded(child: Divider(color: AppColors.hairline, height: 1)),
+          Expanded(child: Divider(color: context.palette.hairline, height: 1)),
         ],
       ),
     );
@@ -159,13 +159,13 @@ class SocialButton extends StatelessWidget {
       child: OutlinedButton.icon(
         onPressed: onPressed,
         icon: isApple
-            ? const Icon(Icons.apple, size: 22, color: Colors.black)
-            : const Icon(Icons.g_mobiledata, size: 30, color: AppColors.chipBlue),
+            ? Icon(Icons.apple, size: 22, color: context.palette.text)
+            : Icon(Icons.g_mobiledata, size: 30, color: context.palette.accent),
         label: Text(isApple ? context.l10n.authContinueWithApple : context.l10n.authContinueWithGoogle),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.ink,
-          backgroundColor: AppColors.paper,
-          side: const BorderSide(color: AppColors.hairline, width: 1.5),
+          foregroundColor: context.palette.text,
+          backgroundColor: context.palette.surface,
+          side: BorderSide(color: context.palette.hairline, width: 1.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'PlusJakartaSans'),
         ),
@@ -187,10 +187,10 @@ class InlineLink extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(lead, style: const TextStyle(fontSize: 13, color: AppColors.ink2)),
+        Text(lead, style: TextStyle(fontSize: 13, color: context.palette.textSecondary)),
         GestureDetector(
           onTap: onTap,
-          child: Text(action, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
+          child: Text(action, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),
         ),
       ],
     );

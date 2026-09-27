@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Design screen 05 — "Select Your Appliances": searchable list of the
 /// category catalog; picking one opens Add-asset pre-filled with that type
@@ -37,13 +37,13 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
   Widget build(BuildContext context) {
     final categories = ref.watch(filteredCategoriesProvider(_query));
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: context.palette.text),
         actions: [
-          IconButton(icon: const Icon(Icons.close, color: AppColors.ink), onPressed: () => context.pop()),
+          IconButton(icon: Icon(Icons.close, color: context.palette.text), onPressed: () => context.pop()),
         ],
       ),
       body: Column(
@@ -52,29 +52,29 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
           Padding(
             padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Text(context.l10n.catalogSelectYourAppliance,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(
               controller: _search,
               onChanged: (v) => setState(() => _query = v),
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text),
               decoration: InputDecoration(
                 isDense: true,
                 filled: true,
-                fillColor: AppColors.paper,
+                fillColor: context.palette.surface,
                 hintText: context.l10n.catalogSearchAppliance,
-                hintStyle: const TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
-                prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.muted),
+                hintStyle: TextStyle(color: context.palette.placeholder, fontWeight: FontWeight.w400),
+                prefixIcon: Icon(Icons.search, size: 18, color: context.palette.textMuted),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.fieldBorder, width: 1.5),
+                  borderSide: BorderSide(color: context.palette.fieldBorder, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.chipBlue, width: 1.5),
+                  borderSide: BorderSide(color: context.palette.accent, width: 1.5),
                 ),
               ),
             ),
@@ -83,12 +83,12 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
           Expanded(
             child: categories.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(context.failureText(e), style: const TextStyle(color: AppColors.muted))),
+              error: (e, _) => Center(child: Text(context.failureText(e), style: TextStyle(color: context.palette.textMuted))),
               data: (filtered) {
                 if (filtered.isEmpty) {
                   return Center(
                       child: Text(context.l10n.catalogNoMatchingAppliance,
-                          style: TextStyle(color: AppColors.muted)));
+                          style: TextStyle(color: context.palette.textMuted)));
                 }
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -121,21 +121,21 @@ class _CategoryTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration:
-            BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+            BoxDecoration(color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
         child: Row(
           children: [
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(12)),
-              child: Icon(category.icon, color: AppColors.ink2, size: 20),
+              decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(12)),
+              child: Icon(category.icon, color: context.palette.textSecondary, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(category.name,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.muted),
+            Icon(Icons.chevron_right, color: context.palette.textMuted),
           ],
         ),
       ),
@@ -157,14 +157,14 @@ class _SomethingElseTile extends StatelessWidget {
         margin: const EdgeInsets.only(top: 4),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: AppColors.bg, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+            color: context.palette.background, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
         child: Row(
           children: [
-            Icon(Icons.add_circle_outline, color: AppColors.chipBlue, size: 20),
+            Icon(Icons.add_circle_outline, color: context.palette.accent, size: 20),
             SizedBox(width: 12),
             Expanded(
                 child: Text(context.l10n.catalogSomethingElse,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.chipBlue))),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.accent))),
           ],
         ),
       ),

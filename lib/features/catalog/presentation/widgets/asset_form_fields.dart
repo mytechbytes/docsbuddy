@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/media/media_picker.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/catalog_models.dart';
 import 'catalog_widgets.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// One selectable category card on step 1.
 class CategoryCard extends StatelessWidget {
@@ -22,9 +22,9 @@ class CategoryCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.paper,
+          color: selected ? context.palette.inverseSurface : context.palette.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
+          border: Border.all(color: selected ? context.palette.inverseSurface : context.palette.border),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -33,17 +33,17 @@ class CategoryCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: selected ? Colors.white.withValues(alpha: 0.12) : AppColors.bg,
+                color: selected ? context.palette.onInverse.withValues(alpha: 0.12) : context.palette.background,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(kind.icon, size: 22, color: selected ? Colors.white : AppColors.ink2),
+              child: Icon(kind.icon, size: 22, color: selected ? context.palette.onInverse : context.palette.textSecondary),
             ),
             const SizedBox(height: 8),
             Text(kind.displayName(context),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.ink)),
+                    fontSize: 13, fontWeight: FontWeight.w700, color: selected ? context.palette.onInverse : context.palette.inverseSurface)),
           ],
         ),
       ),
@@ -66,18 +66,18 @@ class AssetTypeChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.paper,
+          color: selected ? context.palette.inverseSurface : context.palette.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
+          border: Border.all(color: selected ? context.palette.inverseSurface : context.palette.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: selected ? Colors.white : AppColors.ink2),
+            Icon(icon, size: 18, color: selected ? context.palette.onInverse : context.palette.textSecondary),
             const SizedBox(width: 7),
             Text(label,
                 style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppColors.ink)),
+                    fontSize: 13, fontWeight: FontWeight.w700, color: selected ? context.palette.onInverse : context.palette.inverseSurface)),
           ],
         ),
       ),
@@ -108,28 +108,28 @@ class RoomDropdown extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.paper,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+        border: Border.all(color: context.palette.fieldBorder, width: 1.5),
       ),
       child: DropdownButton<String?>(
         value: value,
         isExpanded: true,
         underline: const SizedBox(),
         hint: Text(context.l10n.catalogNoRoomHint,
-            style: TextStyle(fontSize: 14, color: AppColors.placeholder)),
+            style: TextStyle(fontSize: 14, color: context.palette.placeholder)),
         items: [
           DropdownMenuItem<String?>(
               value: null,
-              child: Text(context.l10n.catalogNoRoom, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.muted))),
+              child: Text(context.l10n.catalogNoRoom, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.textMuted))),
           for (final n in names)
             DropdownMenuItem<String?>(
               value: n,
               child: Row(
                 children: [
-                  const Icon(Icons.meeting_room_outlined, size: 18, color: AppColors.ink2),
+                  Icon(Icons.meeting_room_outlined, size: 18, color: context.palette.textSecondary),
                   const SizedBox(width: 8),
-                  Text(n, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                  Text(n, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text)),
                 ],
               ),
             ),
@@ -137,10 +137,10 @@ class RoomDropdown extends StatelessWidget {
             value: newRoomSentinel,
             child: Row(
               children: [
-                Icon(Icons.add_circle_outline, size: 18, color: AppColors.chipBlue),
+                Icon(Icons.add_circle_outline, size: 18, color: context.palette.accent),
                 SizedBox(width: 8),
                 Text(context.l10n.catalogNewRoom,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.accent)),
               ],
             ),
           ),
@@ -164,9 +164,9 @@ class AssetPhotoPicker extends StatelessWidget {
     final placeholder = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_a_photo_outlined, color: AppColors.muted, size: 26),
+        Icon(Icons.add_a_photo_outlined, color: context.palette.textMuted, size: 26),
         SizedBox(height: 6),
-        Text(context.l10n.catalogAddPhoto, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
+        Text(context.l10n.catalogAddPhoto, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.palette.textMuted)),
       ],
     );
     return InkWell(
@@ -176,9 +176,9 @@ class AssetPhotoPicker extends StatelessWidget {
         width: 96,
         height: 96,
         decoration: BoxDecoration(
-          color: AppColors.paper,
+          color: context.palette.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+          border: Border.all(color: context.palette.fieldBorder, width: 1.5),
         ),
         clipBehavior: Clip.antiAlias,
         child: photo != null
@@ -201,7 +201,7 @@ class DateField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
         const SizedBox(height: 6),
         InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -211,13 +211,13 @@ class DateField extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
-              color: AppColors.paper,
+              color: context.palette.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+              border: Border.all(color: context.palette.fieldBorder, width: 1.5),
             ),
             child: Row(
               children: [
-                const Icon(Icons.event_outlined, size: 18, color: AppColors.muted),
+                Icon(Icons.event_outlined, size: 18, color: context.palette.textMuted),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -225,7 +225,7 @@ class DateField extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: value == null ? FontWeight.w400 : FontWeight.w600,
-                      color: value == null ? AppColors.placeholder : AppColors.ink,
+                      color: value == null ? context.palette.placeholder : context.palette.text,
                     ),
                   ),
                 ),

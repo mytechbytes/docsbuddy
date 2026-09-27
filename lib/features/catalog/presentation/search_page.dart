@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/widgets/settings_list.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Search across assets (name/brand/model/serial) and services (label,
 /// provider, policy no.) — wires the dashboard's search icon.
@@ -37,11 +37,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final reminderHits = hits.reminders;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: context.palette.text),
         titleSpacing: 0,
         title: Padding(
           padding: const EdgeInsets.only(right: 16),
@@ -49,20 +49,20 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             controller: _search,
             autofocus: true,
             onChanged: (v) => setState(() => _query = v.trim()),
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.palette.text),
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: context.l10n.catalogSearchHint,
-              hintStyle: TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400, fontSize: 14),
+              hintStyle: TextStyle(color: context.palette.placeholder, fontWeight: FontWeight.w400, fontSize: 14),
             ),
           ),
         ),
       ),
       body: q.isEmpty
           ? Center(
-              child: Text(context.l10n.catalogSearchEmpty, style: const TextStyle(color: AppColors.muted)))
+              child: Text(context.l10n.catalogSearchEmpty, style: TextStyle(color: context.palette.textMuted)))
           : (assetHits.isEmpty && reminderHits.isEmpty)
-              ? Center(child: Text(context.l10n.commonNoMatches, style: const TextStyle(color: AppColors.muted)))
+              ? Center(child: Text(context.l10n.commonNoMatches, style: TextStyle(color: context.palette.textMuted)))
               : ListView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
                   children: [
@@ -94,7 +94,7 @@ class _AssetHit extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+            color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
         child: Row(
           children: [
             AssetThumb(
@@ -104,8 +104,8 @@ class _AssetHit extends StatelessWidget {
               fallback: Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(12)),
-                child: Icon(asset.category.icon, size: 20, color: AppColors.ink2),
+                decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(12)),
+                child: Icon(asset.category.icon, size: 20, color: context.palette.textSecondary),
               ),
             ),
             const SizedBox(width: 12),
@@ -116,12 +116,12 @@ class _AssetHit extends StatelessWidget {
                   Text(asset.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                  Text(asset.subtitle, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
+                  Text(asset.subtitle, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.muted),
+            Icon(Icons.chevron_right, color: context.palette.textMuted),
           ],
         ),
       ),
@@ -142,7 +142,7 @@ class _ReminderHit extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+            color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
         child: Row(
           children: [
             IconBubble(kind: reminder.kind, size: 40),
@@ -154,9 +154,9 @@ class _ReminderHit extends StatelessWidget {
                   Text('${reminder.assetName} — ${reminder.label}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
                   Text(context.formatDate(reminder.dueDate),
-                      style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                      style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
                 ],
               ),
             ),

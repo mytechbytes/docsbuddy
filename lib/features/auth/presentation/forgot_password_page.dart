@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -40,7 +40,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       showLogo: false,
       children: [
         const SizedBox(height: 14),
-        const Center(child: HeroBadge(background: AppColors.blueSoft, foreground: AppColors.chipBlue, icon: Icons.vpn_key_outlined)),
+        Center(child: HeroBadge(background: context.palette.accentSoft, foreground: context.palette.accent, icon: Icons.vpn_key_outlined)),
         const SizedBox(height: 22),
         AuthHero(title: context.l10n.commonForgotPassword, subtitle: context.l10n.authForgotSubtitle),
         const SizedBox(height: 20),

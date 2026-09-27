@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../auth/domain/password_policy.dart';
 import '../application/change_password_controller.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Design screen 16 — Change password: current/new/confirm with a strength
 /// meter. The current password is verified by re-authenticating first.
@@ -51,20 +51,20 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: AppColors.ink),
-        title: Text(context.l10n.changePasswordTitle, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        iconTheme: IconThemeData(color: context.palette.text),
+        title: Text(context.l10n.changePasswordTitle, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
         children: [
           Text(
             context.l10n.changePasswordNotice,
-            style: const TextStyle(fontSize: 13, color: AppColors.muted, height: 1.4),
+            style: TextStyle(fontSize: 13, color: context.palette.textMuted, height: 1.4),
           ),
           const SizedBox(height: 18),
           AppTextField(label: context.l10n.changePasswordCurrent, controller: _current, icon: Icons.lock_outline, obscure: true),
@@ -112,9 +112,9 @@ class _StrengthMeter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (score) {
-      1 => AppColors.red,
-      2 => AppColors.amber,
-      _ => AppColors.green,
+      1 => context.palette.danger,
+      2 => context.palette.warning,
+      _ => context.palette.success,
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,7 +128,7 @@ class _StrengthMeter extends StatelessWidget {
                 child: Container(
                   height: 4,
                   decoration: BoxDecoration(
-                    color: i <= score ? color : AppColors.line,
+                    color: i <= score ? color : context.palette.border,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),

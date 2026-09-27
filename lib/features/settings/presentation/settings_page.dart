@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/error/app_failure.dart';
 import '../../../core/providers/core_providers.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../family/application/family_controller.dart';
@@ -16,6 +15,9 @@ import '../domain/notification_prefs.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/widgets/settings_list.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
+import '../application/appearance_controller.dart';
+import '../domain/appearance.dart';
 
 /// Design screen 15 — Settings: Account / Notifications / Family sections
 /// (notification toggles + default offsets are backed by
@@ -34,11 +36,11 @@ class SettingsPage extends ConsumerWidget {
         runAction(context, () => ref.read(notificationPrefsProvider.notifier).setChannel(channel, enabled));
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        title: Text(context.l10n.commonSettings, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        title: Text(context.l10n.commonSettings, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -49,19 +51,19 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.person_outline,
               title: context.l10n.settingsPersonalInfo,
               onTap: () => context.push(AppRoutes.profile),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
             SettingsRow(
               icon: Icons.mail_outline,
               title: context.l10n.commonEmail,
               trailing: Text(profile?.email ?? '—',
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
             SettingsRow(
               icon: Icons.lock_outline,
               title: context.l10n.commonChangePassword,
               onTap: () => context.push(AppRoutes.changePassword),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
             SettingsRow(
               icon: Icons.shield_outlined,
@@ -69,7 +71,7 @@ class SettingsPage extends ConsumerWidget {
               onTap: () => context.push(AppRoutes.security),
               trailing: Text(
                 ref.watch(securityStatusProvider).value?.totpEnabled == true ? context.l10n.commonOn : context.l10n.commonOff,
-                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
           ]),
@@ -98,8 +100,8 @@ class SettingsPage extends ConsumerWidget {
               title: context.l10n.settingsDefaultOffsets,
               onTap: () => _editOffsets(context, ref, prefs),
               trailing: Text(
-                '${prefs.defaultOffsets.join(' · ')}d',
-                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+                context.formatOffsets(prefs.defaultOffsets),
+                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
             SettingsRow(
@@ -108,7 +110,7 @@ class SettingsPage extends ConsumerWidget {
               onTap: () => _editQuietHours(context, ref, prefs),
               trailing: Text(
                 '${prefs.quietStart} – ${prefs.quietEnd}',
-                style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5),
+                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
           ]),
@@ -119,16 +121,22 @@ class SettingsPage extends ConsumerWidget {
               title: context.l10n.settingsManageFamily,
               onTap: () => context.push(AppRoutes.familyManage),
               trailing: Text(context.l10n.memberCount(members.length),
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
           ]),
           SectionLabel(context.l10n.settingsSectionApp),
           SettingsCard(children: [
             SettingsRow(
+              icon: Icons.dark_mode_outlined,
+              title: context.l10n.settingsAppearance,
+              onTap: () => _pickAppearance(context, ref),
+              trailing: SettingsValue(_appearanceName(context, ref.watch(appearanceProvider))),
+            ),
+            SettingsRow(
               icon: Icons.cloud_outlined,
               title: context.l10n.settingsBackend,
               trailing: Text(ref.watch(backendLabelProvider),
-                  style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
             ),
             SettingsRow(
               icon: Icons.notification_add_outlined,
@@ -141,13 +149,13 @@ class SettingsPage extends ConsumerWidget {
                     : context.showFailure(const UnavailableFailure('Notifications are blocked in system settings.',
                         reason: FailureReason.notificationsBlocked));
               },
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
             SettingsRow(
               icon: Icons.checklist_outlined,
               title: context.l10n.settingsPending,
               onTap: () => context.push(AppRoutes.roadmap),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
             SettingsRow(
               icon: Icons.replay_outlined,
@@ -156,7 +164,7 @@ class SettingsPage extends ConsumerWidget {
                 await ref.read(onboardingControllerProvider.notifier).reset();
                 if (context.mounted) context.go(AppRoutes.onboarding);
               },
-              trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+              trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),
           ]),
           const SizedBox(height: 16),
@@ -184,7 +192,7 @@ class SettingsPage extends ConsumerWidget {
     final selected = {...prefs.defaultOffsets};
     final saved = await showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => SafeArea(
@@ -195,10 +203,10 @@ class SettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(context.l10n.settingsOffsetsTitle,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
                 const SizedBox(height: 4),
                 Text(context.l10n.settingsOffsetsSubtitle,
-                    style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 8,
@@ -212,13 +220,13 @@ class SettingsPage extends ConsumerWidget {
                         labelStyle: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
-                            color: selected.contains(d) ? Colors.white : AppColors.ink2),
-                        selectedColor: AppColors.chipBlue,
+                            color: selected.contains(d) ? Colors.white : context.palette.textSecondary),
+                        selectedColor: context.palette.accent,
                         checkmarkColor: Colors.white,
-                        backgroundColor: AppColors.bg,
+                        backgroundColor: context.palette.background,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(999),
-                            side: const BorderSide(color: AppColors.line)),
+                            side: BorderSide(color: context.palette.border)),
                       ),
                   ],
                 ),
@@ -226,7 +234,7 @@ class SettingsPage extends ConsumerWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: AppColors.ink),
+                    style: FilledButton.styleFrom(backgroundColor: context.palette.inverseSurface),
                     onPressed: selected.isEmpty ? null : () => Navigator.of(context).pop(true),
                     child: Text(context.l10n.commonSave, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
@@ -271,4 +279,31 @@ Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPr
           (hour: end.hour, minute: end.minute),
         ),
   );
+}
+
+String _appearanceName(BuildContext context, AppearanceMode mode) => switch (mode) {
+      AppearanceMode.system => context.l10n.appearanceSystem,
+      AppearanceMode.light => context.l10n.appearanceLight,
+      AppearanceMode.dark => context.l10n.appearanceDark,
+    };
+
+Future<void> _pickAppearance(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(appearanceProvider);
+  final picked = await showModalBottomSheet<AppearanceMode>(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final mode in AppearanceMode.values)
+            ListTile(
+              title: Text(_appearanceName(context, mode), style: const TextStyle(fontWeight: FontWeight.w600)),
+              trailing: mode == current ? Icon(Icons.check, color: context.palette.success) : null,
+              onTap: () => Navigator.of(context).pop(mode),
+            ),
+        ],
+      ),
+    ),
+  );
+  if (picked != null) await ref.read(appearanceProvider.notifier).set(picked);
 }

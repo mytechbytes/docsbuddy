@@ -6,6 +6,7 @@ import '../../application/catalog_providers.dart';
 import '../../domain/catalog_models.dart';
 import 'catalog_style.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/theme/app_theme.dart';
 
 export 'catalog_style.dart';
 
@@ -99,8 +100,8 @@ class CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(999)),
-      child: Text(label, style: const TextStyle(color: AppColors.chipBlue, fontSize: 11, fontWeight: FontWeight.w700)),
+      decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(999)),
+      child: Text(label, style: TextStyle(color: context.palette.accent, fontSize: 11, fontWeight: FontWeight.w700)),
     );
   }
 }

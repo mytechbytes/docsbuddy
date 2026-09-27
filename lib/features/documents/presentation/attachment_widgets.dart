@@ -7,11 +7,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/media/picked_media.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/document_providers.dart';
 import '../domain/document_models.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Icon for a non-image attachment by file extension / MIME type; the
 /// generic "unknown file" icon when the type isn't recognised.
@@ -192,9 +192,9 @@ class DocumentThumb extends ConsumerWidget {
     final iconBox = Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(radius)),
+      decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(radius)),
       child: Icon(fileTypeIcon(doc.title, doc.mimeType),
-          color: AppColors.ink2, size: size.isFinite ? size * 0.5 : 30),
+          color: context.palette.textSecondary, size: size.isFinite ? size * 0.5 : 30),
     );
     if (!doc.isImage) return iconBox;
 
@@ -250,14 +250,14 @@ class PickedMediaGrid extends StatelessWidget {
                   width: 78,
                   height: 78,
                   decoration: BoxDecoration(
-                    color: AppColors.paper,
+                    color: context.palette.surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.line),
+                    border: Border.all(color: context.palette.border),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: image
                       ? Image.memory(f.bytes, fit: BoxFit.cover)
-                      : Icon(fileTypeIcon(f.name), color: AppColors.ink2, size: 30),
+                      : Icon(fileTypeIcon(f.name), color: context.palette.textSecondary, size: 30),
                 ),
               ),
               Positioned(
@@ -269,11 +269,11 @@ class PickedMediaGrid extends StatelessWidget {
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: AppColors.ink,
+                      color: context.palette.inverseSurface,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
+                      border: Border.all(color: context.palette.onInverse, width: 1.5),
                     ),
-                    child: const Icon(Icons.close, size: 12, color: Colors.white),
+                    child: Icon(Icons.close, size: 12, color: context.palette.onInverse),
                   ),
                 ),
               ),
@@ -283,7 +283,7 @@ class PickedMediaGrid extends StatelessWidget {
           Text(f.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
+              style: TextStyle(fontSize: 10.5, color: context.palette.textMuted)),
         ],
       ),
     );
@@ -338,7 +338,7 @@ class _DocCard extends ConsumerWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-            color: AppColors.paper, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.line)),
+            color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,9 +360,9 @@ class _DocCard extends ConsumerWidget {
                         Text(doc.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.palette.text)),
                         Text('${doc.kind.displayName(context)} · ${formatBytes(doc.sizeBytes)}',
-                            style: const TextStyle(fontSize: 10.5, color: AppColors.muted)),
+                            style: TextStyle(fontSize: 10.5, color: context.palette.textMuted)),
                       ],
                     ),
                   ),
@@ -370,7 +370,7 @@ class _DocCard extends ConsumerWidget {
                     width: 28,
                     child: PopupMenuButton<String>(
                       padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.more_vert, size: 17, color: AppColors.muted),
+                      icon: Icon(Icons.more_vert, size: 17, color: context.palette.textMuted),
                       onSelected: (v) {
                         if (v == 'view') onTap();
                         if (v == 'share') onShare();
@@ -382,7 +382,7 @@ class _DocCard extends ConsumerWidget {
                         if (onDelete != null)
                           PopupMenuItem(
                               value: 'delete',
-                              child: Text(context.l10n.commonDelete, style: const TextStyle(color: AppColors.red))),
+                              child: Text(context.l10n.commonDelete, style: TextStyle(color: context.palette.danger))),
                       ],
                     ),
                   ),

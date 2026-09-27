@@ -11,6 +11,7 @@ import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
   const ResetPasswordPage({super.key});
@@ -54,7 +55,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       showLogo: false,
       children: [
         const SizedBox(height: 14),
-        const Center(child: HeroBadge(background: AppColors.amberSoft, foreground: AppColors.amberDeep, icon: Icons.lock_outline)),
+        Center(child: HeroBadge(background: context.palette.warningSoft, foreground: AppColors.amberDeep, icon: Icons.lock_outline)),
         const SizedBox(height: 22),
         AuthHero(title: context.l10n.authResetTitle, subtitle: context.l10n.authResetSubtitle),
         const SizedBox(height: 20),
@@ -86,14 +87,14 @@ class _RequirementsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: AppColors.paper,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.lineSoft),
+        border: Border.all(color: context.palette.borderSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.authPasswordMustHave, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          Text(context.l10n.authPasswordMustHave, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.palette.text)),
           const SizedBox(height: 8),
           for (final r in rules)
             Padding(
@@ -103,11 +104,11 @@ class _RequirementsCard extends StatelessWidget {
                   Container(
                     width: 16,
                     height: 16,
-                    decoration: BoxDecoration(color: r.ok ? AppColors.green : AppColors.hairline, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: r.ok ? context.palette.success : context.palette.hairline, shape: BoxShape.circle),
                     child: r.ok ? const Icon(Icons.check, size: 11, color: Colors.white) : null,
                   ),
                   const SizedBox(width: 8),
-                  Text(r.label, style: TextStyle(fontSize: 12, color: r.ok ? AppColors.ink : AppColors.muted)),
+                  Text(r.label, style: TextStyle(fontSize: 12, color: r.ok ? context.palette.text : context.palette.textMuted)),
                 ],
               ),
             ),

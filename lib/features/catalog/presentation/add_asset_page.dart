@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/media/media_picker.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
@@ -17,6 +16,7 @@ import '../domain/property_specs.dart';
 import 'widgets/catalog_widgets.dart';
 import 'widgets/asset_form_fields.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Add / edit asset as a 3-step flow:
 ///   1. Category (responsive grid, includes Other)
@@ -145,18 +145,18 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.paper,
+        backgroundColor: context.palette.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(context.l10n.catalogCustomTypeTitle,
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text)),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text),
           decoration: InputDecoration(
             hintText: context.l10n.catalogCustomTypeHint,
-            hintStyle: TextStyle(color: AppColors.placeholder, fontWeight: FontWeight.w400),
+            hintStyle: TextStyle(color: context.palette.placeholder, fontWeight: FontWeight.w400),
           ),
           onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
         ),
@@ -234,13 +234,13 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     final type = _effectiveType(categories);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: context.palette.text),
         title: Text(_isEdit ? context.l10n.catalogEditAsset : context.l10n.catalogAddAsset,
-            style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+            style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: Column(
         children: [
@@ -370,7 +370,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       const SizedBox(height: 18),
       AppTextField(label: context.l10n.catalogName, controller: _name, icon: Icons.label_outline, hint: context.l10n.catalogNameHint),
       const SizedBox(height: 14),
-      Text(context.l10n.catalogRoomOptional, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.catalogRoomOptional, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 6),
       RoomDropdown(
         rooms: rooms,
@@ -414,7 +414,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       // ── Type-specific properties ──
       const SizedBox(height: 20),
       Text(context.l10n.catalogDetailsFor(type?.name ?? _customType ?? context.l10n.catalogThisAppliance).toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
       const SizedBox(height: 10),
       for (final spec in specs) ...[
         AppTextField(
@@ -432,7 +432,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
             const SizedBox(width: 10),
             Expanded(child: AppTextField(label: '', controller: _extraProps[i].$2, hint: context.l10n.catalogValueHint)),
             IconButton(
-              icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppColors.muted),
+              icon: Icon(Icons.remove_circle_outline, size: 20, color: context.palette.textMuted),
               onPressed: () => setState(() {
                 final (k, v) = _extraProps.removeAt(i);
                 k.dispose();
@@ -458,7 +458,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
         DateField(label: context.l10n.catalogAmcDate, value: _amcDate, onTap: () => _pickDate(amc: true)),
         const SizedBox(height: 14),
         Text(context.l10n.catalogInvoices,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
         const SizedBox(height: 8),
         PickedMediaGrid(files: _invoices, onRemove: (i) => setState(() => _invoices.removeAt(i))),
         if (_invoices.isNotEmpty) const SizedBox(height: 10),
@@ -466,21 +466,21 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
           onPressed: _pickInvoices,
           style: OutlinedButton.styleFrom(
             minimumSize: const Size.fromHeight(48),
-            side: const BorderSide(color: AppColors.fieldBorder, width: 1.5),
+            side: BorderSide(color: context.palette.fieldBorder, width: 1.5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          icon: const Icon(Icons.upload_file_outlined, size: 18, color: AppColors.ink2),
+          icon: Icon(Icons.upload_file_outlined, size: 18, color: context.palette.textSecondary),
           label: Text(context.l10n.catalogAttachInvoice,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.palette.text)),
         ),
         if (type != null && type.defaults.isNotEmpty) ...[
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(12)),
             child: Text(
               context.l10n.catalogWillAutoAdd(type.defaults.map((d) => d.label).join(' · ')),
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: context.palette.accent),
             ),
           ),
         ],

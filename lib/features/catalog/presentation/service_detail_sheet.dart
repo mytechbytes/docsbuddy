@@ -8,6 +8,7 @@ import '../../documents/presentation/attachment_widgets.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// What the caller wants done after the sheet closes.
 enum ServiceAction { edit, complete, delete }
@@ -23,7 +24,7 @@ class ServiceDetailSheet extends ConsumerWidget {
     return showModalBottomSheet<ServiceAction>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => ServiceDetailSheet(reminder: reminder),
     );
@@ -46,7 +47,7 @@ class ServiceDetailSheet extends ConsumerWidget {
                     width: 40,
                     height: 4,
                     decoration:
-                        BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(999)))),
+                        BoxDecoration(color: context.palette.border, borderRadius: BorderRadius.circular(999)))),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -57,8 +58,8 @@ class ServiceDetailSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(reminder.label,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
-                      Text(reminder.assetName, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
+                      Text(reminder.assetName, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                     ],
                   ),
                 ),
@@ -83,7 +84,7 @@ class ServiceDetailSheet extends ConsumerWidget {
             if (docs.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(context.l10n.catalogServiceDocuments,
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
               const SizedBox(height: 8),
               DocumentGrid(assetId: reminder.assetId, docs: docs),
             ],
@@ -96,7 +97,7 @@ class ServiceDetailSheet extends ConsumerWidget {
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     label: Text(context.l10n.commonEdit, style: const TextStyle(fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.ink, side: const BorderSide(color: AppColors.line)),
+                        foregroundColor: context.palette.text, side: BorderSide(color: context.palette.border)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -111,8 +112,8 @@ class ServiceDetailSheet extends ConsumerWidget {
                 const SizedBox(width: 10),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(ServiceAction.delete),
-                  icon: const Icon(Icons.delete_outline, color: AppColors.red),
-                  style: IconButton.styleFrom(side: const BorderSide(color: AppColors.line)),
+                  icon: Icon(Icons.delete_outline, color: context.palette.danger),
+                  style: IconButton.styleFrom(side: BorderSide(color: context.palette.border)),
                 ),
               ],
             ),
@@ -136,15 +137,15 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppColors.muted),
+          Icon(icon, size: 16, color: context.palette.textMuted),
           const SizedBox(width: 10),
           SizedBox(
             width: 110,
-            child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+            child: Text(label, style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
           ),
           Expanded(
             child: Text(value,
-                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: context.palette.text)),
           ),
         ],
       ),

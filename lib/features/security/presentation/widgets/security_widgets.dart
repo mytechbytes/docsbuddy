@@ -11,6 +11,7 @@ import '../../application/security_providers.dart';
 import '../../domain/security_models.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../security_names.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// QR + secret + code verification for a pending TOTP enrollment.
 class TotpEnrollSheet extends ConsumerStatefulWidget {
@@ -59,10 +60,10 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(context.l10n.securitySetupTitle,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
               const SizedBox(height: 4),
               Text(context.l10n.securitySetupBody,
-                  style: TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                  style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
               const SizedBox(height: 16),
               Center(
                 child: Container(
@@ -70,7 +71,7 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
                   decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.line)),
+                      border: Border.all(color: context.palette.border)),
                   child: QrImageView(data: widget.enrollment.uri, size: 160),
                 ),
               ),
@@ -79,7 +80,7 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
                 children: [
                   Expanded(
                     child: Text(widget.enrollment.secret,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink, letterSpacing: 1)),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text, letterSpacing: 1)),
                   ),
                   TextButton.icon(
                     onPressed: () async {
@@ -124,7 +125,7 @@ class BiometricTypesRow extends ConsumerWidget {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(context.l10n.securityAvailable(kinds.map((k) => k.displayName(context)).join(' · ')),
-            style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+            style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 /// Upper-case grey section heading used above grouped lists.
 class SectionLabel extends StatelessWidget {
@@ -13,21 +13,26 @@ class SectionLabel extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(4, topPadding, 4, 8),
       child: Text(text.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
     );
   }
 }
 
-/// Rounded white card holding a group of [SettingsRow]s.
+/// Rounded card holding a group of [SettingsRow]s. A [Material] (not a
+/// decorated box) so the rows' ink ripples stay visible.
 class SettingsCard extends StatelessWidget {
   const SettingsCard({super.key, required this.children});
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+    return Material(
+      color: context.palette.surface,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: context.palette.border),
+      ),
       child: Column(children: children),
     );
   }
@@ -43,7 +48,7 @@ class SettingsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = danger ? AppColors.red : AppColors.ink;
+    final color = danger ? context.palette.danger : context.palette.text;
     return ListTile(
       onTap: onTap,
       leading: Icon(icon, color: color),
@@ -60,7 +65,7 @@ class SettingsValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Text(text, style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600, fontSize: 12.5));
+      Text(text, style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5));
 }
 
 class SettingsToggleRow extends StatelessWidget {
@@ -83,10 +88,10 @@ class SettingsToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.ink),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
-      subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-      trailing: Switch(value: value, onChanged: onChanged, activeTrackColor: AppColors.green),
+      leading: Icon(icon, color: context.palette.text),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: context.palette.text)),
+      subtitle: subtitle == null ? null : Text(subtitle!, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
+      trailing: Switch(value: value, onChanged: onChanged, activeTrackColor: context.palette.success),
     );
   }
 }

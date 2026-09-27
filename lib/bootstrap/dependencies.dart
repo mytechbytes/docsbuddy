@@ -10,6 +10,8 @@ import '../core/push/push_messaging_service.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/data/shared_prefs_onboarding_store.dart';
 import '../features/security/application/security_providers.dart';
+import '../features/settings/application/appearance_controller.dart';
+import '../features/settings/data/shared_prefs_appearance_store.dart';
 import '../features/security/data/device_security.dart';
 import 'backend_module.dart';
 import 'backends/fake_backend.dart';
@@ -36,6 +38,7 @@ List<Override> platformOverrides(
     [
       appLoggerProvider.overrideWithValue(logger),
       sharedPreferencesProvider.overrideWithValue(prefs),
+      appearanceStoreProvider.overrideWith((ref) => SharedPrefsAppearanceStore(ref.watch(sharedPreferencesProvider))),
       onboardingStoreProvider.overrideWith((ref) => SharedPrefsOnboardingStore(ref.watch(sharedPreferencesProvider))),
       securityPrefsStoreProvider
           .overrideWith((ref) => SharedPrefsSecurityPrefsStore(ref.watch(sharedPreferencesProvider))),

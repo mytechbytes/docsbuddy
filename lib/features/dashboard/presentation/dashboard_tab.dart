@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../catalog/application/catalog_providers.dart';
@@ -14,6 +13,7 @@ import '../../reminders/application/reminder_providers.dart';
 import 'widgets/dashboard_widgets.dart';
 import '../../profile/presentation/widgets/profile_avatar_button.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 class DashboardTab extends ConsumerWidget {
   const DashboardTab({super.key});
@@ -22,7 +22,7 @@ class DashboardTab extends ConsumerWidget {
     final selected = {...ref.read(dashboardControllerProvider).kinds};
     final applied = await showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => SafeArea(
@@ -36,7 +36,7 @@ class DashboardTab extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(context.l10n.dashboardFilterByType,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
                     ),
                     TextButton(
                       onPressed: () => setSheetState(selected.clear),
@@ -58,12 +58,12 @@ class DashboardTab extends ConsumerWidget {
                         labelStyle: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
-                            color: selected.contains(k) ? k.fg : AppColors.ink2),
+                            color: selected.contains(k) ? k.fg : context.palette.textSecondary),
                         selectedColor: k.bg,
                         checkmarkColor: k.fg,
-                        backgroundColor: AppColors.bg,
+                        backgroundColor: context.palette.background,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999), side: const BorderSide(color: AppColors.line)),
+                            borderRadius: BorderRadius.circular(999), side: BorderSide(color: context.palette.border)),
                       ),
                   ],
                 ),
@@ -71,7 +71,7 @@ class DashboardTab extends ConsumerWidget {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: AppColors.ink),
+                    style: FilledButton.styleFrom(backgroundColor: context.palette.inverseSurface),
                     onPressed: () => Navigator.of(context).pop(true),
                     child: Text(context.l10n.commonApply, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
@@ -91,9 +91,9 @@ class DashboardTab extends ConsumerWidget {
     final overdue = ref.watch(hasOverdueProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
         titleSpacing: 20,
         title: const Align(alignment: Alignment.centerLeft, child: DbLogo(size: 20)),
@@ -106,7 +106,7 @@ class DashboardTab extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.appliancePicker()),
-        backgroundColor: AppColors.chipBlue,
+        backgroundColor: context.palette.accent,
         elevation: 2,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -130,7 +130,7 @@ class DashboardTab extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(context.l10n.dashboardUpcoming,
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text)),
                     ),
                     PopupMenuButton<bool>(
                       tooltip: context.l10n.dashboardGroupBy,
@@ -145,12 +145,12 @@ class DashboardTab extends ConsumerWidget {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: filter.groupByAsset ? AppColors.ink : AppColors.paper,
+                          color: filter.groupByAsset ? context.palette.inverseSurface : context.palette.surface,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.line),
+                          border: Border.all(color: context.palette.border),
                         ),
                         child: Icon(Icons.layers_outlined,
-                            size: 17, color: filter.groupByAsset ? Colors.white : AppColors.ink2),
+                            size: 17, color: filter.groupByAsset ? context.palette.onInverse : context.palette.textSecondary),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -161,11 +161,11 @@ class DashboardTab extends ConsumerWidget {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: filter.kinds.isEmpty ? AppColors.paper : AppColors.ink,
+                          color: filter.kinds.isEmpty ? context.palette.surface : context.palette.inverseSurface,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.line),
+                          border: Border.all(color: context.palette.border),
                         ),
-                        child: Icon(Icons.tune, size: 17, color: filter.kinds.isEmpty ? AppColors.ink2 : Colors.white),
+                        child: Icon(Icons.tune, size: 17, color: filter.kinds.isEmpty ? context.palette.textSecondary : context.palette.onInverse),
                       ),
                     ),
                   ],
@@ -179,7 +179,7 @@ class DashboardTab extends ConsumerWidget {
                             filter.kinds.isEmpty
                                 ? context.l10n.dashboardEmpty
                                 : context.l10n.dashboardNoMatches,
-                            style: const TextStyle(color: AppColors.muted))),
+                            style: TextStyle(color: context.palette.textMuted))),
                   )
                 else if (filter.groupByAsset)
                   for (final group in view.groups) AssetGroupCard(reminders: group, asset: view.assetsById[group.first.assetId])

@@ -18,6 +18,8 @@ import 'package:docsbuddy/features/profile/domain/profile.dart';
 import 'package:docsbuddy/features/security/application/security_providers.dart';
 import 'package:docsbuddy/features/security/domain/security_models.dart';
 import 'package:docsbuddy/features/security/domain/security_repository.dart';
+import 'package:docsbuddy/features/settings/application/appearance_controller.dart';
+import 'package:docsbuddy/features/settings/domain/appearance.dart';
 import 'package:docsbuddy/features/settings/domain/notification_prefs_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -106,6 +108,17 @@ class InMemorySecurityPrefsStore implements SecurityPrefsStore {
   Future<void> save(SecurityPrefs next) async => prefs = next;
 }
 
+class InMemoryAppearanceStore implements AppearanceStore {
+  InMemoryAppearanceStore([this.mode = AppearanceMode.system]);
+  AppearanceMode mode;
+
+  @override
+  AppearanceMode load() => mode;
+
+  @override
+  Future<void> save(AppearanceMode next) async => mode = next;
+}
+
 class InMemoryOnboardingStore implements OnboardingStore {
   InMemoryOnboardingStore({this.isComplete = false});
 
@@ -144,6 +157,7 @@ List<Override> testOverrides({
         notificationPrefs: notificationPrefs,
       )),
       appLoggerProvider.overrideWithValue(logger ?? RecordingLogger()),
+      appearanceStoreProvider.overrideWithValue(InMemoryAppearanceStore()),
       onboardingStoreProvider.overrideWithValue(onboarding ?? InMemoryOnboardingStore()),
       notificationServiceProvider.overrideWithValue(notifications ?? RecordingNotificationService()),
       pushMessagingServiceProvider.overrideWithValue(push ?? FakePushMessagingService()),

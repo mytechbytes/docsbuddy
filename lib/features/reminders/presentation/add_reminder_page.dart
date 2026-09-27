@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/media/media_picker.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
@@ -16,6 +15,7 @@ import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../application/reminder_editor_controller.dart';
 import 'widgets/reminder_kind_tile.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Design screen 08 — Add Reminder as a 4-step flow:
 ///   1. Reminder type
@@ -125,17 +125,17 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
     final saving = ref.watch(reminderEditorControllerProvider).isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: context.palette.text),
         title: Text(
           _isEdit ? context.l10n.reminderEditTitle : context.l10n.reminderAddTitle,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.close, color: AppColors.ink), onPressed: () => Navigator.of(context).pop()),
+          IconButton(icon: Icon(Icons.close, color: context.palette.text), onPressed: () => Navigator.of(context).pop()),
         ],
       ),
       body: Column(
@@ -147,9 +147,9 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
                 alignment: Alignment.centerLeft,
                 child: Text.rich(
                   TextSpan(text: context.l10n.reminderFor, children: [
-                    TextSpan(text: asset.name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    TextSpan(text: asset.name, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
                   ]),
-                  style: const TextStyle(fontSize: 13, color: AppColors.muted),
+                  style: TextStyle(fontSize: 13, color: context.palette.textMuted),
                 ),
               ),
             ),
@@ -232,7 +232,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
       AppTextField(
           label: context.l10n.reminderLabel, controller: _label, icon: Icons.label_outline, hint: _kind.displayName(context)),
       const SizedBox(height: 14),
-      Text(context.l10n.reminderDueDate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.reminderDueDate, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 6),
       InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -241,28 +241,28 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: AppColors.paper,
+            color: context.palette.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.fieldBorder, width: 1.5),
+            border: Border.all(color: context.palette.fieldBorder, width: 1.5),
           ),
           child: Row(
             children: [
-              const Icon(Icons.event_outlined, size: 18, color: AppColors.muted),
+              Icon(Icons.event_outlined, size: 18, color: context.palette.textMuted),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(context.formatNumericDate(_due),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.palette.text)),
               ),
               Text(
                 relativeDays(context.l10n, calendarDaysBetween(DateTime.now(), _due)),
-                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                style: TextStyle(fontSize: 12, color: context.palette.textMuted),
               ),
             ],
           ),
         ),
       ),
       const SizedBox(height: 16),
-      Text(context.l10n.reminderRepeats, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.reminderRepeats, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -276,17 +276,17 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
               labelStyle: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
-                  color: _recurrence == r ? Colors.white : AppColors.ink2),
-              selectedColor: AppColors.ink,
-              backgroundColor: AppColors.paper,
+                  color: _recurrence == r ? context.palette.onInverse : context.palette.textSecondary),
+              selectedColor: context.palette.inverseSurface,
+              backgroundColor: context.palette.surface,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999), side: const BorderSide(color: AppColors.line)),
+                  borderRadius: BorderRadius.circular(999), side: BorderSide(color: context.palette.border)),
             ),
         ],
       ),
       const SizedBox(height: 16),
       Text(context.l10n.reminderServiceDetails,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 8),
       Row(
         children: [
@@ -322,7 +322,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
           title: context.l10n.reminderNotifyTitle,
           subtitle: context.l10n.reminderNotifySubtitle),
       const SizedBox(height: 16),
-      Text(context.l10n.reminderNotifyMe, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+      Text(context.l10n.reminderNotifyMe, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -340,24 +340,24 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
               labelStyle: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
-                  color: offsets.contains(d) ? Colors.white : AppColors.ink2),
-              selectedColor: AppColors.chipBlue,
+                  color: offsets.contains(d) ? Colors.white : context.palette.textSecondary),
+              selectedColor: context.palette.accent,
               checkmarkColor: Colors.white,
-              backgroundColor: AppColors.paper,
+              backgroundColor: context.palette.surface,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999), side: const BorderSide(color: AppColors.line)),
+                  borderRadius: BorderRadius.circular(999), side: BorderSide(color: context.palette.border)),
             ),
         ],
       ),
       const SizedBox(height: 14),
       Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(12)),
         child: Text(
           offsets.isEmpty
               ? context.l10n.reminderNoOffsets
               : context.l10n.reminderOffsetsSummary(sortedOffsets(offsets).map(context.l10n.durationDaysShort).join(', ')),
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.chipBlue),
+          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: context.palette.accent),
         ),
       ),
     ];
@@ -378,12 +378,12 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
         onPressed: _pickAttachment,
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          side: const BorderSide(color: AppColors.fieldBorder, width: 1.5),
+          side: BorderSide(color: context.palette.fieldBorder, width: 1.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        icon: const Icon(Icons.attach_file, size: 18, color: AppColors.ink2),
+        icon: Icon(Icons.attach_file, size: 18, color: context.palette.textSecondary),
         label: Text(context.l10n.reminderAttachDocs,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.palette.text)),
       ),
     ];
   }

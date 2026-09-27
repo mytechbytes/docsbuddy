@@ -11,6 +11,7 @@ import '../../auth/application/auth_controller.dart';
 import '../application/security_providers.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// AAL2 step-up gate: shown when the account has a verified authenticator
 /// but the current session hasn't passed the TOTP check yet.
@@ -49,7 +50,7 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
@@ -66,12 +67,12 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
             const SizedBox(height: 16),
             Center(
               child: Text(context.l10n.mfaTitle,
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: context.palette.text)),
             ),
             const SizedBox(height: 6),
             Center(
               child: Text(context.l10n.mfaSubtitle,
-                  textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppColors.muted)),
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
             ),
             const SizedBox(height: 22),
             AppTextField(
@@ -90,7 +91,7 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
                 final ok = await ref.read(authControllerProvider.notifier).signOut();
                 if (ok && context.mounted) context.go(AppRoutes.signIn);
               },
-              child: Text(context.l10n.commonSignOut, style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w700)),
+              child: Text(context.l10n.commonSignOut, style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w700)),
             ),
           ],
         ),

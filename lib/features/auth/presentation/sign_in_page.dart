@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -62,7 +62,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           alignment: Alignment.centerRight,
           child: GestureDetector(
             onTap: () => context.push(AppRoutes.forgotPassword),
-            child: Text(context.l10n.commonForgotPassword, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.chipBlue)),
+            child: Text(context.l10n.commonForgotPassword, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),
           ),
         ),
         const SizedBox(height: 16),

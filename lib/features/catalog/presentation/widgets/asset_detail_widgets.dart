@@ -5,6 +5,7 @@ import '../../domain/catalog_models.dart';
 import '../service_detail_sheet.dart';
 import 'catalog_widgets.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class AddPill extends StatelessWidget {
   const AddPill({super.key, required this.onTap});
@@ -17,13 +18,13 @@ class AddPill extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(999)),
+        decoration: BoxDecoration(color: context.palette.inverseSurface, borderRadius: BorderRadius.circular(999)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.add, size: 16, color: Colors.white),
+            Icon(Icons.add, size: 16, color: context.palette.onInverse),
             SizedBox(width: 4),
-            Text(context.l10n.commonAdd, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+            Text(context.l10n.commonAdd, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.onInverse)),
           ],
         ),
       ),
@@ -58,7 +59,7 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
     ].whereType<String>().join(' · ');
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.line)),
+      decoration: BoxDecoration(color: context.palette.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: context.palette.border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -78,8 +79,8 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
                   fallback: Container(
                     width: 64,
                     height: 64,
-                    decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(16)),
-                    child: Icon(asset.category.icon, color: AppColors.ink2, size: 30),
+                    decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(16)),
+                    child: Icon(asset.category.icon, color: context.palette.textSecondary, size: 30),
                   ),
                 ),
                 Positioned(
@@ -89,11 +90,11 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: AppColors.ink,
+                      color: context.palette.inverseSurface,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.paper, width: 2),
+                      border: Border.all(color: context.palette.surface, width: 2),
                     ),
-                    child: const Icon(Icons.photo_camera_outlined, size: 11, color: Colors.white),
+                    child: Icon(Icons.photo_camera_outlined, size: 11, color: context.palette.onInverse),
                   ),
                 ),
               ],
@@ -104,11 +105,11 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(asset.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.ink, height: 1.2)),
+                Text(asset.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text, height: 1.2)),
                 const SizedBox(height: 6),
                 Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.typeName(context))),
                 const SizedBox(height: 8),
-                Text(meta, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                Text(meta, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                 // Type-specific properties (Tonnage, IMEI, …) from Add asset.
                 if (asset.properties.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -120,17 +121,17 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                           decoration: BoxDecoration(
-                              color: AppColors.bg,
+                              color: context.palette.background,
                               borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: AppColors.line)),
+                              border: Border.all(color: context.palette.border)),
                           child: Text.rich(
                             TextSpan(
                               text: '${e.key}  ',
-                              style: const TextStyle(fontSize: 11.5, color: AppColors.muted, fontWeight: FontWeight.w600),
+                              style: TextStyle(fontSize: 11.5, color: context.palette.textMuted, fontWeight: FontWeight.w600),
                               children: [
                                 TextSpan(
                                     text: e.value,
-                                    style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
+                                    style: TextStyle(color: context.palette.text, fontWeight: FontWeight.w700)),
                               ],
                             ),
                           ),
@@ -145,14 +146,14 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
           IconButton(
             visualDensity: VisualDensity.compact,
             tooltip: _expanded ? context.l10n.catalogHideDetails : context.l10n.catalogShowDetails,
-            icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: AppColors.ink2),
+            icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: context.palette.textSecondary),
             onPressed: () => setState(() => _expanded = !_expanded),
           ),
         ],
       ),
           if (_expanded) ...[
             const SizedBox(height: 6),
-            const Divider(color: AppColors.line, height: 16),
+            Divider(color: context.palette.border, height: 16),
             InfoRow(context.l10n.catalogType, asset.typeName(context)),
             InfoRow(context.l10n.catalogCategory, asset.category.displayName(context)),
             if (asset.locationName != null) InfoRow(context.l10n.catalogRoom, asset.locationName!),
@@ -187,11 +188,11 @@ class InfoRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 128,
-            child: Text(label, style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+            child: Text(label, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
           ),
           Expanded(
             child: Text(value,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.text)),
           ),
         ],
       ),
@@ -257,7 +258,7 @@ class ServiceRow extends StatelessWidget {
       child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+      decoration: BoxDecoration(color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
       child: Row(
         children: [
           IconBubble(kind: reminder.kind, size: 44),
@@ -266,20 +267,20 @@ class ServiceRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(reminder.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                Text(reminder.label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text)),
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    Text(context.formatDate(reminder.dueDate), style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    Text(context.formatDate(reminder.dueDate), style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                     const SizedBox(width: 8),
-                    const Icon(Icons.notifications_none, size: 13, color: AppColors.muted),
+                    Icon(Icons.notifications_none, size: 13, color: context.palette.textMuted),
                     const SizedBox(width: 3),
-                    Text(context.formatOffsets(reminder.notifyOffsets), style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+                    Text(context.formatOffsets(reminder.notifyOffsets), style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
                   ],
                 ),
                 if (service.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(service, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                  Text(service, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
                 ],
               ],
             ),
@@ -288,14 +289,14 @@ class ServiceRow extends StatelessWidget {
           DayPill(daysLeft: reminder.daysLeft),
           PopupMenuButton<ServiceAction>(
             padding: EdgeInsets.zero,
-            icon: Icon(Icons.more_vert, size: 18, color: AppColors.muted),
+            icon: Icon(Icons.more_vert, size: 18, color: context.palette.textMuted),
             onSelected: onAction,
             itemBuilder: (_) => [
               PopupMenuItem(value: ServiceAction.complete, child: Text(context.l10n.catalogMarkAsDone)),
               PopupMenuItem(value: ServiceAction.edit, child: Text(context.l10n.commonEdit)),
               PopupMenuItem(
                   value: ServiceAction.delete,
-                  child: Text(context.l10n.commonDelete, style: const TextStyle(color: AppColors.red))),
+                  child: Text(context.l10n.commonDelete, style: TextStyle(color: context.palette.danger))),
             ],
           ),
         ],

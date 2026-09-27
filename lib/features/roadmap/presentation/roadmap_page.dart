@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// In-app view of the release checklist (mirrors docs/release-todo.md) so
 /// progress is visible without leaving the app.
@@ -72,12 +72,12 @@ class RoadmapPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink),
-        title: const Text("What's pending", style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
+        iconTheme: IconThemeData(color: context.palette.text),
+        title: Text("What's pending", style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -85,10 +85,10 @@ class RoadmapPage extends StatelessWidget {
           for (final (title, items) in _sections) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-              child: Text(title.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 1)),
+              child: Text(title.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
             ),
             Container(
-              decoration: BoxDecoration(color: AppColors.paper, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
+              decoration: BoxDecoration(color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
               child: Column(
                 children: [
                   for (final (done, label) in items)
@@ -99,11 +99,11 @@ class RoadmapPage extends StatelessWidget {
                           Container(
                             width: 20,
                             height: 20,
-                            decoration: BoxDecoration(color: done ? AppColors.green : AppColors.bg, shape: BoxShape.circle, border: Border.all(color: done ? AppColors.green : AppColors.line, width: 1.5)),
+                            decoration: BoxDecoration(color: done ? context.palette.success : context.palette.background, shape: BoxShape.circle, border: Border.all(color: done ? context.palette.success : context.palette.border, width: 1.5)),
                             child: done ? const Icon(Icons.check, size: 13, color: Colors.white) : null,
                           ),
                           const SizedBox(width: 12),
-                          Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: done ? AppColors.ink : AppColors.ink2))),
+                          Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: done ? context.palette.text : context.palette.textSecondary))),
                         ],
                       ),
                     ),

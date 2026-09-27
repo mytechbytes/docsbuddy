@@ -8,6 +8,7 @@ import '../domain/family_models.dart';
 import 'widgets/family_widgets.dart';
 import '../../../core/l10n/l10n.dart';
 import 'family_names.dart';
+import '../../../core/theme/app_theme.dart';
 
 class FamilyPage extends ConsumerWidget {
   const FamilyPage({super.key});
@@ -19,12 +20,12 @@ class FamilyPage extends ConsumerWidget {
     final state = ref.watch(familyControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: context.palette.background,
         elevation: 0,
-        title: Text(context.l10n.commonFamily, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ink)),
-        iconTheme: const IconThemeData(color: AppColors.ink),
+        title: Text(context.l10n.commonFamily, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
+        iconTheme: IconThemeData(color: context.palette.text),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(familyControllerProvider.notifier).refresh(),
@@ -106,7 +107,7 @@ class FamilyPage extends ConsumerWidget {
     if (invite == null || !context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => InviteSheet(invite: invite!),
     );
@@ -115,7 +116,7 @@ class FamilyPage extends ConsumerWidget {
   Future<void> _changeRole(BuildContext context, WidgetRef ref, FamilyMember member) async {
     final role = await showModalBottomSheet<FamilyRole>(
       context: context,
-      backgroundColor: AppColors.paper,
+      backgroundColor: context.palette.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -125,16 +126,16 @@ class FamilyPage extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Text(context.l10n.familyChangeRoleTitle(member.displayName),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
             ),
             for (final r in FamilyRole.assignable)
               ListTile(
-                title: Text(r.displayName(context), style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink)),
+                title: Text(r.displayName(context), style: TextStyle(fontWeight: FontWeight.w600, color: context.palette.text)),
                 subtitle: Text(
                   r.description(context),
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                  style: TextStyle(fontSize: 12, color: context.palette.textMuted),
                 ),
-                trailing: r == member.role ? const Icon(Icons.check, color: AppColors.green) : null,
+                trailing: r == member.role ? Icon(Icons.check, color: context.palette.success) : null,
                 onTap: () => Navigator.pop(ctx, r),
               ),
           ],

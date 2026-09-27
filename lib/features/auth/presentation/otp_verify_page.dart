@@ -5,12 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/theme/app_theme.dart';
 
 class OtpVerifyPage extends ConsumerStatefulWidget {
   const OtpVerifyPage({super.key, required this.email});
@@ -82,7 +82,7 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
       showLogo: false,
       children: [
         const SizedBox(height: 14),
-        const Center(child: HeroBadge(background: AppColors.greenSoft, foreground: AppColors.green, icon: Icons.mail_outline)),
+        Center(child: HeroBadge(background: context.palette.successSoft, foreground: context.palette.success, icon: Icons.mail_outline)),
         const SizedBox(height: 22),
         AuthHero(title: context.l10n.authOtpTitle, subtitle: context.l10n.authOtpSubtitle(widget.email)),
         const SizedBox(height: 22),
@@ -118,10 +118,10 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
         Center(
           child: _secondsLeft > 0
               ? Text.rich(TextSpan(
-                  style: const TextStyle(fontSize: 13, color: AppColors.muted),
+                  style: TextStyle(fontSize: 13, color: context.palette.textMuted),
                   children: [
                     TextSpan(text: context.l10n.authOtpResendIn),
-                    TextSpan(text: _countdownText, style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700)),
+                    TextSpan(text: _countdownText, style: TextStyle(color: context.palette.text, fontWeight: FontWeight.w700)),
                   ],
                 ))
               : InlineLink(lead: context.l10n.authOtpNotReceivedLead, action: context.l10n.authOtpResend, onTap: _resend),
@@ -139,21 +139,21 @@ class _OtpCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color border = digit.isNotEmpty
-        ? AppColors.ink
+        ? context.palette.text
         : active
-            ? AppColors.chipBlue
-            : AppColors.fieldBorder;
+            ? context.palette.accent
+            : context.palette.fieldBorder;
     return Container(
       width: 46,
       height: 56,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.paper,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: border, width: 1.5),
-        boxShadow: active ? [BoxShadow(color: AppColors.chipBlue.withValues(alpha: 0.13), blurRadius: 0, spreadRadius: 4)] : null,
+        boxShadow: active ? [BoxShadow(color: context.palette.accent.withValues(alpha: 0.13), blurRadius: 0, spreadRadius: 4)] : null,
       ),
-      child: Text(digit, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink)),
+      child: Text(digit, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.palette.text)),
     );
   }
 }
