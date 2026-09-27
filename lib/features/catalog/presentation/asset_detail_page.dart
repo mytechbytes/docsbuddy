@@ -5,13 +5,15 @@ import 'package:intl/intl.dart';
 
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
 import '../../../core/widgets/db_logo.dart';
+import '../../../core/widgets/feedback.dart';
 import '../../documents/presentation/asset_documents_section.dart';
 import '../../profile/application/profile_providers.dart';
+import '../application/asset_actions.dart';
 import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../domain/catalog_models.dart';
 import 'service_detail_sheet.dart';
+import 'widgets/catalog_widgets.dart';
 
 class AssetDetailPage extends ConsumerWidget {
   const AssetDetailPage({super.key, required this.assetId});
@@ -20,9 +22,9 @@ class AssetDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asset = ref.watch(assetProvider(assetId));
-    final reminders = ref.watch(assetRemindersProvider(assetId));
-    final list = reminders.valueOrNull ?? const <Reminder>[];
-    final next = _soonest(list);
+    final services = ref.watch(assetServicesProvider(assetId));
+    final list = services.value?.all ?? const <Reminder>[];
+    final next = services.value?.next;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -41,7 +43,7 @@ class AssetDetailPage extends ConsumerWidget {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: AppColors.ink2, size: 22),
             onSelected: (v) {
-              final a = asset.valueOrNull;
+              final a = asset.value;
               if (a == null) return;
               v == 'edit' ? _editAsset(context, ref, a) : _deleteAsset(context, ref, a);
             },
@@ -55,7 +57,7 @@ class AssetDetailPage extends ConsumerWidget {
       ),
       body: asset.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => Center(child: Text(failureMessage(e))),
         data: (a) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           children: [
@@ -74,13 +76,13 @@ class AssetDetailPage extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            reminders.when(
+            services.when(
               loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => Text('$e'),
-              data: (rs) => rs.isEmpty
+              error: (e, _) => Text(failureMessage(e)),
+              data: (s) => s.all.isEmpty
                   ? const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No reminders for this asset yet.', style: TextStyle(color: AppColors.muted))))
                   : Column(children: [
-                      for (final r in rs)
+                      for (final r in s.all)
                         _ReminderRow(
                           reminder: r,
                           onTap: () => _openService(context, ref, r),
@@ -96,71 +98,36 @@ class AssetDetailPage extends ConsumerWidget {
     );
   }
 
-  /// The most urgent reminder (smallest days-left, overdue first).
-  static Reminder? _soonest(List<Reminder> list) {
-    if (list.isEmpty) return null;
-    final sorted = [...list]..sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
-    return sorted.first;
-  }
+  AssetActions _actions(WidgetRef ref) => ref.read(assetActionsProvider(assetId));
 
   /// Picks an image and uploads it as the asset's photo.
   Future<void> _changePhoto(BuildContext context, WidgetRef ref, Asset asset) async {
     final f = await pickImage(context);
-    if (f == null) return;
-    try {
-      await ref.read(catalogRepositoryProvider).setAssetImage(
-            asset.id,
-            bytes: f.bytes,
-            fileName: f.name,
-            mimeType: f.imageMime,
-          );
-      ref.invalidate(assetProvider(assetId));
-      refreshCatalog(ref);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Photo upload failed: $e'), backgroundColor: AppColors.red));
-      }
-    }
+    if (f == null || !context.mounted) return;
+    await runAction(context, () => _actions(ref).setPhoto(f));
   }
-
 
   /// Marks a service done — recurring ones roll their due date forward.
   Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.paper,
-        title: const Text('Mark as done?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        content: Text(r.recurrence == Recurrence.none
-            ? '“${r.label}” will be completed and removed from upcoming reminders.'
-            : '“${r.label}” will be completed and its next due date scheduled (${r.recurrence.label.toLowerCase()}).'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Mark done', style: TextStyle(color: AppColors.green, fontWeight: FontWeight.w700))),
-        ],
-      ),
+    final confirmed = await _confirm(
+      context,
+      title: 'Mark as done?',
+      message: r.isOneOff
+          ? '“${r.label}” will be completed and removed from upcoming reminders.'
+          : '“${r.label}” will be completed and its next due date scheduled (${r.recurrence.label.toLowerCase()}).',
+      action: 'Mark done',
+      color: AppColors.green,
     );
-    if (confirmed != true || !context.mounted) return;
-    await ref.read(catalogRepositoryProvider).completeReminder(r.id);
-    ref.invalidate(assetRemindersProvider(assetId));
-    refreshCatalog(ref);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(r.recurrence == Recurrence.none
-            ? '${r.label} marked as done.'
-            : '${r.label} done — next due date scheduled.'),
-        backgroundColor: AppColors.green,
-      ));
-    }
+    if (!confirmed || !context.mounted) return;
+    await runAction(
+      context,
+      () => _actions(ref).completeService(r),
+      success: r.isOneOff ? '${r.label} marked as done.' : '${r.label} done — next due date scheduled.',
+    );
   }
 
   Future<void> _addReminder(BuildContext context, WidgetRef ref, Asset asset) async {
     await context.push('/asset/${asset.id}/add-reminder');
-    ref.invalidate(assetRemindersProvider(assetId));
-    refreshCatalog(ref);
   }
 
   Future<void> _openService(BuildContext context, WidgetRef ref, Reminder r) async {
@@ -170,62 +137,63 @@ class AssetDetailPage extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleServiceAction(
-      BuildContext context, WidgetRef ref, Reminder r, ServiceAction action) async {
+  Future<void> _handleServiceAction(BuildContext context, WidgetRef ref, Reminder r, ServiceAction action) async {
     switch (action) {
       case ServiceAction.edit:
         await context.push('/asset/$assetId/add-reminder', extra: r);
-        ref.invalidate(assetRemindersProvider(assetId));
-        refreshCatalog(ref);
       case ServiceAction.complete:
         await _complete(context, ref, r);
       case ServiceAction.delete:
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: AppColors.paper,
-            title: const Text('Delete reminder?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-            content: Text('“${r.label}” and its scheduled notifications will be removed.'),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-              TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Delete', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
-            ],
-          ),
+        final confirmed = await _confirm(
+          context,
+          title: 'Delete reminder?',
+          message: '“${r.label}” and its scheduled notifications will be removed.',
+          action: 'Delete',
+          color: AppColors.red,
         );
-        if (confirmed != true) return;
-        await ref.read(catalogRepositoryProvider).deleteReminder(r.id);
-        ref.invalidate(assetRemindersProvider(assetId));
-        refreshCatalog(ref);
+        if (confirmed && context.mounted) await runAction(context, () => _actions(ref).deleteService(r));
     }
   }
 
   Future<void> _editAsset(BuildContext context, WidgetRef ref, Asset asset) async {
     await context.push('/asset-edit', extra: asset);
-    ref.invalidate(assetProvider(assetId));
-    refreshCatalog(ref);
   }
 
   Future<void> _deleteAsset(BuildContext context, WidgetRef ref, Asset asset) async {
+    final confirmed = await _confirm(
+      context,
+      title: 'Delete asset?',
+      message: '“${asset.name}” and all its reminders and documents will be removed. This can\'t be undone.',
+      action: 'Delete',
+      color: AppColors.red,
+    );
+    if (!confirmed || !context.mounted) return;
+    final ok = await runAction(context, () => _actions(ref).deleteAsset());
+    if (ok && context.mounted) Navigator.of(context).pop();
+  }
+
+  static Future<bool> _confirm(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String action,
+    required Color color,
+  }) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.paper,
-        title: const Text('Delete asset?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        content: Text('“${asset.name}” and all its reminders and documents will be removed. This can\'t be undone.'),
+        title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: Text(message),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
+              child: Text(action, style: TextStyle(color: color, fontWeight: FontWeight.w700))),
         ],
       ),
     );
-    if (confirmed != true) return;
-    await ref.read(catalogRepositoryProvider).deleteAsset(asset.id);
-    refreshCatalog(ref);
-    if (context.mounted) Navigator.of(context).pop();
+    return confirmed == true;
   }
 }
 
@@ -235,7 +203,7 @@ class _Avatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileProvider).valueOrNull;
+    final profile = ref.watch(profileProvider).value;
     return InkWell(
       customBorder: const CircleBorder(),
       onTap: () => context.push('/profile'),
@@ -306,7 +274,7 @@ class _InfoCardState extends State<_InfoCard> {
   @override
   Widget build(BuildContext context) {
     final meta = [
-      '$reminderCount reminder${reminderCount == 1 ? '' : 's'} tracked',
+      '${plural(reminderCount, 'reminder')} tracked',
       if (asset.brand != null) asset.brand,
       if (asset.model != null) asset.model,
       if (asset.serialNo != null) asset.serialNo,
@@ -461,12 +429,7 @@ class _NextDueBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = reminder.daysLeft;
-    final phrase = d < 0
-        ? 'Overdue by ${-d} day${d == -1 ? '' : 's'}'
-        : d == 0
-            ? 'Due today'
-            : '$d day${d == 1 ? '' : 's'} left';
+    final phrase = dueCountdown(reminder.daysLeft);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(18)),

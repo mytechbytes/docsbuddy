@@ -7,9 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
-import 'features/auth/application/auth_providers.dart';
+import 'bootstrap/backends/fake_backend.dart';
+import 'bootstrap/dependencies.dart';
 import 'features/auth/data/fake_auth_repository.dart';
-import 'features/onboarding/application/onboarding_controller.dart';
 
 class _SignedInFakeAuth extends FakeAuthRepository {
   @override
@@ -25,8 +25,8 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-        authRepositoryProvider.overrideWithValue(_SignedInFakeAuth()),
+        ...platformOverrides(prefs),
+        ...backendOverrides(FakeBackend(auth: _SignedInFakeAuth())),
       ],
       child: const DocsBuddyApp(),
     ),

@@ -1,12 +1,15 @@
 import 'dart:typed_data';
 
-import 'document_models.dart';
-import 'document_repository.dart';
+import '../../../core/error/app_failure.dart';
+import '../domain/document_models.dart';
+import '../domain/document_repository.dart';
 
-/// In-memory documents (metadata only — no real files, so [viewUrl] is null).
+/// In-memory documents (metadata only — there is no file storage offline).
 class FakeDocumentRepository implements DocumentRepository {
   final _byAsset = <String, List<DocumentMeta>>{};
   int _seq = 0;
+
+  static const _noStorage = UnavailableFailure('Connect Supabase to open or share files.');
 
   Future<void> _delay() => Future<void>.delayed(const Duration(milliseconds: 400));
 
@@ -48,10 +51,10 @@ class FakeDocumentRepository implements DocumentRepository {
   }
 
   @override
-  Future<String?> viewUrl(DocumentMeta doc) async => null;
+  Future<String> viewUrl(DocumentMeta doc) async => throw _noStorage;
 
   @override
-  Future<Uint8List?> download(DocumentMeta doc) async => null;
+  Future<Uint8List> download(DocumentMeta doc) async => throw _noStorage;
 
   @override
   Future<void> delete(DocumentMeta doc) async {

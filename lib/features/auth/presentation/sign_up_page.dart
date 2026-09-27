@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
+import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
@@ -35,33 +36,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     super.dispose();
   }
 
-  /// 0–4 strength based on length + character classes.
-  int get _strength {
-    final p = _password.text;
-    if (p.isEmpty) return 0;
-    var s = 0;
-    if (p.length >= 8) s++;
-    if (RegExp(r'[A-Z]').hasMatch(p)) s++;
-    if (RegExp(r'[0-9]').hasMatch(p)) s++;
-    if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(p)) s++;
-    return s;
-  }
-
-  String get _strengthLabel => switch (_strength) {
-        0 || 1 => 'Use 8+ chars with a number and symbol.',
-        2 => 'Fair — add an uppercase letter or symbol.',
-        3 => 'Strong — keep going for excellent.',
-        _ => 'Excellent password.',
-      };
-
   Future<void> _submit() async {
-    if (!_agreed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the Terms to continue.'), backgroundColor: AppColors.red),
-      );
-      return;
-    }
-    final ok = await ref.read(authControllerProvider.notifier).signUp(_name.text, _email.text, _password.text);
+    final ok = await ref
+        .read(authControllerProvider.notifier)
+        .signUp(_name.text, _email.text, _password.text, acceptedTerms: _agreed);
     if (ok && mounted) context.go('/dashboard');
   }
 
@@ -79,6 +57,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   Widget build(BuildContext context) {
     listenAuthErrors(ref, context);
     final loading = ref.watch(authControllerProvider).isLoading;
+    final (strength, strengthHint) = signUpStrength(_password.text);
 
     return AuthScaffold(
       children: [
@@ -91,9 +70,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         const SizedBox(height: 14),
         AppTextField(label: 'Password', controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, autofillHints: const [AutofillHints.newPassword]),
         const SizedBox(height: 10),
-        _StrengthBar(strength: _strength),
+        _StrengthBar(strength: strength),
         const SizedBox(height: 6),
-        Text(_strengthLabel, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+        Text(strengthHint, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
         const SizedBox(height: 14),
         _TermsRow(value: _agreed, onChanged: (v) => setState(() => _agreed = v)),
         const SizedBox(height: 16),

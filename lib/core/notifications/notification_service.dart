@@ -4,13 +4,24 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
-import '../../features/catalog/data/catalog_models.dart';
-import 'reminder_schedule.dart';
+import 'local_alert.dart';
 
-/// Schedules OS-level local notifications for upcoming reminders — the offline
-/// "never miss a renewal" delivery. Independent of FCM.
-class NotificationService {
-  NotificationService(this._plugin);
+/// Schedules OS-level [LocalAlert]s. Feature-agnostic and independent of FCM.
+/// Implementations never throw — notifications are best-effort.
+abstract interface class NotificationService {
+  /// Asks for permission (Android 13+, iOS, macOS); false when denied.
+  Future<bool> requestPermission();
+
+  /// Cancels everything pending and schedules [alerts].
+  Future<void> replaceAll(List<LocalAlert> alerts);
+
+  /// Fires an immediate test notification.
+  Future<void> showTest();
+}
+
+/// `flutter_local_notifications` implementation.
+class LocalNotificationService implements NotificationService {
+  LocalNotificationService(this._plugin);
 
   final FlutterLocalNotificationsPlugin _plugin;
   bool _ready = false;
@@ -49,7 +60,7 @@ class NotificationService {
     } catch (_) {/* platform unavailable */}
   }
 
-  /// Asks the user for notification permission (Android 13+, iOS, macOS).
+  @override
   Future<bool> requestPermission() async {
     try {
       await init();
@@ -63,14 +74,13 @@ class NotificationService {
     }
   }
 
-  /// Cancels everything and re-arms the soonest reminders, honouring the
-  /// user's quiet hours when provided.
-  Future<void> rescheduleFor(List<Reminder> reminders, {String? quietStart, String? quietEnd}) async {
+  @override
+  Future<void> replaceAll(List<LocalAlert> alerts) async {
     try {
       await init();
       if (!_ready) return;
       await _plugin.cancelAll();
-      for (final a in buildAlerts(reminders, quietStart: quietStart, quietEnd: quietEnd)) {
+      for (final a in alerts) {
         await _plugin.zonedSchedule(
           a.id,
           a.title,
@@ -85,7 +95,7 @@ class NotificationService {
     } catch (_) {/* no-op on failure */}
   }
 
-  /// Fires an immediate test notification.
+  @override
   Future<void> showTest() async {
     try {
       await init();
@@ -94,5 +104,7 @@ class NotificationService {
   }
 }
 
-final notificationServiceProvider =
-    Provider<NotificationService>((ref) => NotificationService(FlutterLocalNotificationsPlugin()));
+/// Bound at the composition root (`bootstrap/dependencies.dart`).
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => throw UnimplementedError('notificationServiceProvider must be overridden'),
+);

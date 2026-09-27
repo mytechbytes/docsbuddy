@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State management (per design handoff §1)
-  flutter_riverpod: ^2.6.1
+  flutter_riverpod: ^3.4.3
   # Declarative routing + deep links
   go_router: ^14.6.2
   # First-launch flag persistence (device-local, not synced)
@@ -63,6 +63,7 @@ dependencies:
   qr_flutter: ^4.1.0
   image_picker: ^1.2.3
   share_plus: ^12.0.2
+  freezed_annotation: ^3.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -74,6 +75,9 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.3
+  freezed: ^4.0.2
+  build_runner: ^2.16.1
+  mocktail: ^1.0.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

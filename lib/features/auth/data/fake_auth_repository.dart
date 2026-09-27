@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'auth_repository.dart';
+import '../../../core/error/app_failure.dart';
+import '../domain/auth_repository.dart';
 
 /// In-memory auth used when no Supabase credentials are configured (local dev,
 /// tests, and the CI-built APK). Simulates latency and basic validation so the

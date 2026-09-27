@@ -1,86 +1,77 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Family;
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/config/env.dart';
-import '../data/family_models.dart';
-import '../data/family_repository.dart';
-import '../data/fake_family_repository.dart';
-import '../data/supabase_family_repository.dart';
+import '../../../core/error/app_failure.dart';
+import '../../../core/providers/core_providers.dart';
+import '../domain/family_models.dart';
+import '../domain/family_repository.dart';
 
-/// Binds the active [FamilyRepository] — Supabase when configured, else fake.
-final familyRepositoryProvider = Provider<FamilyRepository>((ref) {
-  if (Env.hasSupabase) {
-    return SupabaseFamilyRepository(Supabase.instance.client);
-  }
-  return FakeFamilyRepository();
-});
+/// Bound at the composition root (`bootstrap/dependencies.dart`).
+final familyRepositoryProvider = Provider<FamilyRepository>(
+  (ref) => throw UnimplementedError('familyRepositoryProvider must be overridden'),
+);
 
-/// Current family + its members.
-typedef FamilyView = ({Family? family, List<FamilyMember> members});
-
-/// Loads and mutates the caller's family. Display state lives in `state`;
-/// action methods throw [FamilyFailure] so pages can show specific messages.
+/// Loads and mutates the caller's family. Actions throw [AppFailure]s with
+/// user-safe messages. Membership changes bump [familyScopeProvider] so
+/// family-scoped data (rooms, assets, reminders) reloads under the new scope.
 class FamilyController extends AsyncNotifier<FamilyView> {
   FamilyRepository get _repo => ref.read(familyRepositoryProvider);
 
   @override
-  Future<FamilyView> build() => _load();
+  Future<FamilyView> build() => _load(ref.watch(familyRepositoryProvider));
 
-  Future<FamilyView> _load() async {
-    final family = await _repo.currentFamily();
-    final members = family == null ? <FamilyMember>[] : await _repo.members(family.id);
-    return (family: family, members: members);
+  Future<FamilyView> _load(FamilyRepository repo) async {
+    final family = await repo.currentFamily();
+    final members = family == null ? const <FamilyMember>[] : await repo.members(family.id);
+    return FamilyView(family: family, members: members, myUserId: repo.currentUserId);
   }
 
   Future<void> refresh() async {
-    state = await AsyncValue.guard(_load);
+    state = await AsyncValue.guard(() => _load(_repo));
   }
 
+  Family get _family =>
+      state.value?.family ?? (throw const ValidationFailure('No active family.'));
+
+  void _scopeChanged() => ref.read(familyScopeProvider.notifier).changed();
+
   Future<void> createFamily(String name) async {
-    await _repo.createFamily(name);
+    if (name.trim().isEmpty) throw const ValidationFailure('Please enter a family name.');
+    await _repo.createFamily(name.trim());
+    _scopeChanged();
     await refresh();
   }
 
-  Future<FamilyInvite> invite(FamilyRole role) async {
-    final family = state.valueOrNull?.family;
-    if (family == null) throw const FamilyFailure('No active family.');
-    return _repo.createInvite(familyId: family.id, role: role);
-  }
+  Future<FamilyInvite> invite([FamilyRole role = FamilyRole.member]) =>
+      _repo.createInvite(familyId: _family.id, role: role);
 
   Future<void> acceptInvite(String code) async {
-    await _repo.acceptInvite(code);
+    final normalized = code.trim().toUpperCase();
+    if (normalized.isEmpty) throw const ValidationFailure('Enter a valid invite code.');
+    await _repo.acceptInvite(normalized);
+    _scopeChanged();
     await refresh();
   }
 
   Future<void> leave() async {
-    final family = state.valueOrNull?.family;
+    final family = state.value?.family;
     if (family == null) return;
     await _repo.leaveFamily(family.id);
+    _scopeChanged();
     await refresh();
   }
 
-  /// The signed-in user's membership row, if loaded.
-  FamilyMember? get me {
-    final uid = _repo.currentUserId;
-    return state.valueOrNull?.members.where((m) => m.userId == uid).firstOrNull;
-  }
-
   Future<void> changeRole(FamilyMember member, FamilyRole role) async {
-    final family = state.valueOrNull?.family;
-    if (family == null) throw const FamilyFailure('No active family.');
-    if (member.userId == family.ownerId) throw const FamilyFailure("The owner's role can't be changed.");
-    await _repo.updateMemberRole(familyId: family.id, userId: member.userId, role: role);
+    if (role == member.role) return;
+    if (member.userId == _family.ownerId) throw const ValidationFailure("The owner's role can't be changed.");
+    await _repo.updateMemberRole(familyId: _family.id, userId: member.userId, role: role);
     await refresh();
   }
 
   Future<void> removeMember(FamilyMember member) async {
-    final family = state.valueOrNull?.family;
-    if (family == null) throw const FamilyFailure('No active family.');
-    if (member.userId == family.ownerId) throw const FamilyFailure("The owner can't be removed.");
-    await _repo.removeMember(familyId: family.id, userId: member.userId);
+    if (member.userId == _family.ownerId) throw const ValidationFailure("The owner can't be removed.");
+    await _repo.removeMember(familyId: _family.id, userId: member.userId);
     await refresh();
   }
 }
 
-final familyControllerProvider =
-    AsyncNotifierProvider<FamilyController, FamilyView>(FamilyController.new);
+final familyControllerProvider = AsyncNotifierProvider<FamilyController, FamilyView>(FamilyController.new);

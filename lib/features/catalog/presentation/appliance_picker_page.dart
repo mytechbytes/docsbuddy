@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// Design screen 05 — "Select Your Appliances": searchable list of the
 /// category catalog; picking one opens Add-asset pre-filled with that type
@@ -31,7 +33,7 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider);
+    final categories = ref.watch(filteredCategoriesProvider(_query));
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -54,7 +56,7 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(
               controller: _search,
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+              onChanged: (v) => setState(() => _query = v),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
               decoration: InputDecoration(
                 isDense: true,
@@ -79,10 +81,8 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
           Expanded(
             child: categories.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('$e', style: const TextStyle(color: AppColors.muted))),
-              data: (list) {
-                final filtered =
-                    _query.isEmpty ? list : list.where((c) => c.name.toLowerCase().contains(_query)).toList();
+              error: (e, _) => Center(child: Text(failureMessage(e), style: const TextStyle(color: AppColors.muted))),
+              data: (filtered) {
                 if (filtered.isEmpty) {
                   return const Center(
                       child: Text('No matching appliance — use "Something else" below.',

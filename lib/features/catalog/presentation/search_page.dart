@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
 import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// Search across assets (name/brand/model/serial) and services (label,
 /// provider, policy no.) — wires the dashboard's search icon.
@@ -27,29 +27,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     super.dispose();
   }
 
-  bool _matchesAsset(Asset a, String q) => [
-        a.name,
-        a.brand ?? '',
-        a.model ?? '',
-        a.serialNo ?? '',
-        a.typeLabel,
-        a.locationName ?? '',
-      ].any((s) => s.toLowerCase().contains(q));
-
-  bool _matchesReminder(Reminder r, String q) => [
-        r.label,
-        r.assetName,
-        r.provider ?? '',
-        r.policyNo ?? '',
-      ].any((s) => s.toLowerCase().contains(q));
-
   @override
   Widget build(BuildContext context) {
-    final assets = ref.watch(assetsProvider).valueOrNull ?? const <Asset>[];
-    final reminders = ref.watch(upcomingRemindersProvider).valueOrNull ?? const <Reminder>[];
-    final q = _query.toLowerCase();
-    final assetHits = q.isEmpty ? const <Asset>[] : assets.where((a) => _matchesAsset(a, q)).toList();
-    final reminderHits = q.isEmpty ? const <Reminder>[] : reminders.where((r) => _matchesReminder(r, q)).toList();
+    final q = _query;
+    final hits = ref.watch(catalogSearchProvider(q));
+    final assetHits = hits.assets;
+    final reminderHits = hits.reminders;
 
     return Scaffold(
       backgroundColor: AppColors.bg,

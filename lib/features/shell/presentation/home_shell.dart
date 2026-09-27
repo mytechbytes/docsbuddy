@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/notifications/fcm_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../catalog/application/catalog_sync.dart';
 import '../../catalog/presentation/assets_page.dart';
 import '../../catalog/presentation/rooms_page.dart';
 import '../../dashboard/presentation/dashboard_tab.dart';
+import '../../devices/application/push_registration.dart';
 import '../../family/presentation/family_page.dart';
 import '../../security/application/security_providers.dart';
 import '../../security/presentation/lock_screen.dart';
 import '../../security/presentation/mfa_challenge_screen.dart';
 import '../../settings/presentation/settings_page.dart';
 
-/// Signed-in app shell with bottom navigation and the optional app lock:
-/// when enabled, reopening the app after the auto-lock window (or a fresh
-/// launch) shows the biometric [LockScreen] first.
+/// Signed-in app shell with bottom navigation. Gates on the MFA step-up and
+/// the app lock (whose rules live in [AppLockController]; this widget only
+/// forwards lifecycle events), and keeps the signed-in background syncs alive.
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
@@ -24,8 +25,6 @@ class HomeShell extends ConsumerStatefulWidget {
 
 class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserver {
   int _index = 0;
-  bool _locked = false;
-  DateTime? _pausedAt;
 
   static const _tabs = [DashboardTab(), RoomsPage(), AssetsPage(), FamilyPage(), SettingsPage()];
 
@@ -33,9 +32,6 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _locked = ref.read(securityPrefsProvider).appLock;
-    // Register for silent push once signed in (no-op without Firebase config).
-    WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(fcmServiceProvider).init());
   }
 
   @override
@@ -46,30 +42,30 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final prefs = ref.read(securityPrefsProvider);
-    if (!prefs.appLock) return;
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
-      _pausedAt ??= DateTime.now();
-    } else if (state == AppLifecycleState.resumed) {
-      final away = _pausedAt == null ? Duration.zero : DateTime.now().difference(_pausedAt!);
-      _pausedAt = null;
-      if (away >= Duration(minutes: prefs.autoLockMinutes)) {
-        setState(() => _locked = true);
-      }
+    final lock = ref.read(appLockProvider.notifier);
+    switch (state) {
+      case AppLifecycleState.paused || AppLifecycleState.hidden:
+        lock.appPaused();
+      case AppLifecycleState.resumed:
+        lock.appResumed();
+      default:
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Signed-in background work: local reminder notifications, refresh on
+    // silent push, and push-token registration.
+    ref.watch(reminderNotificationSyncProvider);
+    ref.watch(remoteChangeSyncProvider);
+    ref.watch(pushRegistrationProvider);
+
     // AAL2 step-up comes before everything: a session with an enrolled
     // authenticator must pass the TOTP check first.
-    final mfaRequired = ref.watch(mfaChallengeRequiredProvider).valueOrNull ?? false;
-    if (mfaRequired) {
-      return MfaChallengeScreen(onVerified: () => ref.invalidate(mfaChallengeRequiredProvider));
-    }
-    if (_locked) {
-      return LockScreen(onUnlocked: () => setState(() => _locked = false));
-    }
+    if (ref.watch(mfaChallengeRequiredProvider).value ?? false) return const MfaChallengeScreen();
+    if (ref.watch(appLockProvider)) return const LockScreen();
+
     return Scaffold(
       body: IndexedStack(index: _index, children: _tabs),
       bottomNavigationBar: NavigationBar(
@@ -79,10 +75,13 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
         indicatorColor: const Color(0xFFEEF3FB),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.meeting_room_outlined), selectedIcon: Icon(Icons.meeting_room), label: 'Rooms'),
-          NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Assets'),
+          NavigationDestination(
+              icon: Icon(Icons.meeting_room_outlined), selectedIcon: Icon(Icons.meeting_room), label: 'Rooms'),
+          NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Assets'),
           NavigationDestination(icon: Icon(Icons.groups_outlined), selectedIcon: Icon(Icons.groups), label: 'Family'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
+          NavigationDestination(
+              icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );

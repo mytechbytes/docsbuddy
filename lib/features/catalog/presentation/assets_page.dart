@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/catalog_widgets.dart';
+import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
-import '../data/catalog_models.dart';
+import '../domain/catalog_models.dart';
+import 'widgets/catalog_widgets.dart';
 
 class AssetsPage extends ConsumerStatefulWidget {
   const AssetsPage({super.key});
@@ -24,15 +25,9 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
     super.dispose();
   }
 
-  bool _matches(Asset a) {
-    final q = _query.toLowerCase();
-    return [a.name, a.brand ?? '', a.model ?? '', a.serialNo ?? '', a.typeLabel, a.locationName ?? '']
-        .any((s) => s.toLowerCase().contains(q));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final assets = ref.watch(assetsProvider);
+    final assets = ref.watch(filteredAssetsProvider(_query));
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -77,9 +72,8 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
           Expanded(
             child: assets.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('$e')),
-              data: (list) {
-                final visible = _query.isEmpty ? list : list.where(_matches).toList();
+              error: (e, _) => Center(child: Text(failureMessage(e))),
+              data: (visible) {
                 if (visible.isEmpty) {
                   return Center(
                       child: Text(_query.isEmpty ? 'No assets yet. Tap “Add asset”.' : 'No matches.',

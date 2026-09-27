@@ -5,15 +5,17 @@ import 'package:intl/intl.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
-import '../../../core/widgets/catalog_widgets.dart';
+import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
-import '../../documents/application/document_providers.dart';
-import '../../documents/data/document_models.dart';
 import '../../documents/presentation/attachment_widgets.dart';
 import '../application/catalog_providers.dart';
-import '../application/common_categories.dart';
-import '../application/default_reminders.dart';
-import '../data/catalog_models.dart';
+import '../application/editor_controllers.dart';
+import '../application/rooms_controller.dart';
+import '../domain/catalog_inputs.dart';
+import '../domain/catalog_models.dart';
+import '../domain/common_categories.dart';
+import '../domain/property_specs.dart';
+import 'widgets/catalog_widgets.dart';
 
 /// Add / edit asset as a 3-step flow:
 ///   1. Category (responsive grid, includes Other)
@@ -55,11 +57,16 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       text: widget.editing?.purchasePrice == null ? '' : widget.editing!.purchasePrice!.toStringAsFixed(0));
   late final _store = TextEditingController(text: widget.editing?.store ?? '');
   late AssetCategory? _type = widget.preset;
+
+  /// Once the user picks a type, the edited asset's saved type stops applying.
   bool _typeTouched = false;
 
   /// Type name entered via the "Others" popup (custom, not in the catalog).
   late String? _customType =
       widget.editing != null && widget.editing!.categoryId == null ? widget.editing!.categoryName : null;
+
+  /// Spec fields shown when editing before the type changes.
+  late final String? _editingSlug = widget.editing == null ? null : specSlugForAsset(widget.editing!);
   late AssetCategoryKind _category =
       widget.editing?.category ?? widget.preset?.kindGroup ?? AssetCategoryKind.vehicle;
 
@@ -71,7 +78,6 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   DateTime? _amcDate;
   PickedMedia? _photo;
   final _invoices = <PickedMedia>[];
-  bool _saving = false;
 
   /// Values for the type's [PropertySpec] fields, keyed by spec label.
   final _specValues = <String, TextEditingController>{};
@@ -84,29 +90,12 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   @override
   void initState() {
     super.initState();
-    // Editing: split stored properties into spec fields vs free-form rows.
-    final existing = widget.editing?.properties ?? const <String, String>{};
-    if (existing.isNotEmpty) {
-      final specLabels = propertySpecsFor(_slugForEditing()).map((s) => s.label).toSet();
-      existing.forEach((k, v) {
-        if (specLabels.contains(k)) {
-          _specValues[k] = TextEditingController(text: v);
-        } else {
-          _extraProps.add((TextEditingController(text: k), TextEditingController(text: v)));
-        }
-      });
+    // Editing: pre-fill spec fields and free-form rows from saved properties.
+    final split = splitProperties(widget.editing?.properties ?? const {}, _editingSlug);
+    split.specValues.forEach((k, v) => _specValues[k] = TextEditingController(text: v));
+    for (final e in split.extras) {
+      _extraProps.add((TextEditingController(text: e.label), TextEditingController(text: e.value)));
     }
-  }
-
-  /// Slug of the asset-being-edited's type: matched by built-in id, else by
-  /// name (the DB seed mirrors [commonAssetCategories], so names line up).
-  String? _slugForEditing() {
-    final e = widget.editing;
-    if (e == null) return null;
-    final match = commonAssetCategories
-        .where((c) => c.id == e.categoryId || (e.categoryName != null && c.name == e.categoryName))
-        .firstOrNull;
-    return match?.slug;
   }
 
   @override
@@ -127,8 +116,6 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     }
     super.dispose();
   }
-
-  String? _text(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
 
   Future<void> _pickPhoto() async {
     final picked = await pickImage(context);
@@ -200,115 +187,50 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     });
   }
 
-  Map<String, String> _collectProperties(String? slug) {
-    final props = <String, String>{};
-    for (final spec in propertySpecsFor(slug)) {
-      final v = _specValues[spec.label]?.text.trim();
-      if (v != null && v.isNotEmpty) props[spec.label] = v;
-    }
-    for (final (k, v) in _extraProps) {
-      final key = k.text.trim();
-      final value = v.text.trim();
-      if (key.isNotEmpty && value.isNotEmpty) props[key] = value;
-    }
-    return props;
-  }
+  /// The type in effect: the picked one, else (editing) the saved one.
+  AssetCategory? _effectiveType(List<AssetCategory> categories) => _typeTouched || widget.editing == null
+      ? _type
+      : _type ?? resolveAssetType(widget.editing!, categories);
 
-  String? get _locationName =>
-      _room == _newRoomSentinel ? _text(_newRoom) : _room;
+  String? _specSlug(AssetCategory? type) => type?.slug ?? (_typeTouched ? null : _editingSlug);
+
+  /// Snapshot of the form as typed; the controller validates and parses it.
+  AssetDraft _draft(AssetCategory? type) => AssetDraft(
+        name: _name.text,
+        category: _category,
+        type: type,
+        customType: _customType,
+        specSlug: _specSlug(type),
+        roomName: _room == _newRoomSentinel ? _newRoom.text : _room,
+        brand: _brand.text,
+        model: _model.text,
+        serialNo: _serialNo.text,
+        price: _price.text,
+        store: _store.text,
+        purchaseDate: _purchaseDate,
+        specValues: {for (final e in _specValues.entries) e.key: e.value.text},
+        extraProperties: [for (final (k, v) in _extraProps) PropertyEntry(label: k.text, value: v.text)],
+      );
 
   Future<void> _save(AssetCategory? type) async {
-    if (_name.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a name.'), backgroundColor: AppColors.red));
-      return;
-    }
-    setState(() => _saving = true);
-    final repo = ref.read(catalogRepositoryProvider);
-    // Fallback/custom types carry their name in typeName (no DB FK).
-    final typeName = type != null
-        ? (isDbCategoryId(type.id) ? null : type.name)
-        : _customType;
-    final properties = _collectProperties(type?.slug);
-    final Asset asset;
-    try {
-      if (_isEdit) {
-        asset = await repo.updateAsset(
-          widget.editing!.id,
-          name: _name.text,
-          category: _category,
-          categoryId: type?.id,
-          typeName: typeName,
-          locationName: _locationName,
-          brand: _text(_brand),
-          model: _text(_model),
-          serialNo: _text(_serialNo),
-          purchaseDate: _purchaseDate,
-          purchasePrice: double.tryParse(_price.text.trim().replaceAll(',', '')),
-          store: _text(_store),
-          properties: properties,
-        );
-      } else {
-        asset = await repo.addAsset(
-          name: _name.text,
-          category: _category,
-          categoryId: type?.id,
-          typeName: typeName,
-          locationName: _locationName,
-          brand: _text(_brand),
-          model: _text(_model),
-          serialNo: _text(_serialNo),
-          purchaseDate: _purchaseDate,
-          purchasePrice: double.tryParse(_price.text.trim().replaceAll(',', '')),
-          store: _text(_store),
-          properties: properties,
-        );
-
-        // Auto-seed the type's default services (AMC date overrides/creates AMC).
-        try {
-          await seedDefaultReminders(repo, asset, type, amcDate: _amcDate);
-        } catch (_) {/* asset saved; reminders can be added manually */}
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _saving = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: AppColors.red));
-      }
-      return;
-    }
-
-    final photo = _photo;
-    if (photo != null) {
-      try {
-        await repo.setAssetImage(asset.id,
-            bytes: photo.bytes, fileName: photo.name, mimeType: photo.imageMime);
-      } catch (_) {/* retry from asset detail */}
-    }
-
-    for (final invoice in _invoices) {
-      try {
-        await ref.read(documentRepositoryProvider).upload(
-              assetId: asset.id,
-              fileName: invoice.name,
-              bytes: invoice.bytes,
-              mimeType: invoice.docMime,
-              kind: DocKind.invoice,
-            );
-      } catch (_) {/* attach later from the documents section */}
-    }
-
-    if (!mounted) return;
-    refreshCatalog(ref);
-    Navigator.of(context).pop();
+    final ok = await runAction(
+      context,
+      () => ref.read(assetEditorControllerProvider.notifier).save(
+            draft: _draft(type),
+            editing: widget.editing,
+            photo: _photo,
+            invoices: _invoices,
+            amcDate: _amcDate,
+          ),
+    );
+    if (ok && mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider).valueOrNull ?? commonAssetCategories;
-    // Editing: resolve the asset's current type until the user changes it.
-    final type = _typeTouched
-        ? _type
-        : _type ?? categories.where((c) => c.id == widget.editing?.categoryId).firstOrNull;
+    final categories = ref.watch(categoriesProvider).value ?? commonAssetCategories;
+    final saving = ref.watch(assetEditorControllerProvider).isLoading;
+    final type = _effectiveType(categories);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -337,7 +259,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
               child: StepNav(
                 step: _step,
-                busy: _saving,
+                busy: saving,
                 nextLabel: switch (_step) {
                   _stepCategory => 'Next',
                   _stepType => type == null && _customType == null ? 'Skip' : 'Next',
@@ -434,8 +356,8 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
 
   // ── Step 3: details ──
   List<Widget> _detailsStep(AssetCategory? type) {
-    final specs = propertySpecsFor(type?.slug);
-    final rooms = ref.watch(locationsProvider).valueOrNull ?? const <Location>[];
+    final specs = propertySpecsFor(_specSlug(type));
+    final rooms = ref.watch(locationsProvider).value ?? const <Location>[];
     return [
       StepHeader(
           step: 2,
