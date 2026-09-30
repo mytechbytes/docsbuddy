@@ -128,24 +128,39 @@ The custom scheme is registered in `ios/Runner/Info.plist` and
 
 ### Android — make the https link open the app
 
-1. Get the **SHA-256 certificate fingerprint** of the key that signs the app
-   users install:
-   - **Play Store builds** (Play App Signing): Play Console → your app →
-     **Protected with Play → Play Store protection → Protect app signing key**
-     (or the **Manage Play app signing** link) → *App signing key certificate*
-     → **SHA-256 certificate fingerprint**. Use this one, not the *upload key*
-     certificate — it's the key that signs what users install.
-     *(Older Play Console: Test and release → App integrity → App signing.)*
-   - **Local release builds**:
+1. Collect the **SHA-256 certificate fingerprints** of the keys that sign the
+   builds you want sign-in to return to. In this project release builds are
+   made on GitHub, so no keystore file is needed locally:
+
+   | Build | Signed by | Where to get the SHA-256 |
+   |---|---|---|
+   | Installed from **Google Play** (all users) | Google's **app signing key** | Play Console → your app → **Protected with Play → Play Store protection → Protect app signing key** (or **Manage Play app signing**) → *App signing key certificate* → **SHA-256 certificate fingerprint**. **Required.** |
+   | GitHub-built AAB/APK installed directly (not via Play) | your **upload key** (repo secret `ANDROID_KEYSTORE_BASE64`) | Same Play Console page → *Upload key certificate* → **SHA-256**. Optional. |
+   | **Android Studio** debug runs | the **debug key** on your Mac | see below. Optional (local testing only). |
+
+   *(Older Play Console: Test and release → App integrity → App signing.)*
+
+   **Debug key.** `~/.android/debug.keystore` does not exist until you first
+   run the app on an Android emulator/device from Android Studio — do that
+   once, then either:
+   - Android Studio → **Gradle** panel → `app` → **Tasks → android →
+     signingReport** (the *debug* variant's `SHA-256`), or
+   - from a terminal:
      ```bash
-     keytool -list -v -keystore <path/to/upload-keystore.jks> -alias <alias>
+     cd android && ./gradlew signingReport
      ```
-   - **Debug builds**:
+     or
      ```bash
      keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android
      ```
+   Each developer's Mac has its own debug key — add every one you need.
+
+   > **Keep a backup of the upload keystore.** GitHub never reveals a secret's
+   > value again, so the `.jks` and its passwords should also live in the team
+   > password manager. If they are lost, Play App Signing lets you replace the
+   > upload key — see `docs/play-store-release.md` → *upload key reset*.
 2. Host this file at `https://docsbuddy.mytechbytes.in/.well-known/assetlinks.json`
-   (list every fingerprint you need — Play, upload, debug):
+   (one entry per fingerprint from step 1 — app signing key first):
    ```json
    [{
      "relation": ["delegate_permission/common.handle_all_urls"],
