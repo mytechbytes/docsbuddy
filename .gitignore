@@ -48,3 +48,5 @@ app.*.map.json
 /config/*.json
 !/config/*.example.json
 !/config/fake.json
+# Widget Preview related
+.widget_preview/
