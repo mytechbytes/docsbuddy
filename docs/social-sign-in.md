@@ -131,8 +131,11 @@ The custom scheme is registered in `ios/Runner/Info.plist` and
 1. Get the **SHA-256 certificate fingerprint** of the key that signs the app
    users install:
    - **Play Store builds** (Play App Signing): Play Console → your app →
-     **Test and release → App integrity → App signing** → *App signing key
-     certificate* → **SHA-256 certificate fingerprint**.
+     **Protected with Play → Play Store protection → Protect app signing key**
+     (or the **Manage Play app signing** link) → *App signing key certificate*
+     → **SHA-256 certificate fingerprint**. Use this one, not the *upload key*
+     certificate — it's the key that signs what users install.
+     *(Older Play Console: Test and release → App integrity → App signing.)*
    - **Local release builds**:
      ```bash
      keytool -list -v -keystore <path/to/upload-keystore.jks> -alias <alias>

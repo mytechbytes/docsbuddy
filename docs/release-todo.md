@@ -28,8 +28,9 @@ Status of what's needed to ship a Play **internal testing** build.
 
 ## B. Signing key (you lost the old one)
 - [ ] Generate a new upload keystore (`keytool -genkey … -alias upload`)
-- [ ] **Request upload key reset** in Play Console (App integrity → upload the new
-      cert PEM); wait for Google approval — see `docs/play-store-release.md`
+- [ ] **Request upload key reset** in Play Console (Protected with Play → Play
+      Store protection → Protect app signing key → upload the new cert PEM);
+      wait for Google approval — see `docs/play-store-release.md`
 
 ## C. GitHub secrets (Settings → Secrets and variables → Actions)
 - [ ] `ANDROID_KEYSTORE_BASE64` (`base64 -i docsbuddy-upload.jks`)
