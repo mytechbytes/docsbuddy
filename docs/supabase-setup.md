@@ -24,33 +24,8 @@ repository — so every screen works offline. This guide turns on real Supabase.
      logs in immediately; keep it on for production.
    - **Email OTP** — enable, length **6**. The forgot-password flow uses a
      6-digit code (`signInWithOtp` → `verifyOTP` → `updateUser`).
-   - **Google / Apple** (optional, for the social buttons) — Apple needs an
-     Apple Developer Services ID; Google step by step:
-
-     **Google sign-in, end to end**
-
-     1. <https://console.cloud.google.com> → create/select a project (the
-        Firebase project used for FCM is fine).
-     2. **APIs & Services → OAuth consent screen** — app name `DocsBuddy`,
-        support + developer emails, audience **External**, authorized domain
-        `mytechbytes.in`. While in *Testing* mode only listed test users can
-        sign in — **Publish** for everyone.
-     3. **APIs & Services → Credentials → Create credentials → OAuth client
-        ID** — type **Web application** (Supabase brokers the flow, so *web*,
-        not Android), name `docsbuddy-supabase`, **Authorized redirect URI**
-        `https://<project-ref>.supabase.co/auth/v1/callback` → copy the
-        **Client ID** and **Client secret**.
-     4. Supabase → **Authentication → Sign In / Providers → Google** →
-        Enable, paste both values, save.
-     5. Make sure the app's return URLs are in **Redirect URLs** (step 4
-        below) — the app calls
-        `signInWithOAuth(google, redirectTo: Env.authRedirectUrl)`.
-     6. ⚠️ The HTTPS return link only re-opens the app once
-        `/.well-known/assetlinks.json` is hosted (Part E). Until then,
-        temporarily set `Env.authRedirectUrl` to
-        `in.mytechbytes.docsbuddy://login-callback` to get back into the app.
-     7. Test: Sign in → **Continue with Google** → account chooser → signed
-        in; the `public.users` row auto-appears via `handle_new_user`.
+   - **Google / Apple / Microsoft** (optional, for the social buttons) —
+     full step-by-step setup in [social-sign-in.md](social-sign-in.md).
 4. **Authentication → URL Configuration** — **required so confirm-email / magic
    links return to the app instead of `localhost`:**
    - **Redirect URLs** → add **`https://docsbuddy.mytechbytes.in/login-callback`**
@@ -99,13 +74,17 @@ for f in supabase/migrations/0*.sql; do psql "$DATABASE_URL" -f "$f"; done
 
 ## Part C — Run the app with credentials
 
-Pass the two values via `--dart-define` — **never commit keys**:
+Store the two values in the gitignored `config/dev.json` — **never commit
+keys** (details in [config/README.md](../config/README.md)):
 
 ```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=YOUR_ANON_OR_PUBLISHABLE_KEY
+cp config/dev.example.json config/dev.json   # fill in SUPABASE_URL + SUPABASE_ANON_KEY
+flutter run --dart-define-from-file=config/dev.json
 ```
+
+VS Code: pick **DocsBuddy (Supabase dev)** in Run and Debug (`.vscode/launch.json`).
+Android Studio: Run → Edit Configurations → `main.dart` → **Additional run
+args**: `--dart-define-from-file=config/dev.json`.
 
 Same flags for release builds (source from CI secrets):
 
@@ -160,33 +139,17 @@ verify/reset screens accordingly.
 
 ## Part E — Deep links (App Links / Universal Links)
 
-Email/password sign-in without email-confirm needs **none** of this. Confirm-email,
-magic link, and OAuth use `Env.authRedirectUrl` =
-`https://docsbuddy.mytechbytes.in/login-callback`.
-
-**App side — already wired in this repo:**
-- `signUp`/OAuth pass the URL (`supabase_auth_repository.dart`).
-- **Android App Link** — verified `https` intent-filter on `MainActivity`
-  (`autoVerify="true"`) + a custom-scheme fallback
-  (`in.mytechbytes.docsbuddy://login-callback`).
-- **iOS** — `ios/Runner/Runner.entitlements` is ready with
-  `applinks:docsbuddy.mytechbytes.in`, plus the custom scheme in `Info.plist`.
-  ⚠️ **Not yet enabled in Xcode** — turn on *Signing & Capabilities → Associated
-  Domains* once iOS signing is set up (see the release TODO).
-
-**Site side — you host on `docsbuddy.mytechbytes.in`** (these make the HTTPS link
-open the app directly):
-- `/.well-known/assetlinks.json` — Android, with the **Play App Signing** key's
-  SHA-256.
-- `/.well-known/apple-app-site-association` — iOS, with your **Apple Team ID**.
-  Both must be served over HTTPS, `Content-Type: application/json`, no redirects.
-
-**Supabase side:** add both URLs to **Redirect URLs** and set **Site URL** (Part A).
+Email/password sign-in without email-confirm needs none of this. Confirm-email,
+magic links and OAuth return through `Env.authRedirectUrl` (the https App Link
+on Android; the `in.mytechbytes.docsbuddy://` scheme on iOS until universal
+links are set up). Hosting `assetlinks.json` / `apple-app-site-association`,
+the Xcode capability and the `IOS_UNIVERSAL_LINKS` flag are covered step by
+step in [social-sign-in.md → Part 2](social-sign-in.md#part-2--returning-to-the-app-deep-links).
 
 ## Still stubbed / follow-ups
 
-- **Google/Apple** call `signInWithOAuth` — they only complete once providers +
-  redirects (Parts A & E) are configured.
+- **Google/Apple/Microsoft** call `signInWithOAuth` — they only complete once
+  the providers and redirects are configured ([social-sign-in.md](social-sign-in.md)).
 - The recovery flow assumes **email OTP** (Part A).
 - No live project was used to smoke-test the real GoTrue/PostgREST round-trips;
   the fake path is fully tested.

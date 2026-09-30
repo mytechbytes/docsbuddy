@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local build configuration (see config/README.md): real values stay local.
+/config/*.json
+!/config/*.example.json
+!/config/fake.json
