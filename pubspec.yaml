@@ -95,8 +95,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Brand mark (the provided gradient-Z logo) — rendered by DbLogo on every
-  # page header; also the source for all launcher/store icons (store/README.md).
+  # Brand mark (docsbuddy-web/brand/web/logo.png) — rendered by DbLogo on
+  # every page header. Launcher/store icons come from the same brand kit.
   assets:
     - assets/icon/source_logo.png
 
@@ -145,6 +145,7 @@ flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
   remove_alpha_ios: true
-  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_background: "#E8F3F7"
   adaptive_icon_foreground: "assets/icon/adaptive_foreground.png"
+  adaptive_icon_monochrome: "assets/icon/adaptive_monochrome.png"
   min_sdk_android: 21

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 /// Brand mark + "Docs**Buddy**" wordmark — `DBLogo` in the design handoff.
-/// The mark is the provided gradient-Z logo (`assets/icon/source_logo.png`),
-/// the same file every launcher/store icon derives from.
+/// The mark is the DocsBuddy brand tile (`assets/icon/source_logo.png`),
+/// from the same brand kit every launcher/store icon is generated from.
 class DbLogo extends StatelessWidget {
   const DbLogo({super.key, this.size = 17, this.showMark = true});
 

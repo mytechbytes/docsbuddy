@@ -1,11 +1,11 @@
 {
-    "name": "docsbuddy",
-    "short_name": "docsbuddy",
+    "name": "DocsBuddy",
+    "short_name": "DocsBuddy",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F4F6FA",
+    "theme_color": "#0D1A2B",
+    "description": "Track your family's appliances, vehicles and documents, with service reminders so you never miss a renewal.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
