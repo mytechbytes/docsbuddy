@@ -20,7 +20,7 @@ Status of what's needed to ship a Play **internal testing** build.
 - [ ] Auth → URL Configuration: **Site URL** = `https://docsbuddy.mytechbytes.in`;
       **Redirect URLs** += `https://docsbuddy.mytechbytes.in/login-callback`
       **and** `in.mytechbytes.docsbuddy://login-callback`
-- [ ] (Optional) Google/Apple OAuth providers + their redirect URLs
+- [ ] (Optional) Google/Apple/Microsoft providers — see `docs/social-sign-in.md`
 - [ ] Deploy the 3 Edge Functions + secrets (`notify-family` webhooks;
       reminder-sender crons via `supabase/schedules.sql`) — commands in
       `supabase/README.md`; how to obtain each credential (Firebase JSON,
