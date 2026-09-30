@@ -129,8 +129,9 @@ What you can recover depends on **Play App Signing** (step 4):
      keytool -export -rfc -keystore ~/docsbuddy-upload.jks \
        -alias upload -file upload_certificate.pem
      ```
-  3. Play Console → your app → **Test and release → App integrity → App signing
-     → Request upload key reset**, upload `upload_certificate.pem`. Google
+  3. Play Console → your app → **Protected with Play → Play Store protection →
+     Protect app signing key** (or **Manage Play app signing**) → **Request
+     upload key reset**, upload `upload_certificate.pem`. Google
      approves it (often within a day or two).
   4. Update the GitHub secrets to the new keystore (below). The **app signing
      key Google holds is unchanged**, so existing installs keep updating.
