@@ -74,13 +74,17 @@ for f in supabase/migrations/0*.sql; do psql "$DATABASE_URL" -f "$f"; done
 
 ## Part C — Run the app with credentials
 
-Pass the two values via `--dart-define` — **never commit keys**:
+Store the two values in the gitignored `config/dev.json` — **never commit
+keys** (details in [config/README.md](../config/README.md)):
 
 ```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=YOUR_ANON_OR_PUBLISHABLE_KEY
+cp config/dev.example.json config/dev.json   # fill in SUPABASE_URL + SUPABASE_ANON_KEY
+flutter run --dart-define-from-file=config/dev.json
 ```
+
+VS Code: pick **DocsBuddy (Supabase dev)** in Run and Debug (`.vscode/launch.json`).
+Android Studio: Run → Edit Configurations → `main.dart` → **Additional run
+args**: `--dart-define-from-file=config/dev.json`.
 
 Same flags for release builds (source from CI secrets):
 

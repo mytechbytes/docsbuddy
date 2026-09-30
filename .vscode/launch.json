@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DocsBuddy (Supabase dev)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "toolArgs": ["--dart-define-from-file=config/dev.json"]
+    },
+    {
+      "name": "DocsBuddy (offline fake backend)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "toolArgs": ["--dart-define-from-file=config/fake.json"]
+    },
+    {
+      "name": "DocsBuddy (screenshot harness)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_screenshot.dart"
+    }
+  ]
+}

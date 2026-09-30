@@ -1,17 +1,38 @@
-# docsbuddy
+# DocsBuddy
 
-A new Flutter project.
+Track your family's appliances, vehicles and documents, with service reminders
+so you never miss a renewal. Flutter app (iOS + Android) on Supabase.
 
-## Getting Started
+## Getting started
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+```
 
-A few resources to get you started if this is your first Flutter project:
+**Offline (no backend, seeded demo data):**
+```bash
+flutter run --dart-define-from-file=config/fake.json
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+**Against your Supabase project:**
+```bash
+cp config/dev.example.json config/dev.json   # fill in SUPABASE_URL + SUPABASE_ANON_KEY
+flutter run --dart-define-from-file=config/dev.json
+```
+`config/dev.json` is gitignored — see [config/README.md](config/README.md).
+VS Code launch configurations for both are in `.vscode/launch.json`.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+After changing freezed models run `dart run build_runner build`; translations
+are generated from `lib/l10n/app_en.arb` on `flutter pub get` / `flutter run`.
+
+## Docs
+
+| Topic | File |
+|---|---|
+| Supabase project + database | [docs/supabase-setup.md](docs/supabase-setup.md) |
+| Google / Apple / Microsoft sign-in | [docs/social-sign-in.md](docs/social-sign-in.md) |
+| Swapping or adding a backend | [docs/backends.md](docs/backends.md) |
+| Localization | [docs/localization.md](docs/localization.md) |
+| Theming & dark mode | [docs/theming.md](docs/theming.md) |
+| Push notifications | [docs/push-setup.md](docs/push-setup.md) |
+| Google Play release | [docs/play-store-release.md](docs/play-store-release.md) |

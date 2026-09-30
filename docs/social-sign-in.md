@@ -67,10 +67,33 @@ Do this once, before any provider.
 
 1. Open <https://supabase.com/dashboard> → your project.
 2. **Project Settings → API**: note the **Project URL** (gives you `<ref>`) and
-   the **anon / publishable key**. The app is built with them:
+   the **anon / publishable key**, and put them in your local config file:
    ```bash
-   flutter run --dart-define=SUPABASE_URL=https://<ref>.supabase.co --dart-define=SUPABASE_ANON_KEY=<anon key>
+   cp config/dev.example.json config/dev.json
    ```
+   Edit `config/dev.json` (gitignored — never committed):
+   ```json
+   {
+     "SUPABASE_URL": "https://<ref>.supabase.co",
+     "SUPABASE_ANON_KEY": "<anon or publishable key>",
+     "BACKEND": "supabase",
+     "IOS_UNIVERSAL_LINKS": "false"
+   }
+   ```
+   Run with it:
+   ```bash
+   flutter run --dart-define-from-file=config/dev.json
+   ```
+   VS Code: **Run and Debug → DocsBuddy (Supabase dev)**. Android Studio:
+   **Run → Edit Configurations → main.dart → Additional run args** =
+   `--dart-define-from-file=config/dev.json`.
+
+   Only these two public client values go in the app. Provider secrets from
+   Parts 3–5 (Google/Microsoft client secrets, the Apple `.p8` key and JWT) and
+   the Supabase **service_role** key never go in the repo or the app — they are
+   entered only in the Supabase dashboard and kept in the team password
+   manager. CI reads `SUPABASE_URL` / `SUPABASE_ANON_KEY` from GitHub
+   repository secrets (see `config/README.md`).
 3. **Authentication → URL Configuration**:
    - **Site URL**: `https://docsbuddy.mytechbytes.in`
      (the default `http://localhost:3000` is where users land if a redirect is
@@ -167,9 +190,11 @@ link to open the app from the https domain.
      }
    }
    ```
-4. Build iOS with the flag so the app uses the https redirect:
+4. Set `"IOS_UNIVERSAL_LINKS": "true"` in `config/dev.json` (and pass
+   `--dart-define=IOS_UNIVERSAL_LINKS=true` in the release workflow) so the app
+   uses the https redirect, then run as usual:
    ```bash
-   flutter run --dart-define=IOS_UNIVERSAL_LINKS=true --dart-define=SUPABASE_URL=… --dart-define=SUPABASE_ANON_KEY=…
+   flutter run --dart-define-from-file=config/dev.json
    ```
 5. Check: install the build, then paste
    `https://docsbuddy.mytechbytes.in/login-callback` into Notes on the device
@@ -397,9 +422,9 @@ App → **Continue with Microsoft** → Microsoft sign-in → consent screen lis
 
 ## Part 6 — Test every provider
 
-Run a Supabase build:
+Run a Supabase build (values from Part 1, step 2):
 ```bash
-flutter run --dart-define=SUPABASE_URL=https://<ref>.supabase.co --dart-define=SUPABASE_ANON_KEY=<anon key>
+flutter run --dart-define-from-file=config/dev.json
 ```
 
 For **each** of Google, Apple and Microsoft, on **both** Android and iOS:
@@ -428,7 +453,7 @@ For **each** of Google, Apple and Microsoft, on **both** Android and iOS:
 | Microsoft: `AADSTS7000215` (invalid client secret) | Used the Secret **ID**, or the secret expired | 5.2 — paste the **Value**, create a new one |
 | Microsoft: personal accounts rejected | Account type set to single/multi-tenant only | 5.1 step 3; tenant URL `common` |
 | Supabase: “Error getting user email from external provider” | Provider didn't return an email | Google: email scope (3.1.5); Apple: normal after first sign-in only if email was hidden; Microsoft: optional `email` claim (5.3) |
-| Button does nothing / error snackbar | Provider not enabled in Supabase, or app built without `SUPABASE_URL` (fake backend) | Part 1 step 2; enable the provider |
+| Button does nothing / error snackbar | Provider not enabled in Supabase, or app run without `config/dev.json` (fake backend — Settings → App → Backend shows *Local (fake)*) | Part 1 step 2; enable the provider |
 
 Supabase → **Logs → Auth** shows the exact error for a failed attempt.
 
