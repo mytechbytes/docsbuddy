@@ -181,7 +181,12 @@ class MemberTile extends StatelessWidget {
                     children: [
                       Icon(Icons.phone_outlined, size: 12, color: context.palette.textMuted),
                       const SizedBox(width: 4),
-                      Text(phone, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+                      Flexible(
+                        child: Text(phone,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+                      ),
                     ],
                   ),
                 ],
