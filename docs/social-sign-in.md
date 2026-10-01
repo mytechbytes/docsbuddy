@@ -113,111 +113,303 @@ Do this once, before any provider.
 
 ## Part 2 — Returning to the app (deep links)
 
-After Supabase finishes, it opens the redirect URL. That URL must open the app.
+After Supabase completes the provider authentication in the external browser, it redirects back to the configured redirect URL (`Env.authRedirectUrl`). That deep link must be intercepted by the operating system and passed directly to DocsBuddy.
 
-### What the app uses today (`Env.authRedirectUrl`)
+---
 
-| Platform | Redirect | Status |
+### How deep link handling works in DocsBuddy
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 1. App calls signInWithOAuth() with redirectTo                           │
+│    └─► Browser opens Supabase /authorize ──► Provider OAuth login page   │
+│                                                                          │
+│ 2. Provider authenticates user ──► Supabase /callback                    │
+│                                                                          │
+│ 3. Supabase issues session ──► Redirects browser to authRedirectUrl      │
+│    (e.g., https://docsbuddy.mytechbytes.in/login-callback#access_token=…) │
+│                                                                          │
+│ 4. OS intercepts URL (App Link / Universal Link / Custom Scheme)        │
+│    └─► Opens MainActivity / Runner (launchMode="singleTop")             │
+│                                                                          │
+│ 5. supabase_flutter (via app_links plugin) intercepts tokens             │
+│    └─► Stores session in SecureLocalStorage / SecurePkceStorage         │
+│    └─► Triggers onAuthStateChange ──► App opens Dashboard               │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Codebase Configuration (`lib/core/config/env.dart`)
+
+```dart
+static const authRedirectAppLink = 'https://docsbuddy.mytechbytes.in/login-callback';
+static const authRedirectScheme  = 'in.mytechbytes.docsbuddy://login-callback';
+
+static String get authRedirectUrl =>
+    defaultTargetPlatform == TargetPlatform.iOS && !_iosUniversalLinks
+        ? authRedirectScheme
+        : authRedirectAppLink;
+```
+
+- **Android**: Uses the HTTPS App Link (`authRedirectAppLink`). Falls back to `authRedirectScheme` if needed during local development.
+- **iOS**: Uses the custom scheme (`authRedirectScheme`) by default. When `--dart-define=IOS_UNIVERSAL_LINKS=true` is passed, it switches to the HTTPS Universal Link (`authRedirectAppLink`).
+
+---
+
+### Platform Summary
+
+| Platform | Redirect URL | Type | Requirement / Status |
+|---|---|---|---|
+| **Android** | `https://docsbuddy.mytechbytes.in/login-callback` | **App Link** | Requires `assetlinks.json` hosted on your domain. |
+| **Android (Fallback)** | `in.mytechbytes.docsbuddy://login-callback` | **Custom Scheme** | Registered in `AndroidManifest.xml`. Works without web hosting. |
+| **iOS (Default)** | `in.mytechbytes.docsbuddy://login-callback` | **Custom Scheme** | Registered in `Info.plist`. Works out-of-the-box without web hosting. |
+| **iOS (Production)** | `https://docsbuddy.mytechbytes.in/login-callback` | **Universal Link** | Requires `apple-app-site-association` hosted + Xcode entitlement. |
+
+---
+
+### Native Manifest & Plist Registrations
+
+#### 1. Android (`android/app/src/main/AndroidManifest.xml`)
+
+`MainActivity` is configured with `android:launchMode="singleTop"` so deep links deliver directly to the running instance without re-creating the Activity stack.
+
+```xml
+<!-- Verified HTTPS App Link -->
+<intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+    <category android:name="android.intent.category.BROWSABLE"/>
+    <data android:scheme="https"
+          android:host="docsbuddy.mytechbytes.in"
+          android:pathPrefix="/login-callback"/>
+</intent-filter>
+
+<!-- Custom Scheme Fallback -->
+<intent-filter android:autoVerify="false">
+    <action android:name="android.intent.action.VIEW"/>
+    <category android:name="android.intent.category.DEFAULT"/>
+    <category android:name="android.intent.category.BROWSABLE"/>
+    <data android:scheme="in.mytechbytes.docsbuddy" android:host="login-callback"/>
+</intent-filter>
+```
+
+#### 2. iOS (`ios/Runner/Info.plist` & `Runner.entitlements`)
+
+In `ios/Runner/Info.plist`:
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLName</key>
+        <string>in.mytechbytes.docsbuddy</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>in.mytechbytes.docsbuddy</string>
+        </array>
+    </dict>
+</array>
+```
+
+In `ios/Runner/Runner.entitlements`:
+```xml
+<key>com.apple.developer.associated-domains</key>
+<array>
+    <string>applinks:docsbuddy.mytechbytes.in</string>
+</array>
+```
+
+---
+
+### Android — Step-by-Step App Links Setup
+
+Android App Links allow `https://docsbuddy.mytechbytes.in/login-callback` to open DocsBuddy directly without showing a domain choice dialog.
+
+#### Step 1: Collect SHA-256 Fingerprints
+
+Android requires the SHA-256 certificate fingerprints for every key signing your app builds:
+
+| Build Type | Signed By | Where to Get SHA-256 |
 |---|---|---|
-| Android | `https://docsbuddy.mytechbytes.in/login-callback` (App Link) | needs `assetlinks.json` hosted (below) |
-| iOS | `in.mytechbytes.docsbuddy://login-callback` (custom scheme) | works now, no hosting needed |
+| **Google Play Release** (All production users) | Google **App Signing Key** | Play Console → App → **Protected with Play → Play Store protection → App signing** → *App signing key certificate* → **SHA-256 certificate fingerprint**. (**Required**) |
+| **GitHub CI Release Builds** (Direct AAB/APK) | **Upload Key** (`ANDROID_KEYSTORE_BASE64`) | Play Console → *Upload key certificate* → **SHA-256**. |
+| **Android Studio Local Debug** | **Debug Key** (`debug.keystore`) | Terminal command or Gradle signing report (see below). |
 
-The custom scheme is registered in `ios/Runner/Info.plist` and
-`AndroidManifest.xml`; the https App Link intent-filter is in
-`AndroidManifest.xml`.
+**How to extract the local Debug Key SHA-256:**
+Run either of the following commands from your project root:
+```bash
+# Option A: Via Gradle task
+cd android && ./gradlew signingReport
 
-### Android — make the https link open the app
+# Option B: Via keytool
+keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+```
+Look for `SHA256:` under `Variant: debug`. Format: `AA:BB:CC:...:FF` (uppercase hex bytes separated by colons).
 
-1. Collect the **SHA-256 certificate fingerprints** of the keys that sign the
-   builds you want sign-in to return to. In this project release builds are
-   made on GitHub, so no keystore file is needed locally:
+> **Upload Keystore Backup**: Always keep a backup of `docsbuddy-upload.jks` and its passwords in your team password manager. GitHub repository secrets cannot be retrieved after saving.
 
-   | Build | Signed by | Where to get the SHA-256 |
-   |---|---|---|
-   | Installed from **Google Play** (all users) | Google's **app signing key** | Play Console → your app → **Protected with Play → Play Store protection → Protect app signing key** (or **Manage Play app signing**) → *App signing key certificate* → **SHA-256 certificate fingerprint**. **Required.** |
-   | GitHub-built AAB/APK installed directly (not via Play) | your **upload key** (repo secret `ANDROID_KEYSTORE_BASE64`) | Same Play Console page → *Upload key certificate* → **SHA-256**. Optional. |
-   | **Android Studio** debug runs | the **debug key** on your Mac | see below. Optional (local testing only). |
+#### Step 2: Host `assetlinks.json`
 
-   *(Older Play Console: Test and release → App integrity → App signing.)*
+Create and host a JSON file at exact URL:
+`https://docsbuddy.mytechbytes.in/.well-known/assetlinks.json`
 
-   **Debug key.** `~/.android/debug.keystore` does not exist until you first
-   run the app on an Android emulator/device from Android Studio — do that
-   once, then either:
-   - Android Studio → **Gradle** panel → `app` → **Tasks → android →
-     signingReport** (the *debug* variant's `SHA-256`), or
-   - from a terminal:
-     ```bash
-     cd android && ./gradlew signingReport
-     ```
-     or
-     ```bash
-     keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android
-     ```
-   Each developer's Mac has its own debug key — add every one you need.
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.mytechbytes.docsbuddy",
+      "sha256_cert_fingerprints": [
+        "4A:8B:...:PlayAppSigningSHA256",
+        "12:34:...:UploadKeySHA256",
+        "FE:DC:...:DebugKeySHA256"
+      ]
+    }
+  }
+]
+```
 
-   > **Keep a backup of the upload keystore.** GitHub never reveals a secret's
-   > value again, so the `.jks` and its passwords should also live in the team
-   > password manager. If they are lost, Play App Signing lets you replace the
-   > upload key — see `docs/play-store-release.md` → *upload key reset*.
-2. Host this file at `https://docsbuddy.mytechbytes.in/.well-known/assetlinks.json`
-   (one entry per fingerprint from step 1 — app signing key first):
-   ```json
-   [{
-     "relation": ["delegate_permission/common.handle_all_urls"],
-     "target": {
-       "namespace": "android_app",
-       "package_name": "in.mytechbytes.docsbuddy",
-       "sha256_cert_fingerprints": ["AA:BB:…:FF"]
-     }
-   }]
-   ```
-   Served over **HTTPS**, `Content-Type: application/json`, **no redirects**.
-3. Check it: <https://developers.google.com/digital-asset-links/tools/generator>
-   (enter domain, package, fingerprint → **Test statement**), and on a device:
+**HTTP Hosting Requirements:**
+- URL: `https://docsbuddy.mytechbytes.in/.well-known/assetlinks.json`
+- Protocol: **HTTPS** (valid SSL certificate required)
+- HTTP Status: **200 OK**
+- Content-Type: `application/json`
+- **No HTTP redirects** (must not redirect 301/302 to www or another URL)
+- Must be publicly accessible without authentication.
+
+#### Step 3: Verify & Test Android App Links
+
+1. **Verify Online Statement**:
+   Use Google's Digital Asset Links Statement Generator & Tester:
+   <https://developers.google.com/digital-asset-links/tools/generator>
+   Enter Domain: `docsbuddy.mytechbytes.in`, Package: `in.mytechbytes.docsbuddy`, Fingerprint: `<SHA256>` → click **Test statement**.
+
+2. **Verify on Device via ADB**:
+   Re-install the app on a device or emulator (Android verifies App Links during package installation), then run:
    ```bash
    adb shell pm get-app-links in.mytechbytes.docsbuddy
    ```
-   The domain should show `verified`. (Re-install the app after hosting the
-   file; Android verifies at install time.)
-
-Until this is hosted, Android sign-in returns to the **website**. As a stop-gap
-you can build Android with the custom scheme by changing
-`Env.authRedirectUrl` to return `authRedirectScheme` for Android too.
-
-### iOS — optional: switch to Universal Links
-
-The custom scheme already works. Universal links are nicer (they can't be
-claimed by another app) and are required if you want the email-confirmation
-link to open the app from the https domain.
-
-1. **Apple Developer → Certificates, Identifiers & Profiles → Identifiers** →
-   `in.mytechbytes.docsbuddy` → enable **Associated Domains** → **Save**.
-2. **Xcode** → `ios/Runner.xcworkspace` → target **Runner** → **Signing &
-   Capabilities** → **+ Capability** → **Associated Domains**. Xcode picks up
-   `Runner/Runner.entitlements`, which already contains
-   `applinks:docsbuddy.mytechbytes.in`.
-3. Host `https://docsbuddy.mytechbytes.in/.well-known/apple-app-site-association`
-   (no file extension, `Content-Type: application/json`, no redirects):
-   ```json
-   {
-     "applinks": {
-       "details": [{
-         "appIDs": ["PAB3TLAUZH.in.mytechbytes.docsbuddy"],
-         "components": [{ "/": "/login-callback*" }]
-       }]
-     }
-   }
+   *Expected output:*
+   ```text
+   in.mytechbytes.docsbuddy:
+     ID: ...
+     Signatures: [...]
+     Domain verification state:
+       docsbuddy.mytechbytes.in: verified
    ```
-4. Set `"IOS_UNIVERSAL_LINKS": "true"` in `config/dev.json` (and pass
-   `--dart-define=IOS_UNIVERSAL_LINKS=true` in the release workflow) so the app
-   uses the https redirect, then run as usual:
+
+   If status shows `legacy_failure` or `ask`, force a re-verification:
    ```bash
-   flutter run --dart-define-from-file=config/dev.json
+   adb shell pm verify-app-links --re-verify in.mytechbytes.docsbuddy
    ```
-5. Check: install the build, then paste
-   `https://docsbuddy.mytechbytes.in/login-callback` into Notes on the device
-   and long-press it — **Open in DocsBuddy** should be offered. (Apple's CDN
-   caches the file; changes can take up to 24 h.)
+
+3. **Test Deep Link Navigation via ADB**:
+   Test HTTPS App Link:
+   ```bash
+   adb shell am start -W -a android.intent.action.VIEW -d "https://docsbuddy.mytechbytes.in/login-callback#access_token=test" in.mytechbytes.docsbuddy
+   ```
+   Test Custom Scheme Fallback:
+   ```bash
+   adb shell am start -W -a android.intent.action.VIEW -d "in.mytechbytes.docsbuddy://login-callback#access_token=test" in.mytechbytes.docsbuddy
+   ```
+
+---
+
+### iOS — Step-by-Step Universal Links Setup (Optional / Production)
+
+The custom scheme (`in.mytechbytes.docsbuddy://login-callback`) works immediately out-of-the-box for iOS. Universal Links (`https://docsbuddy.mytechbytes.in/login-callback`) offer enhanced security and prevent other apps from claiming the scheme.
+
+#### Step 1: Enable Associated Domains in Apple Developer Portal
+
+1. Log into <https://developer.apple.com/account> → **Certificates, Identifiers & Profiles** → **Identifiers**.
+2. Select App ID: `in.mytechbytes.docsbuddy`.
+3. Under **Capabilities**, enable **Associated Domains**.
+4. Click **Save**.
+
+#### Step 2: Configure Xcode Capability
+
+1. Open `ios/Runner.xcworkspace` in Xcode.
+2. Select target **Runner** → **Signing & Capabilities**.
+3. Click **+ Capability** → select **Associated Domains**.
+4. Add entry: `applinks:docsbuddy.mytechbytes.in`.
+   *(This updates `ios/Runner/Runner.entitlements`).*
+
+#### Step 3: Host `apple-app-site-association` (AASA)
+
+Host the AASA file at:
+`https://docsbuddy.mytechbytes.in/.well-known/apple-app-site-association`
+
+```json
+{
+  "applinks": {
+    "details": [
+      {
+        "appID": "PAB3TLAUZH.in.mytechbytes.docsbuddy",
+        "components": [
+          {
+            "/": "/login-callback*"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**HTTP Hosting Requirements:**
+- URL: `https://docsbuddy.mytechbytes.in/.well-known/apple-app-site-association`
+- File name: `apple-app-site-association` (**No `.json` extension!**)
+- Content-Type: `application/json` or `application/pkcs7-mime`
+- Protocol: **HTTPS** (valid SSL certificate required)
+- **No HTTP redirects**
+
+> `PAB3TLAUZH` is your **Apple Team ID** (found top-right in Apple Developer Portal).
+
+#### Step 4: Enable Universal Links in App Configuration
+
+In `config/dev.json`:
+```json
+{
+  "IOS_UNIVERSAL_LINKS": "true"
+}
+```
+
+Or pass via command line:
+```bash
+flutter run --dart-define-from-file=config/dev.json --dart-define=IOS_UNIVERSAL_LINKS=true
+```
+
+#### Step 5: Test iOS Universal Links
+
+1. **iOS Simulator CLI Test**:
+   ```bash
+   # Test Custom Scheme:
+   xcrun simctl openurl booted "in.mytechbytes.docsbuddy://login-callback"
+
+   # Test HTTPS Universal Link:
+   xcrun simctl openurl booted "https://docsbuddy.mytechbytes.in/login-callback"
+   ```
+
+2. **Physical Device Test**:
+   - Open Notes app or Safari on the iOS device.
+   - Type or paste: `https://docsbuddy.mytechbytes.in/login-callback`
+   - Long-press the link → verified options should show **"Open in DocsBuddy"**. Tapping it opens the app directly without Safari navigation.
+
+> **Apple CDN Caching**: Apple caches AASA files on their CDN (`app-site-association.cdn-apple.com`). Updates can take up to 24 hours to propagate. For instant testing on iOS 14+, you can add `?mode=developer` to the entitlement:
+> `<string>applinks:docsbuddy.mytechbytes.in?mode=developer</string>`
+
+---
+
+### Deep Link Troubleshooting Matrix
+
+| Symptom / Issue | Cause | Resolution |
+|---|---|---|
+| **Android: Redirect lands on website in browser instead of opening app** | `assetlinks.json` not hosted, wrong SHA-256 fingerprint, or redirect present on website. | 1. Check `adb shell pm get-app-links in.mytechbytes.docsbuddy`.<br>2. Ensure `assetlinks.json` returns HTTP 200 without 301/302 redirects.<br>3. Verify SHA-256 fingerprint matches the exact key signing the build. |
+| **Android: Works in local debug, fails in Play Store build** | Only debug key SHA-256 was added to `assetlinks.json`. | Play Store re-signs builds with Google Play App Signing key. Copy Play App Signing SHA-256 from Play Console into `assetlinks.json`. |
+| **iOS: Custom scheme opens app, HTTPS link opens Safari** | `IOS_UNIVERSAL_LINKS` flag is `false` or AASA file cached/missing. | 1. Set `"IOS_UNIVERSAL_LINKS": "true"` in `config/dev.json`.<br>2. Confirm `apple-app-site-association` has no `.json` extension.<br>3. Ensure Associated Domains capability is active in Xcode. |
+| **Supabase: User lands on `localhost:3000` after sign-in** | Supabase **Site URL** or **Redirect URLs** misconfigured. | Open Supabase Dashboard → **Authentication → URL Configuration**:<br>- Set **Site URL** = `https://docsbuddy.mytechbytes.in`<br>- Add `https://docsbuddy.mytechbytes.in/login-callback`<br>- Add `in.mytechbytes.docsbuddy://login-callback` |
+| **OAuth Error: `redirect_uri_mismatch`** | Provider console (Google/Apple/Microsoft) callback URL mismatch. | The OAuth provider console must be set to `https://<ref>.supabase.co/auth/v1/callback` (**NOT** `docsbuddy.mytechbytes.in`). Supabase handles the provider callback and then redirects to DocsBuddy. |
 
 ---
 

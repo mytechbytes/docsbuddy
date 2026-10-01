@@ -77,7 +77,7 @@ class SupabaseBackend implements BackendModule {
   ProfileRepository createProfileRepository() => RemoteProfileRepository(
         SupabaseProfileRemoteDataSource(_client),
         _files,
-        localTimezone: FlutterTimezone.getLocalTimezone,
+        localTimezone: () async => (await FlutterTimezone.getLocalTimezone()).identifier,
         logger: _logger,
       );
 

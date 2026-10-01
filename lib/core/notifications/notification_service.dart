@@ -47,7 +47,8 @@ class LocalNotificationService implements NotificationService {
     try {
       tzdata.initializeTimeZones();
       try {
-        tz.setLocalLocation(tz.getLocation(await FlutterTimezone.getLocalTimezone()));
+        final timezone = await FlutterTimezone.getLocalTimezone();
+        tz.setLocalLocation(tz.getLocation(timezone.identifier));
       } catch (e) {
         _logger.warning('Device timezone unavailable; scheduling in UTC', error: e);
         tz.setLocalLocation(tz.UTC);

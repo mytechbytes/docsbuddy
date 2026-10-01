@@ -22,15 +22,8 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1011229930015-14qa9rc93od02dih9jvfunl2b4drq4e3.apps.googleusercontent.com",
+              "client_id": "1011229930015-u0hoceijqa5k85v626q181lbq9im1ftc.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "1011229930015-lbu600gt5n3jksp69otk90hrtlasmjqk.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "in.mytechbytes.docsbuddy"
-              }
             }
           ]
         }
