@@ -80,6 +80,11 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Auth callbacks are consumed by supabase_flutter (app_links). Without this,
+	     Flutter also pushes the callback URL into go_router, which has no such
+	     route and shows "Page Not Found" after sign-in. -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<!-- FCM silent data pushes (docs/push-setup.md). -->
 	<key>UIBackgroundModes</key>
 	<array>

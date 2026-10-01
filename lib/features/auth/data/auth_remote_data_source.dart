@@ -15,6 +15,17 @@ abstract interface class AuthRemoteDataSource {
   Future<void> signOut();
 }
 
+/// Signed-in flag per auth event.
+///
+/// Error events are dropped: the SDK reports a failed deep-link exchange on this
+/// stream, and a duplicate delivery of the same callback link (the hosted
+/// redirect page opens the app by itself and again on "Open the app") fails with
+/// "Code verifier could not be found" even though the first delivery already
+/// signed the user in. The route guard only needs the flag, and an unhandled
+/// error here would surface as an uncaught exception.
+Stream<bool> sessionFlags(Stream<AuthState> events) =>
+    events.map((s) => s.session != null).handleError((Object _) {});
+
 class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
   SupabaseAuthRemoteDataSource(this._client);
 
@@ -23,7 +34,7 @@ class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
   GoTrueClient get _auth => _client.auth;
 
   @override
-  Stream<bool> sessionChanges() => _auth.onAuthStateChange.map((s) => s.session != null);
+  Stream<bool> sessionChanges() => sessionFlags(_auth.onAuthStateChange);
 
   @override
   bool get hasSession => _auth.currentSession != null;

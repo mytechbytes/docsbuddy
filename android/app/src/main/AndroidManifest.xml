@@ -31,6 +31,12 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Auth callbacks are consumed by supabase_flutter (app_links). Without
+                 this, Flutter also pushes the callback URL into go_router, which has
+                 no such route and shows "Page Not Found" after sign-in. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false" />
             <!-- Supabase auth — App Link (verified): opens the app directly for
                  https://docsbuddy.mytechbytes.in/login-callback. Requires
                  /.well-known/assetlinks.json on the domain (Play App Signing SHA-256). -->

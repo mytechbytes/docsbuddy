@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/env.dart';
 import '../../core/data/file_storage.dart';
+import '../../core/data/supabase/oauth_browser_closer.dart';
 import '../../core/data/supabase/supabase_file_storage.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/data/supabase/secure_supabase_storage.dart';
@@ -52,6 +53,7 @@ class SupabaseBackend implements BackendModule {
         pkceAsyncStorage: SecurePkceStorage(),
       ),
     );
+    closeBrowserOnSignIn(supabase.client.auth.onAuthStateChange);
     return SupabaseBackend(supabase.client, logger: logger);
   }
 
