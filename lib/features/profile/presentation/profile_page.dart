@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
+import '../../../core/widgets/settings_list.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../../family/application/family_controller.dart';
@@ -72,7 +73,7 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 14),
             const _FamilyCard(),
             const SizedBox(height: 16),
-            _MenuCard(children: [
+            SettingsCard(children: [
               _MenuRow(
                 icon: Icons.person_outline,
                 title: context.l10n.profileEditInfo,
@@ -91,7 +92,7 @@ class ProfilePage extends ConsumerWidget {
               ),
             ]),
             const SizedBox(height: 16),
-            _MenuCard(children: [
+            SettingsCard(children: [
               _MenuRow(
                 icon: Icons.logout,
                 title: context.l10n.commonSignOut,
@@ -319,20 +320,6 @@ class _FamilyCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _MenuCard extends StatelessWidget {
-  const _MenuCard({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
-      child: Column(children: children),
     );
   }
 }
