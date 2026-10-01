@@ -63,6 +63,8 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
         title: const Align(alignment: Alignment.centerLeft, child: DbLogo(size: 20)),
       ),
       floatingActionButton: FloatingActionButton(
+        // Tabs share an IndexedStack, so the default hero tag would collide.
+        heroTag: null,
         onPressed: _openAddRoomSheet,
         backgroundColor: context.palette.inverseSurface,
         foregroundColor: context.palette.onInverse,

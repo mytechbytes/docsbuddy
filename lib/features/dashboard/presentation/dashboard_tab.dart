@@ -105,6 +105,8 @@ class DashboardTab extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        // Tabs share an IndexedStack, so the default hero tag would collide.
+        heroTag: null,
         onPressed: () => context.push(AppRoutes.appliancePicker()),
         backgroundColor: context.palette.accent,
         elevation: 2,

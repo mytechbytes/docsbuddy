@@ -39,6 +39,8 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
         title: Text(context.l10n.navAssets, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        // Tabs share an IndexedStack, so the default hero tag would collide.
+        heroTag: null,
         backgroundColor: context.palette.inverseSurface,
         onPressed: () => context.push(AppRoutes.appliancePicker()),
         icon: Icon(Icons.add, color: context.palette.onInverse),
