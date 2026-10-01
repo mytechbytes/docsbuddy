@@ -55,10 +55,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
     return AuthScaffold(
       showBack: false,
+      showLogo: false,
       children: [
         const SizedBox(height: 8),
-        AuthHero(title: context.l10n.authSignInTitle, subtitle: context.l10n.authSignInSubtitle, big: true),
-        const SizedBox(height: 22),
+        const AuthBrand(),
+        const SizedBox(height: 24),
         AppTextField(label: context.l10n.commonEmail, controller: _email, icon: Icons.mail_outline, hint: context.l10n.commonEmailHint, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.email]),
         const SizedBox(height: 14),
         AppTextField(label: context.l10n.commonPassword, controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, textInputAction: TextInputAction.done, onSubmitted: (_) => _submit()),

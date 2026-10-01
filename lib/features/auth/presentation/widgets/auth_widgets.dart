@@ -98,6 +98,20 @@ class AuthHero extends StatelessWidget {
   }
 }
 
+/// Centered brand lockup (app icon + "DocsBuddy") that heads sign-in and
+/// sign-up in place of a title and tagline.
+class AuthBrand extends StatelessWidget {
+  const AuthBrand({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Center(child: DbLogo(size: 34)),
+    );
+  }
+}
+
 /// 84pt round tinted icon badge used atop forgot/verify/reset screens.
 class HeroBadge extends StatelessWidget {
   const HeroBadge({super.key, required this.background, required this.foreground, required this.icon});
@@ -143,9 +157,21 @@ class OrDivider extends StatelessWidget {
   }
 }
 
-enum SocialProvider { google, apple, microsoft }
+/// Social sign-in providers on the auth screens. [enabled] is the one switch
+/// for a provider's button: Apple and Microsoft stay off until their console
+/// and Supabase setup is done (docs/social-sign-in.md, Parts 4 and 5).
+enum SocialProvider {
+  google(enabled: true),
+  apple(enabled: false),
+  microsoft(enabled: false);
 
-/// Outlined "Continue with Google/Apple/Microsoft" button.
+  const SocialProvider({required this.enabled});
+
+  final bool enabled;
+}
+
+/// Outlined "Continue with Google/Apple/Microsoft" button. Rendered dimmed and
+/// inert when the provider isn't [SocialProvider.enabled].
 class SocialButton extends StatelessWidget {
   const SocialButton({super.key, required this.provider, required this.onPressed});
 
@@ -154,6 +180,7 @@ class SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final enabled = provider.enabled;
     final (icon, label) = switch (provider) {
       SocialProvider.google => (
           Icon(Icons.g_mobiledata, size: 30, color: context.palette.accent) as Widget,
@@ -165,12 +192,14 @@ class SocialButton extends StatelessWidget {
     return SizedBox(
       height: 50,
       child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: icon,
+        onPressed: enabled ? onPressed : null,
+        icon: enabled ? icon : Opacity(opacity: 0.45, child: icon),
         label: Text(label),
         style: OutlinedButton.styleFrom(
           foregroundColor: context.palette.text,
           backgroundColor: context.palette.surface,
+          disabledForegroundColor: context.palette.textMuted,
+          disabledBackgroundColor: context.palette.surface,
           side: BorderSide(color: context.palette.hairline, width: 1.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'PlusJakartaSans'),

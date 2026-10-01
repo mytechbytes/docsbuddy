@@ -24,6 +24,16 @@ void main() {
     expect(palette.accent, AppColors.chipBlue);
   });
 
+  test('app bars share one header style in both themes', () {
+    for (final (theme, palette) in [(AppTheme.light, AppPalette.light), (AppTheme.dark, AppPalette.dark)]) {
+      final bar = theme.appBarTheme;
+      expect(bar.centerTitle, isTrue, reason: 'iOS centers by default, Android does not');
+      expect(bar.elevation, 0);
+      expect(bar.scrolledUnderElevation, 0);
+      expect(bar.shape, Border(bottom: BorderSide(color: palette.border)));
+    }
+  });
+
   test('palettes interpolate for theme animations', () {
     final dark = AppPalette.light.copyWith(background: Colors.black);
     expect(AppPalette.light.lerp(dark, 1).background, Colors.black);

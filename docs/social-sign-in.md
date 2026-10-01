@@ -4,6 +4,11 @@ Step-by-step setup for the three social buttons on the Sign in / Sign up
 screens. Nothing here requires code changes — the app side is already built;
 this is console + Supabase configuration.
 
+> **Current status:** Google is live. The **Apple** and **Microsoft** buttons are
+> shown but **disabled** in the app until Parts 4 and 5 are done — then flip the
+> provider's `enabled` flag in `SocialProvider`
+> (`lib/features/auth/presentation/widgets/auth_widgets.dart`).
+
 > Console menus change names from time to time. The labels below match the
 > consoles at the time of writing; if one has moved, search the console for the
 > bold term.
@@ -219,6 +224,23 @@ In `ios/Runner/Runner.entitlements`:
 </array>
 ```
 
+#### 3. Keep Flutter from routing the callback
+
+`supabase_flutter` reads the callback link itself (via `app_links`). Flutter
+would otherwise *also* push the same URL into `go_router`, which has no such
+route and shows **Page Not Found** right after sign-in. Both platforms opt out:
+
+```xml
+<!-- ios/Runner/Info.plist -->
+<key>FlutterDeepLinkingEnabled</key>
+<false/>
+```
+
+```xml
+<!-- android/app/src/main/AndroidManifest.xml, inside <activity> -->
+<meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
+```
+
 ---
 
 ### Android — Step-by-Step App Links Setup
@@ -407,7 +429,9 @@ flutter run --dart-define-from-file=config/dev.json --dart-define=IOS_UNIVERSAL_
 |---|---|---|
 | **Android: Redirect lands on website in browser instead of opening app** | `assetlinks.json` not hosted, wrong SHA-256 fingerprint, or redirect present on website. | 1. Check `adb shell pm get-app-links in.mytechbytes.docsbuddy`.<br>2. Ensure `assetlinks.json` returns HTTP 200 without 301/302 redirects.<br>3. Verify SHA-256 fingerprint matches the exact key signing the build. |
 | **Android: Works in local debug, fails in Play Store build** | Only debug key SHA-256 was added to `assetlinks.json`. | Play Store re-signs builds with Google Play App Signing key. Copy Play App Signing SHA-256 from Play Console into `assetlinks.json`. |
-| **iOS: Custom scheme opens app, HTTPS link opens Safari** | `IOS_UNIVERSAL_LINKS` flag is `false` or AASA file cached/missing. | 1. Set `"IOS_UNIVERSAL_LINKS": "true"` in `config/dev.json`.<br>2. Confirm `apple-app-site-association` has no `.json` extension.<br>3. Ensure Associated Domains capability is active in Xcode. |
+| **iOS: Custom scheme opens app, HTTPS link opens Safari** | Associated Domains not active, or AASA file cached/missing. | 1. Ensure the Associated Domains capability is active in Xcode **first** (otherwise leave `IOS_UNIVERSAL_LINKS` at `false` — see the next rows).<br>2. Confirm `apple-app-site-association` has no `.json` extension.<br>3. Then set `"IOS_UNIVERSAL_LINKS": "true"` in `config/dev.json`. |
+| **App shows “Page Not Found — no routes for location …login-callback…” after sign-in** | Flutter's own deep-link handling forwards the callback URL to `go_router`. | Set `FlutterDeepLinkingEnabled` = `false` (iOS) / `flutter_deeplinking_enabled` = `false` (Android) — see *Native Manifest & Plist Registrations → 3*. Needs a full rebuild, not hot reload. |
+| **iOS: stuck on an “Opening DocsBuddy…” sheet, and/or `Code verifier could not be found in local storage`** | `IOS_UNIVERSAL_LINKS` is `true` but the Associated Domains capability isn't enabled, so the https redirect can never open the app directly and falls back to the website's bridge page, which opens the app twice (automatically and on “Open the app”). The first delivery signs in and consumes the one-time verifier; the second finds none. | Keep `"IOS_UNIVERSAL_LINKS": "false"` until the capability is active. (The app also dismisses the sheet on sign-in and ignores the duplicate delivery.) |
 | **Supabase: User lands on `localhost:3000` after sign-in** | Supabase **Site URL** or **Redirect URLs** misconfigured. | Open Supabase Dashboard → **Authentication → URL Configuration**:<br>- Set **Site URL** = `https://docsbuddy.mytechbytes.in`<br>- Add `https://docsbuddy.mytechbytes.in/login-callback`<br>- Add `in.mytechbytes.docsbuddy://login-callback` |
 | **OAuth Error: `redirect_uri_mismatch`** | Provider console (Google/Apple/Microsoft) callback URL mismatch. | The OAuth provider console must be set to `https://<ref>.supabase.co/auth/v1/callback` (**NOT** `docsbuddy.mytechbytes.in`). Supabase handles the provider callback and then redirects to DocsBuddy. |
 

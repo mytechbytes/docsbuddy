@@ -67,9 +67,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     final (strength, strengthHint) = signUpStrength(_password.text);
 
     return AuthScaffold(
+      showLogo: false,
       children: [
         const SizedBox(height: 4),
-        AuthHero(title: context.l10n.authSignUpTitle, subtitle: context.l10n.authSignUpSubtitle),
+        const AuthBrand(),
         const SizedBox(height: 20),
         AppTextField(label: context.l10n.authFullName, controller: _name, icon: Icons.person_outline, hint: context.l10n.authFullNameHint, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.name]),
         const SizedBox(height: 14),

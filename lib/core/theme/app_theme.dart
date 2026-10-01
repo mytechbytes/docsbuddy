@@ -238,10 +238,16 @@ abstract final class AppTheme {
     );
     return base.copyWith(
       textTheme: base.textTheme.apply(bodyColor: p.text, displayColor: p.text),
+      // One header style for every screen: centered title (otherwise iOS
+      // centers and Android doesn't) over a hairline, flat even when content
+      // scrolls under it.
       appBarTheme: AppBarTheme(
         backgroundColor: p.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        shape: Border(bottom: BorderSide(color: p.border)),
         iconTheme: IconThemeData(color: p.text),
         titleTextStyle: TextStyle(
             fontFamily: fontFamily, fontSize: 17, fontWeight: FontWeight.w800, color: p.text),

@@ -42,6 +42,7 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
         backgroundColor: context.palette.background,
         elevation: 0,
         iconTheme: IconThemeData(color: context.palette.text),
+        title: Text(context.l10n.catalogSelectYourAppliance, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
         actions: [
           IconButton(icon: Icon(Icons.close, color: context.palette.text), onPressed: () => context.pop()),
         ],
@@ -49,11 +50,7 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text(context.l10n.catalogSelectYourAppliance,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
-          ),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(

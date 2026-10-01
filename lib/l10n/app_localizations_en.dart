@@ -60,13 +60,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navAssets => 'Assets';
 
   @override
-  String get authSignInTitle => 'Welcome back';
-
-  @override
-  String get authSignInSubtitle =>
-      'Sign in to keep your assets and reminders in sync.';
-
-  @override
   String get authSignInCta => 'Sign In';
 
   @override
@@ -83,13 +76,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authContinueWithApple => 'Continue with Apple';
-
-  @override
-  String get authSignUpTitle => 'Create your account';
-
-  @override
-  String get authSignUpSubtitle =>
-      'Track warranties, bills and renewals with your family — never miss a due date.';
 
   @override
   String get authFullName => 'Full Name';

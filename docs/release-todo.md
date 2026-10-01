@@ -20,7 +20,10 @@ Status of what's needed to ship a Play **internal testing** build.
 - [ ] Auth → URL Configuration: **Site URL** = `https://docsbuddy.mytechbytes.in`;
       **Redirect URLs** += `https://docsbuddy.mytechbytes.in/login-callback`
       **and** `in.mytechbytes.docsbuddy://login-callback`
-- [ ] (Optional) Google/Apple/Microsoft providers — see `docs/social-sign-in.md`
+- [x] Google provider — working in the app
+- [ ] (Optional) Apple / Microsoft providers — see `docs/social-sign-in.md`;
+      their buttons are **disabled in the app** until set up, then flip
+      `SocialProvider.enabled` (`lib/features/auth/presentation/widgets/auth_widgets.dart`)
 - [ ] Deploy the 3 Edge Functions + secrets (`notify-family` webhooks;
       reminder-sender crons via `supabase/schedules.sql`) — commands in
       `supabase/README.md`; how to obtain each credential (Firebase JSON,
@@ -43,9 +46,11 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] Android verified `https` intent-filter (`autoVerify="true"`) + scheme fallback
 - [x] `Env.authRedirectUrl` = the HTTPS URL
 - [x] iOS `Runner.entitlements` prepared (`applinks:docsbuddy.mytechbytes.in`)
-- [ ] **Host on the domain** (over HTTPS, `application/json`, no redirects):
+- [x] **Host on the domain** (over HTTPS, `application/json`, no redirects):
       `/.well-known/assetlinks.json` (Play App Signing **SHA-256**) and
-      `/.well-known/apple-app-site-association` (**Apple Team ID**)
+      `/.well-known/apple-app-site-association` (**Apple Team ID**) — both
+      serve HTTP 200 today; re-check `assetlinks.json` lists every signing
+      fingerprint you ship with (Play App Signing, GitHub-built, debug)
 - [ ] After install, verify: `adb shell pm verify-app-links --re-verify in.mytechbytes.docsbuddy`
 - [ ] **iOS only:** enable Associated Domains in Xcode (Signing & Capabilities)
       once iOS signing exists — intentionally not pre-wired (would break signed builds)
@@ -106,7 +111,7 @@ Dart models → repository mapping → screens.
 - [x] 00a–d Onboarding carousel
 - [x] 01 Dashboard — redesigned to match handoff
 - [x] 07 Asset detail — redesigned to match handoff
-- [x] 09–13 Auth — sign-in/up (incl. Google/Apple), forgot, OTP, reset
+- [x] 09–13 Auth — sign-in/up (Google live; Apple/Microsoft buttons disabled until provider setup), forgot, OTP, reset
 - [x] `updatePassword` repo method (backend for Change password screen)
 - [x] Document upload path to Supabase Storage (pattern reused for photos)
 

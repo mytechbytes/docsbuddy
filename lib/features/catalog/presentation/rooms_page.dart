@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/media/media_picker.dart';
 import '../../../core/widgets/buttons.dart';
-import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/rooms_controller.dart';
 import '../domain/catalog_models.dart';
@@ -59,8 +58,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
       appBar: AppBar(
         backgroundColor: context.palette.background,
         elevation: 0,
-        titleSpacing: 20,
-        title: const Align(alignment: Alignment.centerLeft, child: DbLogo(size: 20)),
+        title: Text(context.l10n.navRooms, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       floatingActionButton: FloatingActionButton(
         // Tabs share an IndexedStack, so the default hero tag would collide.

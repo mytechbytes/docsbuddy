@@ -1,3 +1,4 @@
+import 'package:docsbuddy/core/widgets/db_logo.dart';
 import 'package:docsbuddy/features/auth/presentation/forgot_password_page.dart';
 import 'package:docsbuddy/features/auth/presentation/reset_password_page.dart';
 import 'package:docsbuddy/features/auth/presentation/sign_in_page.dart';
@@ -33,20 +34,44 @@ void main() {
     await tester.pumpWidget(_harness());
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome back'), findsOneWidget);
+    // The brand lockup (icon + wordmark) replaces the old title and tagline.
+    expect(find.byType(DbLogo), findsOneWidget);
+    expect(find.text('Welcome back'), findsNothing);
+    expect(find.text('Sign in to keep your assets and reminders in sync.'), findsNothing);
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
     expect(find.text('Continue with Apple'), findsOneWidget);
     expect(find.text('Continue with Microsoft'), findsOneWidget);
   });
 
-  testWidgets('Microsoft button signs in (fake backend) and reaches the app', (tester) async {
+  OutlinedButton socialButton(WidgetTester tester, String label) => tester.widget<OutlinedButton>(
+        find.ancestor(of: find.text(label), matching: find.byWidgetPredicate((w) => w is OutlinedButton)),
+      );
+
+  testWidgets('Google button signs in (fake backend) and reaches the app', (tester) async {
     await tester.pumpWidget(_harness());
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Continue with Microsoft'));
-    await tester.tap(find.text('Continue with Microsoft'));
+    await tester.ensureVisible(find.text('Continue with Google'));
+    await tester.tap(find.text('Continue with Google'));
     await settle(tester, const Duration(seconds: 1));
     expect(find.text('DASH'), findsOneWidget);
+  });
+
+  testWidgets('Apple and Microsoft buttons are disabled; Google stays enabled', (tester) async {
+    await tester.pumpWidget(_harness());
+    await tester.pumpAndSettle();
+
+    expect(socialButton(tester, 'Continue with Google').onPressed, isNotNull);
+    expect(socialButton(tester, 'Continue with Apple').onPressed, isNull);
+    expect(socialButton(tester, 'Continue with Microsoft').onPressed, isNull);
+
+    // Tapping a disabled provider does nothing (it would otherwise reach DASH).
+    await tester.ensureVisible(find.text('Continue with Apple'));
+    await tester.tap(find.text('Continue with Apple'), warnIfMissed: false);
+    await tester.tap(find.text('Continue with Microsoft'), warnIfMissed: false);
+    await settle(tester, const Duration(seconds: 1));
+    expect(find.text('DASH'), findsNothing);
+    expect(find.byType(SignInPage), findsOneWidget);
   });
 
   testWidgets('valid credentials sign in and reach the app', (tester) async {
@@ -73,7 +98,7 @@ void main() {
     await settle(tester, const Duration(seconds: 1));
 
     expect(find.text('Incorrect email or password.'), findsOneWidget);
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.byType(SignInPage), findsOneWidget);
   });
 
   testWidgets('navigates from sign-in to sign-up', (tester) async {
@@ -84,6 +109,12 @@ void main() {
     await tester.tap(find.text('Sign up'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Create your account'), findsOneWidget);
+    // Same brand lockup as sign-in, in place of the old title and tagline.
+    expect(find.byType(SignUpPage), findsOneWidget);
+    expect(find.byType(DbLogo), findsOneWidget);
+    expect(find.text('Create your account'), findsNothing);
+    expect(find.text('Create Account'), findsOneWidget);
+    expect(socialButton(tester, 'Continue with Apple').onPressed, isNull);
+    expect(socialButton(tester, 'Continue with Microsoft').onPressed, isNull);
   });
 }

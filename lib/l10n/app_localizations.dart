@@ -196,18 +196,6 @@ abstract class AppLocalizations {
   /// **'Assets'**
   String get navAssets;
 
-  /// No description provided for @authSignInTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome back'**
-  String get authSignInTitle;
-
-  /// No description provided for @authSignInSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to keep your assets and reminders in sync.'**
-  String get authSignInSubtitle;
-
   /// No description provided for @authSignInCta.
   ///
   /// In en, this message translates to:
@@ -243,18 +231,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue with Apple'**
   String get authContinueWithApple;
-
-  /// No description provided for @authSignUpTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Create your account'**
-  String get authSignUpTitle;
-
-  /// No description provided for @authSignUpSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Track warranties, bills and renewals with your family — never miss a due date.'**
-  String get authSignUpSubtitle;
 
   /// No description provided for @authFullName.
   ///

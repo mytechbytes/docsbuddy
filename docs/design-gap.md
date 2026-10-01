@@ -183,7 +183,7 @@ is surfaced in Dart.
 - [x] **00a–d Onboarding** — carousel implemented
 - [x] **01 Dashboard** — redesigned to match handoff
 - [x] **07 Asset detail** — redesigned to match handoff
-- [x] **09–13 Auth** — sign-in/up (incl. Google/Apple), forgot, OTP, reset
+- [x] **09–13 Auth** — sign-in/up (Google live; Apple/Microsoft buttons disabled until provider setup), forgot, OTP, reset
 
 ### C. Decorative UI to wire — **all wired**
 
