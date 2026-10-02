@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../documents/application/document_providers.dart';
 import '../../documents/domain/document_models.dart';
 import '../../documents/presentation/attachment_widgets.dart';
@@ -49,22 +50,42 @@ class ServiceDetailSheet extends ConsumerWidget {
                     decoration:
                         BoxDecoration(color: context.palette.border, borderRadius: BorderRadius.circular(999)))),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                IconBubble(kind: reminder.kind, size: 44),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final title = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(reminder.label,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
+                    Text(reminder.assetName, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+                  ],
+                );
+                // Beside the title the pill leaves it a few letters of width at
+                // large text, so it goes under the title.
+                if (fitsAtScale(context, constraints.maxWidth, 250)) {
+                  return Row(
                     children: [
-                      Text(reminder.label,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
-                      Text(reminder.assetName, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+                      IconBubble(kind: reminder.kind, size: 44),
+                      const SizedBox(width: 12),
+                      Expanded(child: title),
+                      DayPill(daysLeft: reminder.daysLeft),
                     ],
-                  ),
-                ),
-                DayPill(daysLeft: reminder.daysLeft),
-              ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    IconBubble(kind: reminder.kind, size: 44),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [title, const SizedBox(height: 8), DayPill(daysLeft: reminder.daysLeft)],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
             _DetailRow(
@@ -89,33 +110,44 @@ class ServiceDetailSheet extends ConsumerWidget {
               DocumentGrid(assetId: reminder.assetId, docs: docs),
             ],
             const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.of(context).pop(ServiceAction.edit),
-                    icon: const Icon(Icons.edit_outlined, size: 16),
-                    label: Text(context.l10n.commonEdit, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    style: OutlinedButton.styleFrom(
-                        foregroundColor: context.palette.text, side: BorderSide(color: context.palette.border)),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.of(context).pop(ServiceAction.complete),
-                    icon: const Icon(Icons.check, size: 16),
-                    label: Text(context.l10n.commonDone, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    style: FilledButton.styleFrom(backgroundColor: AppColors.green),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final edit = OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).pop(ServiceAction.edit),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: Text(context.l10n.commonEdit, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  style: OutlinedButton.styleFrom(
+                      foregroundColor: context.palette.text, side: BorderSide(color: context.palette.border)),
+                );
+                final done = FilledButton.icon(
+                  onPressed: () => Navigator.of(context).pop(ServiceAction.complete),
+                  icon: const Icon(Icons.check, size: 16),
+                  label: Text(context.l10n.commonDone, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.green),
+                );
+                final delete = IconButton(
                   onPressed: () => Navigator.of(context).pop(ServiceAction.delete),
                   icon: Icon(Icons.delete_outline, color: context.palette.danger),
                   style: IconButton.styleFrom(side: BorderSide(color: context.palette.border)),
-                ),
-              ],
+                );
+                if (fitsAtScale(context, constraints.maxWidth, 240)) {
+                  return Row(
+                    children: [
+                      Expanded(child: edit),
+                      const SizedBox(width: 10),
+                      Expanded(child: done),
+                      const SizedBox(width: 10),
+                      delete,
+                    ],
+                  );
+                }
+                // Three controls no longer fit one line: the main action first,
+                // each at full width.
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [done, const SizedBox(height: 10), edit, const SizedBox(height: 10), Align(alignment: Alignment.centerLeft, child: delete)],
+                );
+              },
             ),
           ],
         ),

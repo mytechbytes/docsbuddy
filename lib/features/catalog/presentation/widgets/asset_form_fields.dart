@@ -14,6 +14,11 @@ class CategoryCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// Shortest a card can be at the user's font size: its padding and border,
+  /// the 40dp icon, and one line of label. A grid must not make it shorter.
+  static double minHeight(BuildContext context) =>
+      24 + 2 + 40 + 8 + MediaQuery.textScalerOf(context).scale(13) * 1.5;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -75,9 +80,11 @@ class AssetTypeChip extends StatelessWidget {
           children: [
             Icon(icon, size: 18, color: selected ? context.palette.onInverse : context.palette.textSecondary),
             const SizedBox(width: 7),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: selected ? context.palette.onInverse : context.palette.inverseSurface)),
+            Flexible(
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700, color: selected ? context.palette.onInverse : context.palette.inverseSurface)),
+            ),
           ],
         ),
       ),
@@ -105,7 +112,7 @@ class RoomDropdown extends StatelessWidget {
     // Keep a prefilled value selectable even before it exists as a room.
     if (value != null && value != newRoomSentinel) names.add(value!);
     return Container(
-      height: 52,
+      constraints: const BoxConstraints(minHeight: 52),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: context.palette.surface,
@@ -117,11 +124,14 @@ class RoomDropdown extends StatelessWidget {
         isExpanded: true,
         underline: const SizedBox(),
         hint: Text(context.l10n.catalogNoRoomHint,
-            style: TextStyle(fontSize: 14, color: context.palette.placeholder)),
+            maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: context.palette.placeholder)),
         items: [
           DropdownMenuItem<String?>(
               value: null,
-              child: Text(context.l10n.catalogNoRoom, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.textMuted))),
+              child: Text(context.l10n.catalogNoRoom,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.textMuted))),
           for (final n in names)
             DropdownMenuItem<String?>(
               value: n,
@@ -129,7 +139,13 @@ class RoomDropdown extends StatelessWidget {
                 children: [
                   Icon(Icons.meeting_room_outlined, size: 18, color: context.palette.textSecondary),
                   const SizedBox(width: 8),
-                  Text(n, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text)),
+                  // A menu row is one line tall, so a long room name ends in an ellipsis.
+                  Flexible(
+                    child: Text(n,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.palette.text)),
+                  ),
                 ],
               ),
             ),
@@ -139,8 +155,12 @@ class RoomDropdown extends StatelessWidget {
               children: [
                 Icon(Icons.add_circle_outline, size: 18, color: context.palette.accent),
                 SizedBox(width: 8),
-                Text(context.l10n.catalogNewRoom,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.accent)),
+                Flexible(
+                  child: Text(context.l10n.catalogNewRoom,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.accent)),
+                ),
               ],
             ),
           ),
@@ -183,7 +203,13 @@ class AssetPhotoPicker extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: photo != null
             ? Image.memory(photo!.bytes, fit: BoxFit.cover)
-            : AssetThumb(imageRef: existingRef, size: 96, radius: 18, fallback: placeholder),
+            : AssetThumb(
+                imageRef: existingRef,
+                size: 96,
+                radius: 18,
+                // The tile is a fixed size, so large text shrinks the prompt to fit.
+                fallback: Padding(padding: const EdgeInsets.all(6), child: FittedBox(fit: BoxFit.scaleDown, child: placeholder)),
+              ),
       ),
     );
   }
@@ -207,7 +233,7 @@ class DateField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Container(
-            height: 50,
+            constraints: const BoxConstraints(minHeight: 50),
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(

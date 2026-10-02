@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/media/media_picker.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
@@ -289,16 +292,21 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       const SizedBox(height: 18),
       LayoutBuilder(
         builder: (context, constraints) {
-          // 1 / 2 / 3 columns depending on available width.
-          final w = constraints.maxWidth;
+          // 1 / 2 / 3 columns depending on available width, counted in
+          // default-size pixels so large text moves to fewer columns.
+          final w = constraints.maxWidth / context.textScale;
           final cols = w < 240 ? 1 : (w < 480 ? 2 : 3);
-          return GridView.count(
-            crossAxisCount: cols,
+          final cardWidth = (constraints.maxWidth - 10 * (cols - 1)) / cols;
+          return GridView(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: cols == 1 ? 3.4 : 1.55,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: cols,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              // Today's proportions, but never shorter than the card's own content.
+              mainAxisExtent: math.max(CategoryCard.minHeight(context), cardWidth / (cols == 1 ? 3.4 : 1.55)),
+            ),
             children: [
               for (final c in AssetCategoryKind.values)
                 CategoryCard(
@@ -383,30 +391,21 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
         AppTextField(label: '', controller: _newRoom, icon: Icons.place_outlined, hint: context.l10n.catalogNewRoomHint),
       ],
       const SizedBox(height: 14),
-      Row(
-        children: [
-          Expanded(child: AppTextField(label: context.l10n.catalogBrand, controller: _brand, hint: context.l10n.commonOptional)),
-          const SizedBox(width: 12),
-          Expanded(child: AppTextField(label: context.l10n.catalogModelNumber, controller: _model, hint: context.l10n.commonOptional)),
-        ],
+      TwoUp(
+        left: AppTextField(label: context.l10n.catalogBrand, controller: _brand, hint: context.l10n.commonOptional),
+        right: AppTextField(label: context.l10n.catalogModelNumber, controller: _model, hint: context.l10n.commonOptional),
       ),
       const SizedBox(height: 14),
       AppTextField(label: context.l10n.catalogSerialNo, controller: _serialNo, icon: Icons.tag, hint: context.l10n.catalogSerialHint),
       const SizedBox(height: 14),
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: DateField(label: context.l10n.catalogPurchaseDate, value: _purchaseDate, onTap: () => _pickDate(amc: false))),
-          const SizedBox(width: 12),
-          Expanded(
-            child: AppTextField(
-              label: context.l10n.catalogPurchasePrice,
-              controller: _price,
-              hint: context.l10n.catalogPriceHint,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            ),
-          ),
-        ],
+      TwoUp(
+        left: DateField(label: context.l10n.catalogPurchaseDate, value: _purchaseDate, onTap: () => _pickDate(amc: false)),
+        right: AppTextField(
+          label: context.l10n.catalogPurchasePrice,
+          controller: _price,
+          hint: context.l10n.catalogPriceHint,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        ),
       ),
       const SizedBox(height: 14),
       AppTextField(label: context.l10n.catalogStore, controller: _store, icon: Icons.storefront_outlined, hint: context.l10n.catalogStoreHint),

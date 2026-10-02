@@ -19,12 +19,15 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 54dp is a minimum, not a fixed height: a long label or large text wraps
+    // and the button grows with it instead of clipping.
     return SizedBox(
-      height: 54,
       width: double.infinity,
       child: FilledButton(
         onPressed: isLoading ? null : onPressed,
         style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(54),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           backgroundColor: context.palette.inverseSurface,
           foregroundColor: context.palette.onInverse,
           disabledBackgroundColor: context.palette.inverseSurface,
@@ -44,7 +47,7 @@ class PrimaryButton extends StatelessWidget {
                 height: 22,
                 child: CircularProgressIndicator(strokeWidth: 2.4, color: context.palette.onInverse),
               )
-            : Text(label),
+            : Text(label, textAlign: TextAlign.center),
       ),
     );
   }
@@ -60,11 +63,12 @@ class GhostButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 54,
       width: double.infinity,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(54),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           foregroundColor: context.palette.text,
           backgroundColor: context.palette.surface,
           side: BorderSide(color: context.palette.border),
@@ -77,7 +81,7 @@ class GhostButton extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        child: Text(label),
+        child: Text(label, textAlign: TextAlign.center),
       ),
     );
   }

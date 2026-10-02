@@ -36,9 +36,11 @@ class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(context.l10n.docsTitle, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
+            Expanded(
+              child: Text(context.l10n.docsTitle, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
+            ),
+            const SizedBox(width: 8),
             _busy
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                 : GestureDetector(

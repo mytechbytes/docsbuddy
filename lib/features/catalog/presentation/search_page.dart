@@ -6,6 +6,7 @@ import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/settings_list.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
@@ -114,8 +115,8 @@ class _AssetHit extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(asset.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: context.primaryLines,
+                      overflow: context.primaryOverflow,
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
                   Text(asset.subtitle, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
                 ],
@@ -143,25 +144,21 @@ class _ReminderHit extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
             color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
-        child: Row(
-          children: [
-            IconBubble(kind: reminder.kind, size: 40),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${reminder.assetName} — ${reminder.label}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
-                  Text(context.formatDate(reminder.dueDate),
-                      style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
-                ],
-              ),
-            ),
-            DayPill(daysLeft: reminder.daysLeft),
-          ],
+        child: BadgedTile(
+          badgeGap: 0,
+          leading: IconBubble(kind: reminder.kind, size: 40),
+          badge: DayPill(daysLeft: reminder.daysLeft),
+          body: (wrap) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${reminder.assetName} — ${reminder.label}',
+                  maxLines: wrap ? null : 1,
+                  overflow: wrap ? null : TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
+              Text(context.formatDate(reminder.dueDate),
+                  style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
+            ],
+          ),
         ),
       ),
     );

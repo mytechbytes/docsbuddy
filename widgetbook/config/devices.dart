@@ -18,6 +18,17 @@ abstract final class ScreenSizes {
     safeAreas: EdgeInsets.only(top: 24),
   );
 
+  /// A 320dp screen as tall as a long page. Lists build only what is on screen,
+  /// so this is how to see (and test) a whole scrolling screen at once.
+  static const compactWholePage = ViewportData(
+    name: 'Phone · compact, whole page 320×4000',
+    width: 320,
+    height: 4000,
+    pixelRatio: 2,
+    platform: TargetPlatform.android,
+    safeAreas: EdgeInsets.only(top: 24),
+  );
+
   static const phone = ViewportData(
     name: 'Phone · Android 360×800',
     width: 360,
@@ -49,6 +60,7 @@ abstract final class ScreenSizes {
   static const all = <ViewportData>[
     IosViewports.iPhone13,
     compactPhone,
+    compactWholePage,
     IosViewports.iPhoneSE,
     phone,
     AndroidViewports.samsungGalaxyNote20Ultra,

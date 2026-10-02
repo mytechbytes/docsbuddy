@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/media/media_picker.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
 import '../application/rooms_controller.dart';
@@ -173,6 +174,37 @@ class _ApplianceGroupCard extends StatelessWidget {
       if (asset.purchaseDate != null) context.l10n.catalogSince(context.formatMonthYear(asset.purchaseDate!)),
       ...asset.properties.entries.map((e) => '${e.key} ${e.value}'),
     ].join(' · ');
+    final thumb = AssetThumb(
+      imageRef: asset.imageUrl,
+      size: 52,
+      fallback: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(14)),
+        child: Icon(asset.category.icon, size: 24, color: context.palette.accent),
+      ),
+    );
+    Widget details(bool wrap) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(asset.name,
+                maxLines: wrap ? null : 1,
+                overflow: wrap ? null : TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text, height: 1.15)),
+            const SizedBox(height: 3),
+            Text(detailLine,
+                maxLines: wrap ? null : 1,
+                overflow: wrap ? null : TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+            if (extraLine.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(extraLine,
+                  maxLines: wrap ? null : 1,
+                  overflow: wrap ? null : TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, color: context.palette.textMuted)),
+            ],
+          ],
+        );
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -184,50 +216,17 @@ class _ApplianceGroupCard extends StatelessWidget {
             onTap: () => context.push(AppRoutes.asset(asset.id)),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  AssetThumb(
-                    imageRef: asset.imageUrl,
-                    size: 52,
-                    fallback: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(14)),
-                      child: Icon(asset.category.icon, size: 24, color: context.palette.accent),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              child: reminders.isNotEmpty
+                  ? BadgedTile(leading: thumb, badge: DayPill(daysLeft: reminders.first.daysLeft), body: details)
+                  : Row(
                       children: [
-                        Text(asset.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text, height: 1.15)),
-                        const SizedBox(height: 3),
-                        Text(detailLine,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
-                        if (extraLine.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(extraLine,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 11.5, color: context.palette.textMuted)),
-                        ],
+                        thumb,
+                        const SizedBox(width: 12),
+                        Expanded(child: details(context.largeText)),
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right, size: 18, color: context.palette.textMuted),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (reminders.isNotEmpty)
-                    DayPill(daysLeft: reminders.first.daysLeft)
-                  else
-                    Icon(Icons.chevron_right, size: 18, color: context.palette.textMuted),
-                ],
-              ),
             ),
           ),
           if (reminders.isNotEmpty) ...[
@@ -237,18 +236,15 @@ class _ApplianceGroupCard extends StatelessWidget {
                 onTap: () => context.push(AppRoutes.asset(r.assetId)),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      IconBubble(kind: r.kind, size: 34),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text('${r.label} · ${context.formatShortDate(r.dueDate)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: context.palette.text)),
-                      ),
-                      DayPill(daysLeft: r.daysLeft),
-                    ],
+                  child: BadgedTile(
+                    gap: 10,
+                    badgeGap: 0,
+                    leading: IconBubble(kind: r.kind, size: 34),
+                    badge: DayPill(daysLeft: r.daysLeft),
+                    body: (wrap) => Text('${r.label} · ${context.formatShortDate(r.dueDate)}',
+                        maxLines: wrap ? null : 1,
+                        overflow: wrap ? null : TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: context.palette.text)),
                   ),
                 ),
               ),

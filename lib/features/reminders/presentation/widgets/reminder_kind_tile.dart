@@ -10,6 +10,11 @@ class ReminderKindTile extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// Shortest a tile can be at the user's font size: its border, the 34dp icon
+  /// and one line of label. A grid must not make it shorter.
+  static double minHeight(BuildContext context) =>
+      4 + 34 + 6 + MediaQuery.textScalerOf(context).scale(11) * 1.5 + 8;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(

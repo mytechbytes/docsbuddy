@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/media/media_picker.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/rooms_controller.dart';
@@ -292,8 +293,8 @@ class _RoomCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(location.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            maxLines: context.primaryLines,
+                            overflow: context.primaryOverflow,
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),
                         const SizedBox(height: 2),
                         Text(context.l10n.catalogRegisteredCount(location.assetCount),

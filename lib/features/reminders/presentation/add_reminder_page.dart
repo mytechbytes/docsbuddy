@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/media/media_picker.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../../core/widgets/step_flow.dart';
@@ -195,27 +198,40 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
     return [
       StepHeader(step: 0, total: _total, title: context.l10n.reminderTypeTitle, subtitle: context.l10n.reminderTypeSubtitle),
       const SizedBox(height: 16),
-      GridView.count(
-        crossAxisCount: 4,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 0.92,
-        children: [
-          for (final k in ReminderKind.values.where((k) => k != ReminderKind.other))
-            ReminderKindTile(
-              kind: k,
-              selected: _kind == k,
-              onTap: () => setState(() {
-                if (_kind != k) {
-                  _kind = k;
-                  _label.text = k.displayName(context);
-                }
-                _step = _stepDetails;
-              }),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          const spacing = 8.0;
+          // Four across while a tile keeps room for its label; fewer as text
+          // grows, so labels get a line each instead of colliding.
+          final columns = adaptiveColumns(context, constraints.maxWidth, minTileWidth: 62, spacing: spacing, min: 2);
+          final tileWidth = (constraints.maxWidth - spacing * (columns - 1)) / columns;
+          // Today's proportions, but never shorter than the tile's own content.
+          final tileHeight = math.max(tileWidth / 0.92, ReminderKindTile.minHeight(context));
+          return GridView(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisSpacing: spacing,
+              crossAxisSpacing: spacing,
+              mainAxisExtent: tileHeight,
             ),
-        ],
+            children: [
+              for (final k in ReminderKind.values.where((k) => k != ReminderKind.other))
+                ReminderKindTile(
+                  kind: k,
+                  selected: _kind == k,
+                  onTap: () => setState(() {
+                    if (_kind != k) {
+                      _kind = k;
+                      _label.text = k.displayName(context);
+                    }
+                    _step = _stepDetails;
+                  }),
+                ),
+            ],
+          );
+        },
       ),
     ];
   }

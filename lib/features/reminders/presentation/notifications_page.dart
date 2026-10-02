@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/reminder_providers.dart';
 import '../../../core/widgets/settings_list.dart';
@@ -87,8 +88,8 @@ class _AlertRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${reminder.assetName} — ${reminder.label}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: context.primaryLines,
+                      overflow: context.primaryOverflow,
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.palette.text)),
                   Text(phrase,
                       style: TextStyle(

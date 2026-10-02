@@ -15,7 +15,8 @@ Color _shade(Color c, int delta) => Color.fromARGB(
     );
 
 /// Round, softly-tinted backdrop common to every onboarding illustration
-/// (`IlloStage` in the handoff).
+/// (`IlloStage` in the handoff). The art is a fixed-size picture, so the text
+/// inside it ignores the system font scale instead of spilling out of its cards.
 class IlloStage extends StatelessWidget {
   const IlloStage({super.key, required this.tint, this.size = 250, required this.child});
 
@@ -25,19 +26,25 @@ class IlloStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          center: const Alignment(0, -0.2),
-          radius: 0.72,
-          colors: [tint, _shade(tint, -6), AppColors.bg],
-          stops: const [0, 0.7, 1],
+    // Pictures of the app with made-up text in them: a screen reader should not
+    // read them out, and the text is not the user's to enlarge.
+    return ExcludeSemantics(
+      child: MediaQuery.withNoTextScaling(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              center: const Alignment(0, -0.2),
+              radius: 0.72,
+              colors: [tint, _shade(tint, -6), AppColors.bg],
+              stops: const [0, 0.7, 1],
+            ),
+          ),
+          child: Center(child: child),
         ),
       ),
-      child: Center(child: child),
     );
   }
 }

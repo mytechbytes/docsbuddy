@@ -73,8 +73,9 @@ WidgetbookFolder dashboardWidgets() => WidgetbookFolder(
         WidgetbookComponent(name: 'StatCard', useCases: [
           component(
             'Playground',
-            (context) => Row(children: [
-              StatCard(
+            (context) => SizedBox(
+              width: 170,
+              child: StatCard(
                 value: context.knobs.string(label: 'Value', initialValue: '12'),
                 label: context.knobs.string(label: 'Label', initialValue: 'Active services'),
                 icon: Icons.description_outlined,
@@ -91,7 +92,7 @@ WidgetbookFolder dashboardWidgets() => WidgetbookFolder(
                 fg: context.knobs.boolean(label: 'Light text', initialValue: true) ? Colors.white : AppColors.ink,
                 filter: ReminderFilter.active,
               ),
-            ]),
+            ),
           ),
         ]),
         WidgetbookComponent(name: 'AppliancesCard', useCases: [

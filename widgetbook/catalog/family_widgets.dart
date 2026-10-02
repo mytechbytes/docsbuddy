@@ -1,5 +1,6 @@
 import 'package:docsbuddy/features/family/domain/family_models.dart';
 import 'package:docsbuddy/features/family/presentation/widgets/family_widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 
 import '../support/demo_data.dart';
@@ -11,7 +12,8 @@ WidgetbookFolder familyWidgets() => WidgetbookFolder(
       name: 'Family',
       children: [
         WidgetbookComponent(name: 'FamilyEmptyState', useCases: [
-          filling('Default', (_) => FamilyEmptyState(onCreate: _noop, onJoin: _noop)),
+          // Inside a ListView, as FamilyPage shows it: it scrolls when the text is large.
+          filling('Default', (_) => ListView(children: [FamilyEmptyState(onCreate: _noop, onJoin: _noop)])),
         ]),
         WidgetbookComponent(name: 'FamilyOverview', useCases: [
           filling(

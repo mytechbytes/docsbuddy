@@ -69,8 +69,12 @@ class AssetDetailPage extends ConsumerWidget {
               NextDueBanner(reminder: next),
               const SizedBox(height: 20),
             ],
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // The title and the Add pill share a line; with large text the pill
+            // wraps beneath instead of squeezing the title to a word a line.
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 8,
               children: [
                 Text(context.l10n.catalogAllReminders(list.length),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.palette.text)),

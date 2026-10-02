@@ -34,6 +34,8 @@ class ProfileAvatarButton extends ConsumerWidget {
           child: profile == null
               ? Icon(Icons.person, color: Colors.white, size: size * 0.56)
               : Text(profile.initial,
+                  // A fixed-size circle: the initial can't grow with the font.
+                  textScaler: TextScaler.noScaling,
                   style: TextStyle(fontSize: size * 0.44, fontWeight: FontWeight.w800, color: Colors.white)),
         ),
       ),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/error/app_failure.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
@@ -200,6 +201,7 @@ class _Avatar extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(profile.initial,
+                  textScaler: TextScaler.noScaling,
                   style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white)),
             ),
           ),
@@ -229,25 +231,44 @@ class _StatsRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(profileStatsProvider).value;
-    Widget cell(String value, String label) => Expanded(
-          child: Column(
-            children: [
-              Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
-              const SizedBox(height: 2),
-              Text(label, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
-            ],
-          ),
+    final entries = [
+      ('${stats?.assets ?? '—'}', context.l10n.navAssets),
+      ('${stats?.reminders ?? '—'}', context.l10n.catalogReminders),
+      ('${stats?.documents ?? '—'}', context.l10n.profileDocuments),
+    ];
+    Widget cell(String value, String label) => Column(
+          children: [
+            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
+            const SizedBox(height: 2),
+            Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
+          ],
         );
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
           color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
-      child: Row(
-        children: [
-          cell('${stats?.assets ?? '—'}', context.l10n.navAssets),
-          cell('${stats?.reminders ?? '—'}', context.l10n.catalogReminders),
-          cell('${stats?.documents ?? '—'}', context.l10n.profileDocuments),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Three columns need ~80dp each; with large text they become three
+          // lines, label beside count, rather than labels that break mid-word.
+          if (fitsAtScale(context, constraints.maxWidth, 240)) {
+            return Row(children: [for (final (value, label) in entries) Expanded(child: cell(value, label))]);
+          }
+          return Column(
+            children: [
+              for (final (value, label) in entries)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(label, style: TextStyle(fontSize: 13, color: context.palette.textMuted))),
+                      Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -301,6 +322,7 @@ class _FamilyCard extends ConsumerWidget {
                                 decoration: BoxDecoration(color: context.palette.accent, shape: BoxShape.circle),
                                 alignment: Alignment.center,
                                 child: Text(members[i].initial,
+                                    textScaler: TextScaler.noScaling,
                                     style: const TextStyle(
                                         fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
                               ),
@@ -334,12 +356,12 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = danger ? context.palette.danger : context.palette.text;
-    return ListTile(
+    return SettingsRow(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
       onTap: onTap,
-      leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
-      subtitle: subtitle == null ? null : Text(subtitle!, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
+      danger: danger,
       trailing: danger ? null : Icon(Icons.chevron_right, color: context.palette.textMuted),
     );
   }

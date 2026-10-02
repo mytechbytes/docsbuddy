@@ -145,10 +145,16 @@ class OrDivider extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Divider(color: context.palette.hairline, height: 1)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text((label ?? context.l10n.authOrContinueWith).toUpperCase(),
-                style: TextStyle(fontSize: 11, color: context.palette.textMuted, letterSpacing: 1.2)),
+          // Flexible, so with large text the label wraps between the rules
+          // instead of running off the row.
+          Flexible(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text((label ?? context.l10n.authOrContinueWith).toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, color: context.palette.textMuted, letterSpacing: 1.2)),
+            ),
           ),
           Expanded(child: Divider(color: context.palette.hairline, height: 1)),
         ],
@@ -189,21 +195,21 @@ class SocialButton extends StatelessWidget {
       SocialProvider.apple => (Icon(Icons.apple, size: 22, color: context.palette.text), context.l10n.authContinueWithApple),
       SocialProvider.microsoft => (const _MicrosoftLogo(), context.l10n.authContinueWithMicrosoft),
     };
-    return SizedBox(
-      height: 50,
-      child: OutlinedButton.icon(
-        onPressed: enabled ? onPressed : null,
-        icon: enabled ? icon : Opacity(opacity: 0.45, child: icon),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: context.palette.text,
-          backgroundColor: context.palette.surface,
-          disabledForegroundColor: context.palette.textMuted,
-          disabledBackgroundColor: context.palette.surface,
-          side: BorderSide(color: context.palette.hairline, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'PlusJakartaSans'),
-        ),
+    // 50dp is a minimum: with large text the label wraps and the button grows.
+    return OutlinedButton.icon(
+      onPressed: enabled ? onPressed : null,
+      icon: enabled ? icon : Opacity(opacity: 0.45, child: icon),
+      label: Text(label, textAlign: TextAlign.center),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(50),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        foregroundColor: context.palette.text,
+        backgroundColor: context.palette.surface,
+        disabledForegroundColor: context.palette.textMuted,
+        disabledBackgroundColor: context.palette.surface,
+        side: BorderSide(color: context.palette.hairline, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'PlusJakartaSans'),
       ),
     );
   }
@@ -241,10 +247,12 @@ class InlineLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    // Wraps onto a second line when large text leaves no room for both.
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Text(lead, style: TextStyle(fontSize: 13, color: context.palette.textSecondary)),
+        Text(lead, textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: context.palette.textSecondary)),
         GestureDetector(
           onTap: onTap,
           child: Text(action, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),

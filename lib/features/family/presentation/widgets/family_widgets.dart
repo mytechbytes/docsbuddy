@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/adaptive_layout.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/feedback.dart';
 import '../../../catalog/presentation/widgets/catalog_widgets.dart';
@@ -140,10 +141,96 @@ class MemberTile extends StatelessWidget {
     if (!ok && context.mounted) context.showFailure(const UnavailableFailure('Could not open that app.', reason: FailureReason.appOpenFailed));
   }
 
+  /// Narrowest the tile can be (at the default font size) and still keep the
+  /// name, the contact buttons and the role on one line.
+  static const _singleRowWidth = 280.0;
+
+  Widget _avatar(BuildContext context) => AssetThumb(
+        imageRef: member.avatarUrl,
+        size: 40,
+        radius: 20,
+        fallback: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: context.palette.successSoft, shape: BoxShape.circle),
+          child: Text(member.initial,
+              textScaler: TextScaler.noScaling,
+              style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.successStrong)),
+        ),
+      );
+
+  /// Name over phone. One line each in the single row; free to wrap when
+  /// stacked, because a name cut to "Anan…" is no use to the person reading it.
+  Widget _info(BuildContext context, {required bool wrap}) {
+    final phone = member.phone;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(member.displayName,
+            maxLines: wrap ? null : 1,
+            overflow: wrap ? null : TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.palette.text)),
+        if (phone != null) ...[
+          const SizedBox(height: 2),
+          Row(
+            crossAxisAlignment: wrap ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: wrap ? 3 : 0),
+                child: Icon(Icons.phone_outlined, size: 12, color: context.palette.textMuted),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(phone,
+                    maxLines: wrap ? null : 1,
+                    overflow: wrap ? null : TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<Widget> _contactButtons(BuildContext context) {
+    final phone = member.phone;
+    if (phone == null) return const [];
+    return [
+      IconButton(
+        visualDensity: VisualDensity.compact,
+        onPressed: () => _launch(context, Uri.parse('tel:$phone')),
+        icon: Icon(Icons.call_outlined, size: 18, color: context.palette.accent),
+        tooltip: context.l10n.familyCall,
+      ),
+      IconButton(
+        visualDensity: VisualDensity.compact,
+        onPressed: () => _launch(context, Uri.parse('https://wa.me/${member.whatsappNumber}')),
+        icon: Icon(Icons.chat_outlined, size: 18, color: context.palette.successStrong),
+        tooltip: context.l10n.familyWhatsapp,
+      ),
+    ];
+  }
+
+  Widget _roleChip(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(999)),
+        child: Text(member.role.displayName(context), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.palette.textSecondary)),
+      );
+
+  Widget _menu(BuildContext context) => PopupMenuButton<String>(
+        padding: EdgeInsets.zero,
+        icon: Icon(Icons.more_vert, size: 18, color: context.palette.textMuted),
+        onSelected: (v) => v == 'role' ? onChangeRole() : onRemove(),
+        itemBuilder: (_) => [
+          PopupMenuItem(value: 'role', child: Text(context.l10n.familyChangeRole)),
+          PopupMenuItem(value: 'remove', child: Text(context.l10n.familyRemoveFromFamily, style: TextStyle(color: context.palette.danger))),
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
-    final phone = member.phone;
-    final waDigits = member.whatsappNumber;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -152,77 +239,50 @@ class MemberTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.palette.border),
       ),
-      child: Row(
-        children: [
-          AssetThumb(
-            imageRef: member.avatarUrl,
-            size: 40,
-            radius: 20,
-            fallback: Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: context.palette.successSoft, shape: BoxShape.circle),
-              child: Text(member.initial, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.successStrong)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (fitsAtScale(context, constraints.maxWidth, _singleRowWidth)) {
+            return Row(
               children: [
-                Text(member.displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.palette.text)),
-                if (phone != null) ...[
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(Icons.phone_outlined, size: 12, color: context.palette.textMuted),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(phone,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
-                      ),
-                    ],
-                  ),
+                _avatar(context),
+                const SizedBox(width: 12),
+                Expanded(child: _info(context, wrap: false)),
+                ..._contactButtons(context),
+                _roleChip(context),
+                if (canManage) _menu(context),
+              ],
+            );
+          }
+          // Not enough room for everything on one line: the person on top, their
+          // role and actions on a line of their own beneath the name.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _avatar(context),
+                  const SizedBox(width: 12),
+                  Expanded(child: _info(context, wrap: true)),
                 ],
-              ],
-            ),
-          ),
-          if (phone != null) ...[
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              onPressed: () => _launch(context, Uri.parse('tel:$phone')),
-              icon: Icon(Icons.call_outlined, size: 18, color: context.palette.accent),
-              tooltip: context.l10n.familyCall,
-            ),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              onPressed: () => _launch(context, Uri.parse('https://wa.me/$waDigits')),
-              icon: Icon(Icons.chat_outlined, size: 18, color: context.palette.successStrong),
-              tooltip: context.l10n.familyWhatsapp,
-            ),
-          ],
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(999)),
-            child: Text(member.role.displayName(context), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.palette.textSecondary)),
-          ),
-          if (canManage)
-            PopupMenuButton<String>(
-              padding: EdgeInsets.zero,
-              icon: Icon(Icons.more_vert, size: 18, color: context.palette.textMuted),
-              onSelected: (v) => v == 'role' ? onChangeRole() : onRemove(),
-              itemBuilder: (_) => [
-                PopupMenuItem(value: 'role', child: Text(context.l10n.familyChangeRole)),
-                PopupMenuItem(value: 'remove', child: Text(context.l10n.familyRemoveFromFamily, style: TextStyle(color: context.palette.danger))),
-              ],
-            ),
-        ],
+              ),
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.only(left: 52),
+                child: Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _roleChip(context),
+                    ..._contactButtons(context),
+                    if (canManage) _menu(context),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -235,7 +295,8 @@ class InviteSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      // A bottom sheet is only part of the screen tall, so large text scrolls it.
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,

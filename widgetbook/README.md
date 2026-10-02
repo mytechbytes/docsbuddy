@@ -29,12 +29,12 @@ Pick a use case in the tree, then use the panel on the right.
 |---|---|---|
 | Addons | **Theme** | Light or dark, using the app's own `AppTheme` |
 | Addons | **Text scale** | 0.8× to 3.0× font scaling (Android's "Large" is 1.3, "Largest" 2.0; iOS accessibility sizes reach about 3.1) |
-| Addons | **Viewport** | Phone and tablet sizes, portrait and landscape, with safe areas. "Compact 320×568" is also what a phone becomes at Android's largest display size |
+| Addons | **Viewport** | Phone and tablet sizes, portrait and landscape, with safe areas. "Compact 320×568" is also what a phone becomes at Android's largest display size; "whole page" is that width but 4000dp tall, to see a long screen at once |
 | Addons | **Zoom** | Magnifies the preview to inspect detail; changes no layout |
 | Addons | **Inspector** | Tap a widget to see its size and padding |
 | Knobs | per widget | Live controls (text, numbers, switches, enums) |
 
-**Worst case:** Theme *Dark*, Text scale *2.0*, Viewport *Phone · compact*. That
+**Worst case:** Theme *Dark*, Text scale *2.0*, Viewport *Phone · compact* (or *whole page*). That
 is a small phone with the largest font setting, which real users configure.
 
 ## What's in the tree
@@ -88,12 +88,26 @@ flutter test test/widgetbook
 ```
 
 mounts every use case through the real Widgetbook route and fails on any
-exception or overflow. A second, opt-in pass renders everything at once in the
-worst case above and writes a worklist to `build/widgetbook_stress_report.txt`:
+exception or overflow.
+
+A second, opt-in pass is the large-text gate. It renders every use case at once
+in the worst case a real user can configure (dark theme, 2.0× text, a 320dp
+phone, tall enough to build a whole scrolling page) and fails on any of:
+
+- a **layout overflow**;
+- a **word broken across lines** ("informati / on"), which is what a row squeezed
+  to a few letters looks like even when nothing overflows;
+- **text cut off** by a box that didn't grow with it (a fixed-height button).
 
 ```bash
 flutter test test/widgetbook --dart-define=WIDGETBOOK_STRESS=true --plain-name stress
 ```
 
-It reports rather than fails: it is a list of places where the app itself does
-not cope with large text on a small screen.
+It lists each offender by widget in `build/widgetbook_stress_report.txt`. Add
+`--dart-define=WIDGETBOOK_STRESS_SCALE=3.0` to try iOS accessibility sizes. At 3×
+what remains are single words wider than the screen itself, which only a cap on
+the text scale can fix, so that scale is informational rather than a gate.
+
+Text that is deliberately held to one line with an ellipsis is not flagged, so
+check by eye that primary content (names, titles) wraps instead: use the
+*Phone · compact, whole page* viewport with Text scale 2.0 in the Addons panel.

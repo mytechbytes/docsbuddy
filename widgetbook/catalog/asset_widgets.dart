@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:docsbuddy/core/media/picked_media.dart';
 import 'package:docsbuddy/features/catalog/domain/catalog_models.dart';
 import 'package:docsbuddy/features/catalog/presentation/service_detail_sheet.dart';
@@ -139,7 +141,7 @@ WidgetbookFolder assetWidgets() => WidgetbookFolder(
             Labeled('Overdue', NextDueBanner(reminder: demoReminder(days: -3))),
             Labeled('Due today', NextDueBanner(reminder: demoReminder(days: 0))),
             Labeled('Days left', NextDueBanner(reminder: demoReminder(days: 18, kind: ReminderKind.service))),
-            Labeled('Long label', NextDueBanner(reminder: demoReminder(days: 18, label: 'Extended comprehensive warranty'))),
+            Labeled('Long label', NextDueBanner(reminder: demoReminder(days: 18, label: 'Extended warranty'))),
           ]),
         ]),
         WidgetbookComponent(name: 'ServiceRow', useCases: [
@@ -197,12 +199,14 @@ WidgetbookFolder assetWidgets() => WidgetbookFolder(
             'Selectable grid',
             (_) => Interactive<AssetCategoryKind>(
               initial: AssetCategoryKind.appliance,
-              builder: (context, selected, set) => GridView.count(
+              builder: (context, selected, set) => GridView(
                 shrinkWrap: true,
-                crossAxisCount: 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  mainAxisExtent: CategoryCard.minHeight(context),
+                ),
                 children: [
                   for (final kind in AssetCategoryKind.values)
                     CategoryCard(kind: kind, selected: kind == selected, onTap: () => set(kind)),
@@ -278,12 +282,14 @@ WidgetbookFolder assetWidgets() => WidgetbookFolder(
             'Selectable grid',
             (_) => Interactive<ReminderKind>(
               initial: ReminderKind.service,
-              builder: (context, selected, set) => GridView.count(
+              builder: (context, selected, set) => GridView(
                 shrinkWrap: true,
-                crossAxisCount: 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1.15,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  mainAxisExtent: math.max(ReminderKindTile.minHeight(context), 74),
+                ),
                 children: [
                   for (final kind in ReminderKind.values)
                     ReminderKindTile(kind: kind, selected: kind == selected, onTap: () => set(kind)),

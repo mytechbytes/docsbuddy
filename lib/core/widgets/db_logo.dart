@@ -5,6 +5,9 @@ import '../theme/app_theme.dart';
 /// Brand mark + "Docs**Buddy**" wordmark — `DBLogo` in the design handoff.
 /// The mark is the DocsBuddy brand tile (`assets/icon/source_logo.png`),
 /// from the same brand kit every launcher/store icon is generated from.
+///
+/// It is a logo, not body text: the wordmark keeps its size whatever the system
+/// font scale, so it can't crowd an app bar or overflow a narrow header.
 class DbLogo extends StatelessWidget {
   const DbLogo({super.key, this.size = 17, this.showMark = true, this.showWordmark = true, this.stacked = false})
       : assert(showMark || showWordmark, 'A logo needs its mark, its wordmark, or both');
@@ -20,8 +23,7 @@ class DbLogo extends StatelessWidget {
   final bool showWordmark;
 
   /// Mark above the wordmark instead of beside it: the lockup for a screen
-  /// where the brand is the hero (the startup screen). It is a logo, so its
-  /// wordmark keeps its size whatever the system font scale.
+  /// where the brand is the hero (the startup screen).
   final bool stacked;
 
   @override
@@ -39,9 +41,13 @@ class DbLogo extends StatelessWidget {
           TextSpan(text: 'Buddy', style: TextStyle(color: context.palette.textMuted)),
         ],
       ),
-      textScaler: stacked ? TextScaler.noScaling : null,
+      textScaler: TextScaler.noScaling,
     );
-    if (!showMark) return wordmark;
+    // A logo scales *down* to the room it is given (an app bar title beside a
+    // back arrow and three actions can be narrower than it) but never up.
+    Widget fit(Widget logo) => FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: logo);
+
+    if (!showMark) return fit(wordmark);
 
     // Alone, the mark is the only thing naming the brand, so it says so.
     Widget mark(double height) => Image.asset(
@@ -51,25 +57,29 @@ class DbLogo extends StatelessWidget {
           semanticLabel: showWordmark ? null : 'DocsBuddy',
         );
 
-    if (!showWordmark) return mark(stacked ? size * 3 : size * 1.5);
+    if (!showWordmark) return fit(mark(stacked ? size * 3 : size * 1.5));
 
     if (stacked) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          mark(size * 3),
-          SizedBox(height: size * 0.5),
-          wordmark,
-        ],
+      return fit(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            mark(size * 3),
+            SizedBox(height: size * 0.5),
+            wordmark,
+          ],
+        ),
       );
     }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        mark(size * 1.5),
-        SizedBox(width: size * 0.4),
-        wordmark,
-      ],
+    return fit(
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          mark(size * 1.5),
+          SizedBox(width: size * 0.4),
+          wordmark,
+        ],
+      ),
     );
   }
 }

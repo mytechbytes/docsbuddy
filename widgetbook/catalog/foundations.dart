@@ -1,5 +1,6 @@
 import 'package:docsbuddy/core/theme/app_colors.dart';
 import 'package:docsbuddy/core/theme/app_theme.dart';
+import 'package:docsbuddy/core/widgets/adaptive_layout.dart';
 import 'package:docsbuddy/features/catalog/domain/catalog_enums.dart';
 import 'package:docsbuddy/features/catalog/presentation/widgets/catalog_widgets.dart';
 import 'package:flutter/material.dart';
@@ -110,12 +111,14 @@ class _PaletteList extends StatelessWidget {
 class _PaletteComparison extends StatelessWidget {
   const _PaletteComparison();
 
-  Widget _column(AppPalette p, String title) {
-    return Expanded(
-      child: ColoredBox(
-        color: p.background,
-        child: ListView(
-          padding: const EdgeInsets.all(12),
+  /// One palette's tokens on its own background.
+  Widget _block(AppPalette p, String title) {
+    return ColoredBox(
+      color: p.background,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
@@ -131,7 +134,24 @@ class _PaletteComparison extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [_column(AppPalette.light, 'Light'), _column(AppPalette.dark, 'Dark')]);
+    final light = _block(AppPalette.light, 'Light');
+    final dark = _block(AppPalette.dark, 'Dark');
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Side by side when each half has room for a swatch and its name; one
+        // above the other on a narrow screen or at large text.
+        if (fitsAtScale(context, constraints.maxWidth / 2, 200)) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: SingleChildScrollView(child: light)),
+              Expanded(child: SingleChildScrollView(child: dark)),
+            ],
+          );
+        }
+        return ListView(children: [light, dark]);
+      },
+    );
   }
 }
 

@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'adaptive_layout.dart';
 
 /// Upper-case grey section heading used above grouped lists.
 class SectionLabel extends StatelessWidget {
@@ -38,22 +41,77 @@ class SettingsCard extends StatelessWidget {
   }
 }
 
+/// Settings-style tiles stop growing with the font at this scale: they are
+/// one-line titles in a fixed-width column, so beyond it a single long word
+/// ("notifications") would no longer fit and would break across lines.
+const _tileMaxScale = 1.6;
+
+/// ListTile spacing for the user's font size. The default chrome (a 40dp leading
+/// box, 16dp gaps) takes a quarter of a phone's width; with large text that is
+/// what leaves the title too little room.
+({EdgeInsets? padding, double? gap, double? leading}) _tileChrome(BuildContext context) =>
+    context.textScale > 1.3
+        ? (padding: const EdgeInsets.symmetric(horizontal: 12), gap: 10.0, leading: 24.0)
+        : (padding: null, gap: null, leading: null);
+
 class SettingsRow extends StatelessWidget {
-  const SettingsRow({super.key, required this.icon, required this.title, this.trailing, this.onTap, this.danger = false});
+  const SettingsRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.danger = false,
+  });
   final IconData icon;
   final String title;
+
+  /// A line of explanation under the title.
+  final String? subtitle;
+
+  /// A [SettingsValue] sits beside the title while there is room and drops under
+  /// it when there isn't; anything else (a chevron) always stays beside it.
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool danger;
 
+  /// Narrowest tile (at the default font size) that keeps a value beside its title.
+  static const _valueBesideWidth = 260.0;
+
   @override
   Widget build(BuildContext context) {
     final color = danger ? context.palette.danger : context.palette.text;
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
-      trailing: trailing,
+    final chrome = _tileChrome(context);
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: _tileMaxScale,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Beside the title a long value or large text squeezes it to a few
+          // letters a line, so under the title it goes.
+          final scale = math.min(context.textScale, _tileMaxScale);
+          final stacked = trailing is SettingsValue && constraints.maxWidth / scale < _valueBesideWidth;
+          final hint = subtitle == null ? null : Text(subtitle!, style: TextStyle(fontSize: 12, color: context.palette.textMuted));
+          return ListTile(
+            onTap: onTap,
+            contentPadding: chrome.padding,
+            horizontalTitleGap: chrome.gap,
+            minLeadingWidth: chrome.leading,
+            leading: Icon(icon, color: color),
+            title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
+            subtitle: stacked
+                ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [?hint, trailing!])
+                : hint,
+            trailing: stacked || trailing == null
+                ? null
+                : ConstrainedBox(
+                    // Even when it fits, a value may use at most 45% of the screen.
+                    constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.45),
+                    child: trailing,
+                  ),
+          );
+        },
+      ),
     );
   }
 }
@@ -64,8 +122,9 @@ class SettingsValue extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(text, style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5));
+  Widget build(BuildContext context) => Text(text,
+      textAlign: TextAlign.end,
+      style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5));
 }
 
 class SettingsToggleRow extends StatelessWidget {
@@ -85,13 +144,38 @@ class SettingsToggleRow extends StatelessWidget {
   /// Null disables the switch.
   final ValueChanged<bool>? onChanged;
 
+  /// Narrowest tile (at the default font size) that keeps the switch beside the title.
+  static const _switchBesideWidth = 230.0;
+
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: context.palette.text),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: context.palette.text)),
-      subtitle: subtitle == null ? null : Text(subtitle!, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
-      trailing: Switch(value: value, onChanged: onChanged, activeTrackColor: context.palette.success),
+    final toggle = Switch(value: value, onChanged: onChanged, activeTrackColor: context.palette.success);
+    final hint = subtitle == null ? null : Text(subtitle!, style: TextStyle(fontSize: 12, color: context.palette.textMuted));
+    final chrome = _tileChrome(context);
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: _tileMaxScale,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // With large text the switch would leave the title a few letters of
+          // width, so it moves under the title instead.
+          final scale = math.min(context.textScale, _tileMaxScale);
+          final stacked = constraints.maxWidth / scale < _switchBesideWidth;
+          return ListTile(
+            contentPadding: chrome.padding,
+            horizontalTitleGap: chrome.gap,
+            minLeadingWidth: chrome.leading,
+            leading: Icon(icon, color: context.palette.text),
+            title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: context.palette.text)),
+            subtitle: stacked
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [?hint, Align(alignment: Alignment.centerLeft, child: toggle)],
+                  )
+                : hint,
+            trailing: stacked ? null : toggle,
+          );
+        },
+      ),
     );
   }
 }

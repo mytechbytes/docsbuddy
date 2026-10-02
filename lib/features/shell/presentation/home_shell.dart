@@ -69,19 +69,25 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
 
     return Scaffold(
       body: IndexedStack(index: _index, children: _tabs),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: context.l10n.navHome),
-          NavigationDestination(
-              icon: const Icon(Icons.meeting_room_outlined), selectedIcon: const Icon(Icons.meeting_room), label: context.l10n.navRooms),
-          NavigationDestination(
-              icon: const Icon(Icons.inventory_2_outlined), selectedIcon: const Icon(Icons.inventory_2), label: context.l10n.navAssets),
-          NavigationDestination(icon: const Icon(Icons.groups_outlined), selectedIcon: const Icon(Icons.groups), label: context.l10n.commonFamily),
-          NavigationDestination(
-              icon: const Icon(Icons.settings_outlined), selectedIcon: const Icon(Icons.settings), label: context.l10n.commonSettings),
-        ],
+      // Five labels share one row (64dp each on a small phone), so they stop
+      // growing at 1.15×: past that "Settings" would break across lines. The icons
+      // carry the meaning from there.
+      bottomNavigationBar: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.15,
+        child: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: (i) => setState(() => _index = i),
+          destinations: [
+            NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: context.l10n.navHome),
+            NavigationDestination(
+                icon: const Icon(Icons.meeting_room_outlined), selectedIcon: const Icon(Icons.meeting_room), label: context.l10n.navRooms),
+            NavigationDestination(
+                icon: const Icon(Icons.inventory_2_outlined), selectedIcon: const Icon(Icons.inventory_2), label: context.l10n.navAssets),
+            NavigationDestination(icon: const Icon(Icons.groups_outlined), selectedIcon: const Icon(Icons.groups), label: context.l10n.commonFamily),
+            NavigationDestination(
+                icon: const Icon(Icons.settings_outlined), selectedIcon: const Icon(Icons.settings), label: context.l10n.commonSettings),
+          ],
+        ),
       ),
     );
   }

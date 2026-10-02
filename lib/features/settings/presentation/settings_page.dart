@@ -56,8 +56,7 @@ class SettingsPage extends ConsumerWidget {
             SettingsRow(
               icon: Icons.mail_outline,
               title: context.l10n.commonEmail,
-              trailing: Text(profile?.email ?? '—',
-                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+              trailing: SettingsValue(profile?.email ?? '—'),
             ),
             SettingsRow(
               icon: Icons.lock_outline,
@@ -69,10 +68,7 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.shield_outlined,
               title: context.l10n.settingsSecurity,
               onTap: () => context.push(AppRoutes.security),
-              trailing: Text(
-                ref.watch(securityStatusProvider).value?.totpEnabled == true ? context.l10n.commonOn : context.l10n.commonOff,
-                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
-              ),
+              trailing: SettingsValue(ref.watch(securityStatusProvider).value?.totpEnabled == true ? context.l10n.commonOn : context.l10n.commonOff),
             ),
           ]),
           SectionLabel(context.l10n.commonNotifications),
@@ -99,19 +95,13 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.update_outlined,
               title: context.l10n.settingsDefaultOffsets,
               onTap: () => _editOffsets(context, ref, prefs),
-              trailing: Text(
-                context.formatOffsets(prefs.defaultOffsets),
-                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
-              ),
+              trailing: SettingsValue(context.formatOffsets(prefs.defaultOffsets)),
             ),
             SettingsRow(
               icon: Icons.bedtime_outlined,
               title: context.l10n.settingsQuietHours,
               onTap: () => _editQuietHours(context, ref, prefs),
-              trailing: Text(
-                '${prefs.quietStart} – ${prefs.quietEnd}',
-                style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5),
-              ),
+              trailing: SettingsValue('${prefs.quietStart} – ${prefs.quietEnd}'),
             ),
           ]),
           SectionLabel(context.l10n.commonFamily),
@@ -120,8 +110,7 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.groups_outlined,
               title: context.l10n.settingsManageFamily,
               onTap: () => context.push(AppRoutes.familyManage),
-              trailing: Text(context.l10n.memberCount(members.length),
-                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+              trailing: SettingsValue(context.l10n.memberCount(members.length)),
             ),
           ]),
           SectionLabel(context.l10n.settingsSectionApp),
@@ -135,8 +124,7 @@ class SettingsPage extends ConsumerWidget {
             SettingsRow(
               icon: Icons.cloud_outlined,
               title: context.l10n.settingsBackend,
-              trailing: Text(ref.watch(backendLabelProvider),
-                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+              trailing: SettingsValue(ref.watch(backendLabelProvider)),
             ),
             SettingsRow(
               icon: Icons.notification_add_outlined,

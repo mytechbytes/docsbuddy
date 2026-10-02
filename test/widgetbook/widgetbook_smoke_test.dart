@@ -6,15 +6,20 @@
 //
 // The default run uses Widgetbook's defaults (light, 1.0× text, iPhone 13) and
 // must be clean. A second, opt-in pass renders every use case the hard way at
-// once (dark theme, 2.0× text, the 320dp "compact" phone) and prints where the
-// layout breaks, grouped by the widget responsible. It reports and never fails,
-// because it is a worklist for the app, not a gate:
+// once (dark theme, large text, the 320dp "compact" phone, tall enough to build
+// a whole scrolling page: what someone who raised their system font size sees) and must be clean too. When it isn't, it
+// prints where the layout breaks, grouped by the widget responsible, and writes
+// the same list to build/widgetbook_stress_report.txt:
 //
 //   flutter test test/widgetbook --dart-define=WIDGETBOOK_STRESS=true --plain-name stress
+//
+// The text scale defaults to 2.0 (Android's largest). iOS accessibility sizes
+// go further; try them with --dart-define=WIDGETBOOK_STRESS_SCALE=3.0.
 import 'dart:io';
 
 import 'package:docsbuddy/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:widgetbook/widgetbook.dart';
@@ -25,6 +30,7 @@ import '../../widgetbook/directories.dart';
 import '../../widgetbook/support/harness.dart';
 
 const _stress = bool.fromEnvironment('WIDGETBOOK_STRESS');
+const _stressScale = String.fromEnvironment('WIDGETBOOK_STRESS_SCALE', defaultValue: '2.0');
 
 /// The route Widgetbook opens for [path] with the given addon settings.
 String _route(String path, {Map<String, Map<String, String>> addons = const {}}) => Uri(
@@ -68,6 +74,75 @@ String _summary(FlutterErrorDetails details) {
   return first.length > 90 ? '${first.substring(0, 90)}…' : first;
 }
 
+/// Text that large type has made hard to read, though nothing overflowed: a
+/// word broken across lines ("informati / on"), or lines cut off by a box that
+/// didn't grow with them. Looks only inside [root], the use case itself.
+List<String> _unreadable(Element root) {
+  final found = <String>[];
+
+  // Tokens that can't be wrapped nicely whatever the width: addresses, paths,
+  // colour codes, identifiers. Breaking one of these is not a layout fault.
+  bool unbreakable(String token) =>
+      token.contains(RegExp(r'[@/:.#]')) ||
+      token.length >= 15 ||
+      (token.length >= 8 && token.contains(RegExp(r'\d'))) ||
+      token.contains(RegExp(r'[a-z][A-Z]'));
+
+  final wordChar = RegExp(r'[\p{L}\p{N}]', unicode: true);
+  final space = RegExp(r'\s');
+
+  void check(RenderParagraph paragraph) {
+    final text = paragraph.text.toPlainText();
+    if (text.trim().isEmpty || !paragraph.hasSize) return;
+    final snippet = text.length > 40 ? '${text.substring(0, 40)}…' : text;
+
+    // Where each character sits; a drop in the top edge is a new line.
+    double? lastTop;
+    var reported = false;
+    for (var i = 0; i < text.length && !reported; i++) {
+      final boxes = paragraph.getBoxesForSelection(TextSelection(baseOffset: i, extentOffset: i + 1));
+      if (boxes.isEmpty) continue;
+      final box = boxes.first;
+      if (lastTop != null && box.top > lastTop + 1 && i > 0) {
+        // 1. The line broke between text[i - 1] and text[i]; inside a word?
+        if (wordChar.hasMatch(text[i - 1]) && wordChar.hasMatch(text[i])) {
+          var from = i;
+          while (from > 0 && !space.hasMatch(text[from - 1])) {
+            from--;
+          }
+          var to = i;
+          while (to < text.length && !space.hasMatch(text[to])) {
+            to++;
+          }
+          final word = text.substring(from, to);
+          if (!unbreakable(word)) {
+            found.add('"$snippet"  word "$word" broken across lines');
+            reported = true;
+          }
+        }
+      }
+      lastTop = box.top;
+    }
+
+    // 2. A box given less height than its text needs (cut off silently, with no
+    // overflow error): the paragraph is smaller than it would be unconstrained.
+    if (!reported && paragraph.maxLines == null) {
+      final needed = paragraph.getMaxIntrinsicHeight(paragraph.size.width);
+      if (needed > paragraph.size.height + 1) found.add('"$snippet"  text cut off by its box');
+    }
+  }
+
+  void visit(RenderObject node) {
+    // Decorative art is excluded from semantics and from this check.
+    if (node is RenderExcludeSemantics && node.excluding) return;
+    if (node is RenderParagraph) check(node);
+    node.visitChildren(visit);
+  }
+
+  root.findRenderObject()?.visitChildren(visit);
+  return found;
+}
+
 /// Mounts every use case. With [report] false any error fails that test; with
 /// it true errors are collected into [findings] (use case → "source: message").
 void _runAll(
@@ -98,6 +173,7 @@ void _runAll(
 
           expect(find.byType(Harness), findsOneWidget, reason: 'the use case did not open');
           if (!report) expect(tester.takeException(), isNull);
+          if (report) errors.addAll(_unreadable(tester.element(find.byType(Harness))));
 
           // Dispose the tree and flush timers so one case can't leak into the next.
           await tester.pumpWidget(const SizedBox());
@@ -142,7 +218,7 @@ String _report(Map<String, Set<String>> findings) {
     ..sort((a, b) => b.value.useCases.length.compareTo(a.value.useCases.length));
   final out = StringBuffer()
     ..writeln('Stress report: ${findings.length} use cases hit ${sorted.length} distinct widgets.')
-    ..writeln('(dark theme, 2.0x text, 320dp phone; sorted by how many use cases a widget breaks)')
+    ..writeln('(dark theme, ${_stressScale}x text, 320dp phone, whole page; sorted by how many use cases a widget breaks)')
     ..writeln();
   for (final e in sorted) {
     final v = e.value;
@@ -187,22 +263,22 @@ void main() {
   if (_stress) {
     final findings = <String, Set<String>>{};
     _runAll(
-      'stress: dark, 2.0x text, compact phone',
+      'stress: dark, ${_stressScale}x text, compact phone, whole page',
       report: true,
       findings: findings,
       addons: {
         'theme': {'name': 'Dark'},
-        'text-scale': {'factor': '2.0'},
-        'viewport': {'name': ScreenSizes.compactPhone.name},
+        'text-scale': {'factor': _stressScale},
+        'viewport': {'name': ScreenSizes.compactWholePage.name},
       },
     );
-    tearDownAll(() {
+    // Last in the file, so it runs after every use case has been mounted.
+    test('stress: no layout errors', () {
       final report = _report(findings);
       File('build/widgetbook_stress_report.txt')
         ..createSync(recursive: true)
         ..writeAsStringSync(report);
-      // ignore: avoid_print
-      print(report);
+      expect(findings, isEmpty, reason: report);
     });
   }
 }

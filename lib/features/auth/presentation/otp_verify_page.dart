@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -92,7 +93,9 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                for (var i = 0; i < _length; i++) _OtpCell(digit: i < code.length ? code[i] : '', active: i == code.length),
+                // Flexible so six cells still fit a 320dp screen (6 × 46 doesn't).
+                for (var i = 0; i < _length; i++)
+                  Flexible(child: _OtpCell(digit: i < code.length ? code[i] : '', active: i == code.length)),
               ],
             ),
             Positioned.fill(
@@ -143,9 +146,11 @@ class _OtpCell extends StatelessWidget {
         : active
             ? context.palette.accent
             : context.palette.fieldBorder;
+    // Tall enough for the digit at the user's font size.
+    final height = math.max(56.0, MediaQuery.textScalerOf(context).scale(22) * 1.3 + 12);
     return Container(
-      width: 46,
-      height: 56,
+      constraints: const BoxConstraints(maxWidth: 46),
+      height: height,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: context.palette.surface,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
@@ -101,6 +102,10 @@ class _AssetTile extends StatelessWidget {
   const _AssetTile({required this.asset});
   final Asset asset;
 
+  /// Narrowest (at the default font size) that fits the name, the type chip and
+  /// the chevron on one line.
+  static const _chipBesideWidth = 250.0;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -110,33 +115,46 @@ class _AssetTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
-        child: Row(
-          children: [
-            AssetThumb(
-              imageRef: asset.imageUrl,
-              size: 44,
-              radius: 12,
-              fallback: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(12)),
-                child: Icon(asset.category.icon, color: context.palette.textSecondary),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.palette.text)),
-                  const SizedBox(height: 2),
-                  Text(asset.subtitle, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
-                ],
-              ),
-            ),
-            CategoryChip(asset.typeName(context)),
-            Icon(Icons.chevron_right, color: context.palette.textMuted),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // With large text the type chip would take most of the row, so it
+            // moves under the subtitle and the name may wrap.
+            final roomy = fitsAtScale(context, constraints.maxWidth, _chipBesideWidth);
+            final chip = CategoryChip(asset.typeName(context));
+            return Row(
+              crossAxisAlignment: roomy ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+              children: [
+                AssetThumb(
+                  imageRef: asset.imageUrl,
+                  size: 44,
+                  radius: 12,
+                  fallback: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(color: context.palette.background, borderRadius: BorderRadius.circular(12)),
+                    child: Icon(asset.category.icon, color: context.palette.textSecondary),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(asset.name,
+                          maxLines: roomy ? context.primaryLines : null,
+                          overflow: roomy ? context.primaryOverflow : null,
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.palette.text)),
+                      const SizedBox(height: 2),
+                      Text(asset.subtitle, style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
+                      if (!roomy) ...[const SizedBox(height: 6), chip],
+                    ],
+                  ),
+                ),
+                if (roomy) chip,
+                Icon(Icons.chevron_right, color: context.palette.textMuted),
+              ],
+            );
+          },
         ),
       ),
     );

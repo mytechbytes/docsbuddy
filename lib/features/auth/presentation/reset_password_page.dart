@@ -100,6 +100,7 @@ class _RequirementsCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 3),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     width: 16,
@@ -108,7 +109,9 @@ class _RequirementsCard extends StatelessWidget {
                     child: r.ok ? const Icon(Icons.check, size: 11, color: Colors.white) : null,
                   ),
                   const SizedBox(width: 8),
-                  Text(r.label, style: TextStyle(fontSize: 12, color: r.ok ? context.palette.text : context.palette.textMuted)),
+                  Expanded(
+                    child: Text(r.label, style: TextStyle(fontSize: 12, color: r.ok ? context.palette.text : context.palette.textMuted)),
+                  ),
                 ],
               ),
             ),

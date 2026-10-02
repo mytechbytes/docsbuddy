@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/media/picked_media.dart';
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/document_providers.dart';
 import '../domain/document_models.dart';
@@ -303,12 +305,22 @@ class DocumentGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cols = constraints.maxWidth < 360 ? 2 : 3;
+        // Counted in default-size pixels, so large text moves to fewer columns.
+        final effectiveWidth = constraints.maxWidth / context.textScale;
+        final cols = effectiveWidth < 200 ? 1 : (effectiveWidth < 360 ? 2 : 3);
+        final cardWidth = (constraints.maxWidth - 10 * (cols - 1)) / cols;
+        // A card is a thumbnail over a title and a size line; the text grows with
+        // the font, so the card never gets shorter than that.
+        final scaler = MediaQuery.textScalerOf(context);
+        final textBlock = (scaler.scale(12) + scaler.scale(10.5)) * 1.5 + 12;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: cols, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.82),
+              crossAxisCount: cols,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              mainAxisExtent: math.max(cardWidth / 0.82, 64 + textBlock)),
           itemCount: docs.length,
           itemBuilder: (context, i) => _DocCard(
             doc: docs[i],

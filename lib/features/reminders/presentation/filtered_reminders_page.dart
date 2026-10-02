@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../domain/reminder_filters.dart';
 import '../../catalog/domain/catalog_models.dart';
@@ -61,33 +62,27 @@ class _Row extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
             color: context.palette.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.palette.border)),
-        child: Row(
-          children: [
-            AssetThumb(
-              imageRef: reminder.assetImageUrl,
-              size: 44,
-              fallback: IconBubble(kind: reminder.kind, size: 44),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(reminder.assetName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text)),
-                  const SizedBox(height: 3),
-                  Text('${reminder.label} · ${context.formatDate(reminder.dueDate)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            DayPill(daysLeft: reminder.daysLeft),
-          ],
+        child: BadgedTile(
+          leading: AssetThumb(
+            imageRef: reminder.assetImageUrl,
+            size: 44,
+            fallback: IconBubble(kind: reminder.kind, size: 44),
+          ),
+          badge: DayPill(daysLeft: reminder.daysLeft),
+          body: (wrap) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(reminder.assetName,
+                  maxLines: wrap ? null : 1,
+                  overflow: wrap ? null : TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text)),
+              const SizedBox(height: 3),
+              Text('${reminder.label} · ${context.formatDate(reminder.dueDate)}',
+                  maxLines: wrap ? null : 1,
+                  overflow: wrap ? null : TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: context.palette.textMuted)),
+            ],
+          ),
         ),
       ),
     );
