@@ -1386,4 +1386,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authContinueWithMicrosoft => 'Continue with Microsoft';
+
+  @override
+  String get startupStepServices => 'Starting DocsBuddy…';
+
+  @override
+  String get startupStepAccount => 'Connecting to your account…';
+
+  @override
+  String get startupStepPreferences => 'Loading your preferences…';
+
+  @override
+  String startupStepCount(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get startupFailedTitle => 'Couldn\'t start DocsBuddy';
+
+  @override
+  String get startupFailedBody =>
+      'Something went wrong while getting things ready. Check your connection and try again.';
+
+  @override
+  String get startupRetry => 'Try again';
 }

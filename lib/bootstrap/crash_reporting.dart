@@ -8,6 +8,7 @@ import '../core/logging/crashlytics_logger.dart';
 /// when this platform has no Firebase config (e.g. iOS without
 /// GoogleService-Info.plist, desktop).
 Future<bool> initFirebase() async {
+  if (Firebase.apps.isNotEmpty) return true; // already up (e.g. a startup retry)
   try {
     await Firebase.initializeApp();
     return true;

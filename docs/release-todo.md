@@ -93,7 +93,10 @@ Status of what's needed to ship a Play **internal testing** build.
 - [x] Release build green on CI — AGP 9 / Flutter plugin JVM-target (→17) and
       `compileSdk` (→36) alignment handled in `android/build.gradle.kts` via the
       AGP variant `finalizeDsl` hook; signed AAB artifact produced
-- [ ] Splash screen still the Flutter default (icon is set; branded splash TODO)
+- [x] Branded splash: launcher-icon tint with the mark centred (Android 12+ system
+      splash, older Android launch window, iOS `LaunchScreen.storyboard`), then a
+      Flutter startup screen with step-by-step progress and a retry on failure
+      (`lib/bootstrap/startup_gate.dart`)
 - [ ] KGP deprecation: device_info_plus, flutter_timezone, package_info_plus,
       passkeys_android, ua_client_hints still apply the legacy Kotlin Gradle
       Plugin — only a warning today, will break a future Flutter; bump them when

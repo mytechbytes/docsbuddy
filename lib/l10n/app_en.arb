@@ -675,5 +675,22 @@
   "appearanceSystem": "System",
   "appearanceLight": "Light",
   "appearanceDark": "Dark",
-  "authContinueWithMicrosoft": "Continue with Microsoft"
+  "authContinueWithMicrosoft": "Continue with Microsoft",
+  "startupStepServices": "Starting DocsBuddy…",
+  "startupStepAccount": "Connecting to your account…",
+  "startupStepPreferences": "Loading your preferences…",
+  "startupStepCount": "Step {step} of {total}",
+  "@startupStepCount": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "startupFailedTitle": "Couldn't start DocsBuddy",
+  "startupFailedBody": "Something went wrong while getting things ready. Check your connection and try again.",
+  "startupRetry": "Try again"
 }

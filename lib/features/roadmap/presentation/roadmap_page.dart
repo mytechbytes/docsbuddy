@@ -53,6 +53,8 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Google sign-in: clean return to the app (no stray page, sheet closes)'),
       (true, 'Sign-in / sign-up headed by the app icon + name'),
       (true, 'One consistent header style on every screen'),
+      (true, 'Branded splash: app icon centred on the brand colour (Android + iOS)'),
+      (true, 'Startup screen with step-by-step progress and a retry if it fails'),
     ]),
     ('Pending — your setup', [
       (false, 'Supabase: project, migrations, redirect URLs'),
@@ -69,7 +71,6 @@ class RoadmapPage extends StatelessWidget {
     ('Pending — next features', [
       (false, 'Apple sign-in (button disabled until Services ID + Supabase setup)'),
       (false, 'Microsoft sign-in (button disabled until Entra app + Supabase setup)'),
-      (false, 'Branded splash screen'),
       (false, 'Bump KGP-legacy plugins (Built-in Kotlin)'),
       (false, 'iOS: push (APNs), signing & provisioning'),
     ]),

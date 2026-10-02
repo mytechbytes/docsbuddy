@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   // Neutrals
   static const bg = Color(0xFFF4F6FA);
+
+  /// Launch-screen background: the launcher icon's tint, so the native splash,
+  /// the startup screen and the app icon all read as one brand moment.
+  static const splashBackground = Color(0xFFE8F3F7);
   static const paper = Color(0xFFFFFFFF);
   static const ink = Color(0xFF0D1A2B); // primary text
   static const ink2 = Color(0xFF324159); // secondary text

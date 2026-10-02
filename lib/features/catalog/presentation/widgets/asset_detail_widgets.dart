@@ -269,13 +269,28 @@ class ServiceRow extends StatelessWidget {
               children: [
                 Text(reminder.label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.palette.text)),
                 const SizedBox(height: 3),
-                Row(
+                // Only ~130px remain beside the icon, day pill and menu, so the
+                // date and the offsets list (up to six values) wrap rather than
+                // overflow.
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(context.formatDate(reminder.dueDate), style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
-                    const SizedBox(width: 8),
-                    Icon(Icons.notifications_none, size: 13, color: context.palette.textMuted),
-                    const SizedBox(width: 3),
-                    Text(context.formatOffsets(reminder.notifyOffsets), style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.notifications_none, size: 13, color: context.palette.textMuted),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(context.formatOffsets(reminder.notifyOffsets),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 if (service.isNotEmpty) ...[

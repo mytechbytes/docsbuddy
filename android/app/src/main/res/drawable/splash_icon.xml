@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ masks the splash icon to a circle (192dp of a 288dp canvas), and
+     the mark's corners sit ~120dp from centre. Drawing it at 78% of the canvas
+     (224dp) keeps it inside the circle. StartupScreen.markSize is 224 to match. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/splash_mark"
+    android:inset="11%" />

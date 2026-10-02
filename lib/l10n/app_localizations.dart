@@ -2541,6 +2541,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue with Microsoft'**
   String get authContinueWithMicrosoft;
+
+  /// No description provided for @startupStepServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting DocsBuddy…'**
+  String get startupStepServices;
+
+  /// No description provided for @startupStepAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to your account…'**
+  String get startupStepAccount;
+
+  /// No description provided for @startupStepPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your preferences…'**
+  String get startupStepPreferences;
+
+  /// No description provided for @startupStepCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String startupStepCount(int step, int total);
+
+  /// No description provided for @startupFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start DocsBuddy'**
+  String get startupFailedTitle;
+
+  /// No description provided for @startupFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while getting things ready. Check your connection and try again.'**
+  String get startupFailedBody;
+
+  /// No description provided for @startupRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get startupRetry;
 }
 
 class _AppLocalizationsDelegate
