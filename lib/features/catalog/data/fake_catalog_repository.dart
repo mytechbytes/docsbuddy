@@ -10,8 +10,9 @@ import '../domain/common_categories.dart';
 /// out of the box (local dev, tests, the offline build).
 class FakeCatalogRepository implements CatalogRepository {
   /// [latency] simulates the network so screens show their loading states.
-  FakeCatalogRepository({this.latency = const Duration(milliseconds: 350)}) {
-    _seed();
+  /// [seed] false starts with no assets, reminders or rooms (a new account).
+  FakeCatalogRepository({this.latency = const Duration(milliseconds: 350), bool seed = true}) {
+    if (seed) _seed();
   }
 
   final Duration latency;
@@ -23,7 +24,10 @@ class FakeCatalogRepository implements CatalogRepository {
 
   String _id(String p) => '${p}_${_seq++}';
   DateTime _inDays(int d) => DateTime.now().add(Duration(days: d));
-  Future<void> _delay() => Future<void>.delayed(latency);
+
+  /// No timer at zero latency: seeding is a chain of awaited calls, and in a
+  /// browser each `Future.delayed(zero)` is a real, clamped `setTimeout`.
+  Future<void> _delay() => latency == Duration.zero ? Future<void>.value() : Future<void>.delayed(latency);
 
   void _seed() {
     final bike = Asset(

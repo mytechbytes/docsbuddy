@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
+import 'db_logo.dart';
 
-/// The launch screen shown while the app gets ready: the brand mark centred on
-/// the launcher-icon tint — exactly where the native splash draws it, so the
-/// hand-off from the OS splash to this screen doesn't jump — with what the app
-/// is doing (or what went wrong) underneath.
+/// The launch screen shown while the app gets ready: the stacked brand lockup
+/// (mark over wordmark) on the launcher-icon tint, with what the app is doing —
+/// a spinner and message — or what went wrong underneath.
 ///
-/// Always light, like the native splash it follows, whatever the theme.
+/// Always light, like the native splash it follows, whatever the theme. The
+/// tint is the launcher icon's, so the OS splash, this screen and the app icon
+/// read as one brand moment; the OS splash shows the mark alone, so the
+/// wordmark appears as this screen takes over.
 class StartupScreen extends StatelessWidget {
   /// Working: a spinner, what is happening, and where we are in the sequence.
   const StartupScreen.progress({super.key, required String this.message, required String this.stepLabel})
@@ -26,9 +30,6 @@ class StartupScreen extends StatelessWidget {
   })  : message = null,
         stepLabel = null;
 
-  /// Matches the native splash icon canvas (224 dp: fits the circle Android 12+ masks the splash icon to).
-  static const markSize = 224.0;
-
   final String? message;
   final String? stepLabel;
   final String? title;
@@ -40,27 +41,38 @@ class StartupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.splashBackground,
-      body: Stack(
-        children: [
-          Center(
-            child: Image.asset(
-              'assets/icon/adaptive_foreground.png',
-              width: markSize,
-              height: markSize,
-              filterQuality: FilterQuality.medium,
-              excludeFromSemantics: true,
+    return Theme(
+      // The logo reads the theme's palette; pin it to light so the wordmark
+      // stays legible on the light tint even when the app is in dark mode.
+      data: AppTheme.light,
+      child: Scaffold(
+        backgroundColor: AppColors.splashBackground,
+        body: SafeArea(
+          // Centred when it fits; scrolls on a short screen or at a large font
+          // size rather than overflowing.
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const DbLogo(size: 34, stacked: true),
+                        const SizedBox(height: 40),
+                        _failed
+                            ? _Failure(title: title!, body: body!, retryLabel: retryLabel!, onRetry: onRetry!)
+                            : _Progress(message: message!, stepLabel: stepLabel!),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-          Align(
-            alignment: const Alignment(0, 0.62),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: _failed ? _Failure(title: title!, body: body!, retryLabel: retryLabel!, onRetry: onRetry!) : _Progress(message: message!, stepLabel: stepLabel!),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

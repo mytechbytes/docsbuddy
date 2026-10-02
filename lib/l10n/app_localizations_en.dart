@@ -210,7 +210,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications are blocked in system settings.';
 
   @override
-  String get settingsPending => 'What\'s pending';
+  String get settingsRoadmap => 'Roadmap';
 
   @override
   String get settingsReplayOnboarding => 'Replay onboarding';

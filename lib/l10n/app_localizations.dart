@@ -490,11 +490,11 @@ abstract class AppLocalizations {
   /// **'Notifications are blocked in system settings.'**
   String get settingsNotificationsBlocked;
 
-  /// No description provided for @settingsPending.
+  /// No description provided for @settingsRoadmap.
   ///
   /// In en, this message translates to:
-  /// **'What\'s pending'**
-  String get settingsPending;
+  /// **'Roadmap'**
+  String get settingsRoadmap;
 
   /// No description provided for @settingsReplayOnboarding.
   ///

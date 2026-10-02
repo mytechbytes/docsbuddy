@@ -153,7 +153,7 @@ class SettingsPage extends ConsumerWidget {
             ),
             SettingsRow(
               icon: Icons.checklist_outlined,
-              title: context.l10n.settingsPending,
+              title: context.l10n.settingsRoadmap,
               onTap: () => context.push(AppRoutes.roadmap),
               trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
             ),

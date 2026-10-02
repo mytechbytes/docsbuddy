@@ -81,6 +81,7 @@ dev_dependencies:
   freezed: ^4.0.2
   build_runner: ^2.16.1
   mocktail: ^1.0.5
+  widgetbook: ^3.25.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -99,8 +100,6 @@ flutter:
   # every page header. Launcher/store icons come from the same brand kit.
   assets:
     - assets/icon/source_logo.png
-    # Launch/startup mark (the launcher icon's foreground, transparent background).
-    - assets/icon/adaptive_foreground.png
 
   # Plus Jakarta Sans — the design system typeface (bundled so the app renders
   # correctly offline). Variable font; weights are selected via FontWeight.

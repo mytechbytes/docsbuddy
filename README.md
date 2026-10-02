@@ -22,6 +22,13 @@ flutter run --dart-define-from-file=config/dev.json
 `config/dev.json` is gitignored — see [config/README.md](config/README.md).
 VS Code launch configurations for both are in `.vscode/launch.json`.
 
+**Widget catalog** (every widget and screen, light/dark, any screen size and
+font scale):
+```bash
+flutter run -d chrome -t widgetbook/main.dart
+```
+See [widgetbook/README.md](widgetbook/README.md).
+
 After changing freezed models run `dart run build_runner build`; translations
 are generated from `lib/l10n/app_en.arb` on `flutter pub get` / `flutter run`.
 

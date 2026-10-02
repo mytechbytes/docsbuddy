@@ -107,7 +107,7 @@ class AuthBrand extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 12),
-      child: Center(child: DbLogo(size: 34)),
+      child: Center(child: DbLogo(size: 34, stacked: true, showWordmark: false,)),
     );
   }
 }

@@ -73,7 +73,7 @@
   "settingsTestNotification": "Send test notification",
   "settingsTestNotificationSent": "Sent a test notification.",
   "settingsNotificationsBlocked": "Notifications are blocked in system settings.",
-  "settingsPending": "What's pending",
+  "settingsRoadmap": "Roadmap",
   "settingsReplayOnboarding": "Replay onboarding",
   "settingsOffsetsTitle": "Default reminder offsets",
   "settingsOffsetsSubtitle": "Days before a due date to notify — used for new reminders.",

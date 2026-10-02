@@ -82,6 +82,7 @@ WidgetbookCategory coreWidgets() => WidgetbookCategory(
             (context) => DbLogo(
               size: context.knobs.double.slider(label: 'Size', initialValue: 34, min: 12, max: 64),
               showMark: context.knobs.boolean(label: 'Show mark', initialValue: true),
+              showWordmark: context.knobs.boolean(label: 'Show wordmark', initialValue: true),
               stacked: context.knobs.boolean(label: 'Stacked (mark above wordmark)'),
             ),
           ),
@@ -91,6 +92,8 @@ WidgetbookCategory coreWidgets() => WidgetbookCategory(
             const Labeled('Auth brand (34)', DbLogo(size: 34)),
             const Labeled('Stacked, as on the startup screen (34)', Center(child: DbLogo(size: 34, stacked: true))),
             const Labeled('Wordmark only', DbLogo(size: 20, showMark: false)),
+            const Labeled('Mark only', DbLogo(size: 20, showWordmark: false)),
+            const Labeled('Mark only, stacked size', Center(child: DbLogo(size: 34, showWordmark: false, stacked: true))),
           ]),
         ]),
         WidgetbookComponent(name: 'Settings list', useCases: [
