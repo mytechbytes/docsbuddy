@@ -20,20 +20,14 @@ abstract interface class AuthRemoteDataSource {
   Future<void> signOut();
 }
 
-/// Signed-in flag per auth event.
-///
-/// Error events are dropped: the SDK reports a failed deep-link exchange on this
-/// stream, and a duplicate delivery of the same callback link (the hosted
-/// redirect page opens the app by itself and again on "Open the app") fails with
-/// "Code verifier could not be found" even though the first delivery already
-/// signed the user in. The route guard only needs the flag, and an unhandled
-/// error here would surface as an uncaught exception.
+/// Signed-in flag per auth event. Error events are dropped: the SDK reports failed deep-link exchanges here,
+/// including the duplicate delivery of a callback link (it fails with "Code verifier could not be found" even
+/// though the first delivery signed the user in), and the route guard only needs the flag.
 Stream<bool> sessionFlags(Stream<AuthState> events) =>
     events.map((s) => s.session != null).handleError((Object _) {});
 
-/// The other half of [sessionFlags]: just the errors, as values. They are what
-/// the SDK reports when it can't turn an OAuth / email-link redirect into a
-/// session — otherwise they would only reach the log.
+/// The other half of [sessionFlags]: just the errors, as values (what the SDK reports when it can't turn an
+/// OAuth / email-link redirect into a session).
 Stream<Object> authErrors(Stream<AuthState> events) => events.transform(
       StreamTransformer<AuthState, Object>.fromHandlers(
         handleData: (_, _) {},

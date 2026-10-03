@@ -18,19 +18,11 @@ enum Placement {
   inline,
 }
 
-/// Everything a use case needs to run like it does in the app, minus the app:
-///
-///  * a [ProviderScope] bound to a [Scenario]'s fake backend, with automatic
-///    provider retries off so a failure shows as an error instead of retrying;
-///  * a stub go_router, so `context.push/go/pop` work without a route table;
-///  * its own [Navigator], so dialogs, sheets and `Navigator.pop` stay inside
-///    the preview. Under the content sits a "screen closed" page, which is what
-///    a pop reveals instead of an empty navigator. That also makes the content
-///    look *pushed* (an AppBar gets its back arrow), which is wrong for a root
-///    screen such as a tab, so those pass `root: true` and get no stack below.
-///
-/// All of it is rebuilt whenever Widgetbook rebuilds the use case (any addon
-/// or knob change), so each configuration starts from clean state.
+/// Everything a use case needs to run like it does in the app, minus the app: a [ProviderScope] bound to a [Scenario]'s
+/// fake backend (provider retries off, so a failure shows as an error), a stub go_router so `context.push/go/pop` work
+/// without a route table, and its own [Navigator] so dialogs and pops stay inside the preview. A "screen closed" page sits
+/// under the content, which also makes it look pushed (an AppBar gets a back arrow); root screens such as tabs pass
+/// `root: true` to get none. Rebuilt whenever Widgetbook rebuilds the use case, so each configuration starts clean.
 class Harness extends StatefulWidget {
   const Harness({
     super.key,

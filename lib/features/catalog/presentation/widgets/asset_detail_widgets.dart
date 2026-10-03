@@ -89,7 +89,6 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
         ),
       );
 
-  /// Expand: the full asset record inline.
   Widget _expandButton(BuildContext context) => IconButton(
         visualDensity: VisualDensity.compact,
         tooltip: _expanded ? context.l10n.catalogHideDetails : context.l10n.catalogShowDetails,

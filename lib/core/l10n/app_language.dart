@@ -1,9 +1,7 @@
 import 'dart:ui';
 
-/// The languages the app is translated into, plus "automatic" — the one place
-/// that lists them. Adding a language means adding a value here and an
-/// `app_<code>.arb` (see `docs/localization.md`); a test keeps this list and
-/// the generated `AppLocalizations.supportedLocales` in step.
+/// The languages the app ships in, plus "automatic". A new one also needs an `app_<code>.arb`
+/// (see docs/localization.md); a test keeps this list in step with `AppLocalizations.supportedLocales`.
 enum AppLanguage {
   /// Follow the device language; fall back to English when it isn't supported.
   system('system', null, false),
@@ -24,9 +22,7 @@ enum AppLanguage {
   /// What is stored on the device and what [Locale.languageCode] becomes.
   final String code;
 
-  /// The language's own name, shown the same way whatever language the app is
-  /// in so someone who can't read the current one can still find theirs.
-  /// Null for [system], whose label is translated.
+  /// The language's own name, shown identically in every language so it can always be found. Null for [system].
   final String? nativeName;
 
   final bool isRtl;
@@ -45,10 +41,8 @@ enum AppLanguage {
       values.firstWhere((l) => l.code == code, orElse: () => AppLanguage.system);
 }
 
-/// The locale the app should actually use: the chosen language, or — for
-/// [AppLanguage.system] — the first of the device's locales we have a
-/// translation for, else English. Same rule Flutter applies on its own, kept
-/// here so code with no `BuildContext` (notifications) resolves identically.
+/// The locale to use: the chosen language, or for [AppLanguage.system] the first device locale we translate
+/// (else English). Mirrors Flutter's own rule so code without a `BuildContext` resolves the same way.
 Locale resolveLocale(AppLanguage language, List<Locale> deviceLocales) {
   final chosen = language.locale;
   if (chosen != null) return chosen;

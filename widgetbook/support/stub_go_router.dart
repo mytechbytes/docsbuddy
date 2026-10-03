@@ -20,13 +20,9 @@ class Navigation {
   final Object? extra;
 }
 
-/// A [GoRouter] that goes nowhere: it reports what the screen asked for and
-/// leaves the harness to show a placeholder. A catalog entry stays isolated
-/// from the real route table and its sign-in / onboarding redirects, and on
-/// the web it never touches the URL that Widgetbook itself relies on.
-///
-/// Only the calls screens actually make are implemented; anything else fails
-/// loudly so a new kind of navigation can't silently do nothing.
+/// A [GoRouter] that goes nowhere: it reports what the screen asked for and leaves the harness to show a placeholder, so
+/// a catalog entry stays isolated from the real route table and its redirects (and never touches the URL Widgetbook uses).
+/// Only the calls screens actually make are implemented; anything else fails loudly.
 class StubGoRouter implements GoRouter {
   StubGoRouter({required this.onNavigate, required this.canPopNow});
 

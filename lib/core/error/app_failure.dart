@@ -1,8 +1,5 @@
-/// The single error type that crosses layer boundaries.
-///
-/// Repositories translate backend/platform exceptions into an [AppFailure];
-/// controllers surface it in their state; widgets only read [message], which
-/// is always safe to show to the user.
+/// The single error type that crosses layers. Repositories translate backend exceptions into it, controllers keep
+/// it in state, and widgets only read [message], which is always safe to show.
 sealed class AppFailure implements Exception {
   const AppFailure(this.message, {this.reason, this.args = const []});
 

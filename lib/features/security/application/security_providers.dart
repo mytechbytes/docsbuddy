@@ -55,10 +55,8 @@ class SecurityPrefsController extends Notifier<SecurityPrefs> {
     state = next;
   }
 
-  /// Turns the app lock on or off. Turning it **on** first asks the person to
-  /// authenticate once, so nobody locks themselves out behind a sensor that
-  /// doesn't work: anything but [BiometricResult.success] leaves it off and is
-  /// returned so the screen can say why. Turning it off needs no prompt.
+  /// Turns the app lock on or off. Turning it **on** first needs one successful authentication (so nobody locks
+  /// themselves out behind a sensor that doesn't work); anything else leaves it off and is returned so the screen can say why.
   Future<BiometricResult> setAppLock(bool enabled) async {
     if (enabled) {
       final reason = ref.read(appLocalizationsProvider).lockPromptEnable;
@@ -119,13 +117,9 @@ final securityActionsProvider = Provider<SecurityActions>((ref) => SecurityActio
 
 // ── App lock ──
 
-/// Whether the app is locked behind fingerprint / Face ID (or the device PIN).
-///
-/// Locked on a cold start when the lock is on and there is a saved session;
-/// locks again after the app was away longer than the auto-lock window (the
-/// gate forwards lifecycle events). It has nothing to protect when nobody is
-/// signed in, and signing in is itself authentication — so signing out, or
-/// turning the lock off, unlocks.
+/// Whether the app is locked behind fingerprint / Face ID (or the device PIN). Starts locked on a cold start with the
+/// lock on and a saved session, and re-locks after the app was away longer than the auto-lock window. There is nothing
+/// to protect when signed out and a sign-in is itself authentication, so signing out (or turning the lock off) unlocks.
 class AppLockController extends Notifier<bool> {
   DateTime? _pausedAt;
 

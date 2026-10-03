@@ -7,16 +7,13 @@ import '../core/theme/app_theme.dart';
 import '../core/widgets/startup_screen.dart';
 import 'app_startup.dart';
 
-/// Draws the app straight away and shows [StartupScreen] — progress, or a
-/// retry if a step fails — while [startup] runs, then swaps in the real app.
-/// Without it nothing is drawn until every init step finishes, so the app
-/// looks frozen (and stays blank forever if one of them throws).
+/// Draws the app immediately and shows [StartupScreen] (progress, or a retry if a step fails) while [startup] runs,
+/// then swaps in the real app. Without it nothing is drawn until every init step finishes.
 class StartupGate extends StatefulWidget {
   const StartupGate({super.key, required this.startup, required this.appBuilder});
 
   final AppStartup startup;
 
-  /// Builds the real app once startup succeeded.
   final Widget Function(AppBootstrap bootstrap) appBuilder;
 
   @override

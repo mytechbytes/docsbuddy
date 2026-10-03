@@ -44,12 +44,9 @@ class SupabaseBackend implements BackendModule {
   final AppLogger _logger;
   final FileStorage _files;
 
-  /// Initialises the SDK from [Env] and returns the module.
   static Future<SupabaseBackend> initialize({required AppLogger logger}) async {
-    // Review #9: persist the session + PKCE verifier in Keychain/Keystore
-    // rather than the SDK's default SharedPreferences. The store degrades
-    // instead of throwing — a keystore that can't be read must not stop the
-    // app from starting.
+    // Session and PKCE verifier live in Keychain/Keystore, not SharedPreferences. The store degrades instead of
+    // throwing: an unreadable keystore must not stop the app from starting.
     final vault = SecureStore(const FlutterSecureStorage(), logger: logger);
     final supabase = await initializeSupabase(
       url: Env.supabaseUrl,

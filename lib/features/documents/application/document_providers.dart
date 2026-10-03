@@ -8,7 +8,6 @@ import '../../../core/media/picked_media.dart';
 import '../domain/document_models.dart';
 import '../domain/document_repository.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final documentRepositoryProvider = Provider<DocumentRepository>(
   (ref) => throw UnimplementedError('documentRepositoryProvider must be overridden'),
 );
@@ -17,7 +16,6 @@ final assetDocumentsProvider = FutureProvider.family<List<DocumentMeta>, String>
   return ref.watch(documentRepositoryProvider).forAsset(assetId);
 });
 
-/// The documents attached to one service on an asset.
 final serviceDocumentsProvider =
     FutureProvider.family<List<DocumentMeta>, ({String assetId, String reminderId})>((ref, key) async {
   final docs = await ref.watch(assetDocumentsProvider(key.assetId).future);

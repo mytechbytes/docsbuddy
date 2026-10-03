@@ -3,9 +3,8 @@ import 'dart:async';
 import '../../../core/error/app_failure.dart';
 import '../domain/auth_repository.dart';
 
-/// In-memory auth used when no Supabase credentials are configured (local dev,
-/// tests, and the CI-built APK). Simulates latency and basic validation so the
-/// screens exercise their real loading/error/success paths.
+/// In-memory auth used when no Supabase credentials are configured (dev, tests, CI APK); simulates latency and
+/// validation so screens exercise their real loading and error paths.
 class FakeAuthRepository implements AuthRepository {
   final _controller = StreamController<bool>.broadcast();
   bool _signedIn = false;

@@ -8,7 +8,6 @@ import '../../documents/application/document_providers.dart';
 import '../domain/phone_validation.dart';
 import '../domain/profile.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final profileRepositoryProvider = Provider<ProfileRepository>(
   (ref) => throw UnimplementedError('profileRepositoryProvider must be overridden'),
 );

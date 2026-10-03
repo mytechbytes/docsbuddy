@@ -16,11 +16,9 @@ abstract interface class NotificationService {
   /// Cancels everything pending and schedules [alerts].
   Future<void> replaceAll(List<LocalAlert> alerts);
 
-  /// Fires an immediate test notification.
   Future<void> showTest();
 }
 
-/// `flutter_local_notifications` implementation.
 class LocalNotificationService implements NotificationService {
   LocalNotificationService(this._plugin, {required this._logger});
 
@@ -115,7 +113,6 @@ class LocalNotificationService implements NotificationService {
   }
 }
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final notificationServiceProvider = Provider<NotificationService>(
   (ref) => throw UnimplementedError('notificationServiceProvider must be overridden'),
 );

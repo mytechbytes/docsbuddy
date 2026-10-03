@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Brand mark + "Docs**Buddy**" wordmark — `DBLogo` in the design handoff.
-/// The mark is the DocsBuddy brand tile (`assets/icon/source_logo.png`),
-/// from the same brand kit every launcher/store icon is generated from.
-///
-/// It is a logo, not body text: the wordmark keeps its size whatever the system
-/// font scale, so it can't crowd an app bar or overflow a narrow header.
+/// Brand mark + "Docs**Buddy**" wordmark (`DBLogo` in the design handoff); the mark is `assets/icon/source_logo.png`.
+/// It's a logo, not body text: the wordmark ignores the system font scale so it can't crowd an app bar.
 class DbLogo extends StatelessWidget {
   const DbLogo({super.key, this.size = 17, this.showMark = true, this.showWordmark = true, this.stacked = false})
       : assert(showMark || showWordmark, 'A logo needs its mark, its wordmark, or both');

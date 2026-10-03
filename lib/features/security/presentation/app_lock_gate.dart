@@ -7,17 +7,10 @@ import '../../auth/application/auth_providers.dart';
 import '../application/security_providers.dart';
 import 'lock_screen.dart';
 
-/// Wraps the whole app (`MaterialApp.builder`) so the lock covers **every**
-/// screen — including ones pushed on top of the tabs — and not just the home
-/// screen it used to live in, which left an asset page readable after the lock
-/// had engaged.
-///
-/// While locked the app underneath is kept alive but hidden (not painted, not
-/// focusable, invisible to screen readers), so a form half-filled before the
-/// phone was put down is still there after unlocking. It also forwards
-/// lifecycle events to [AppLockController], and covers the app with a plain
-/// logo screen whenever the app isn't in the foreground, so the app switcher
-/// never shows a snapshot of someone's documents.
+/// Wraps the whole app (`MaterialApp.builder`) so the lock covers every screen, including ones pushed over the tabs.
+/// While locked the app underneath stays alive but hidden (not painted, focusable or readable by screen readers), so a
+/// half-filled form is still there after unlocking. Also forwards lifecycle events to [AppLockController] and covers the
+/// app with a plain logo screen whenever it isn't in the foreground, so the app switcher never snapshots documents.
 class AppLockGate extends ConsumerStatefulWidget {
   const AppLockGate({super.key, required this.child});
 

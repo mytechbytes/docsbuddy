@@ -7,11 +7,8 @@ import 'package:widgetbook/widgetbook.dart';
 import 'harness.dart';
 import 'scenario.dart';
 
-/// A single widget, centred on the page background in its own harness.
-///
-/// [builder] runs inside Widgetbook's own build (so `context.knobs` works) and
-/// the widget it returns is shown inside the harness. Wrap in a [Builder] if
-/// the widget needs a context from *inside* the harness.
+/// A single widget, centred on the page background in its own harness. [builder] runs inside Widgetbook's own build
+/// (so `context.knobs` works); wrap in a [Builder] if the widget needs a context from inside the harness.
 WidgetbookUseCase component(
   String name,
   Widget Function(BuildContext context) builder, {
@@ -50,10 +47,8 @@ WidgetbookUseCase filling(
       },
     );
 
-/// A full screen, built once the scenario's data exists so it can be pointed
-/// at a seeded asset or room through [DemoRefs]. A [root] screen (a tab, the
-/// sign-in page) is the bottom of the navigation stack and has no back button;
-/// any other screen is shown pushed, as it is in the app.
+/// A full screen, built once the scenario's data exists so it can be pointed at a seeded asset or room via [DemoRefs].
+/// A [root] screen (a tab, the sign-in page) has no back button; any other is shown pushed, as in the app.
 WidgetbookUseCase screen(
   String name,
   Widget Function(DemoRefs refs) builder, {

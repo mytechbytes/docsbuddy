@@ -34,7 +34,7 @@ void main() {
     await tester.pumpWidget(_harness());
     await tester.pumpAndSettle();
 
-    // The brand lockup (icon + wordmark) replaces the old title and tagline.
+    // The brand lockup (icon + wordmark) heads the screen instead of a title and tagline.
     expect(find.byType(DbLogo), findsOneWidget);
     expect(find.text('Welcome back'), findsNothing);
     expect(find.text('Sign in to keep your assets and reminders in sync.'), findsNothing);
@@ -158,7 +158,7 @@ void main() {
     await tester.tap(find.text('Sign up'));
     await tester.pumpAndSettle();
 
-    // Same brand lockup as sign-in, in place of the old title and tagline.
+    // Same brand lockup as sign-in, instead of a title and tagline.
     expect(find.byType(SignUpPage), findsOneWidget);
     expect(find.byType(DbLogo), findsOneWidget);
     expect(find.text('Create your account'), findsNothing);

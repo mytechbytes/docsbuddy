@@ -4,16 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Runs [task] behind a blocking loader that says what is happening.
-///
-/// The loader is up before [task] starts and is always taken down afterwards —
-/// whether [task] returns or throws — so the caller only has to act on the
-/// outcome (a snackbar, a navigation). Taps and the back button are blocked
-/// while it shows, which also stops a second tap from starting the work twice.
-///
-/// Only this call's own route is removed, so a screen the task pushed, or one
-/// that already replaced this page (sign-in redirecting to the dashboard), is
-/// never popped by mistake.
+/// Runs [task] behind a blocking loader that says what is happening. The loader is always removed afterwards,
+/// whether [task] returns or throws; taps and back are blocked meanwhile, which also stops a double tap.
+/// Only this call's own route is removed, so a screen the task pushed (or one that replaced this page, e.g.
+/// sign-in redirecting to the dashboard) is never popped by mistake.
 Future<T> withLoader<T>(BuildContext context, String message, Future<T> Function() task) async {
   final navigator = Navigator.of(context, rootNavigator: true);
   final route = DialogRoute<void>(
@@ -65,7 +59,6 @@ class LoaderDialog extends StatelessWidget {
 }
 
 /// What a screen shows while its data loads: a spinner and what is loading.
-/// Replaces a bare `CircularProgressIndicator` so the wait is never unlabeled.
 class LoadingView extends StatelessWidget {
   /// A whole screen (or tab) body, centred.
   const LoadingView({super.key, required this.message}) : _section = false;

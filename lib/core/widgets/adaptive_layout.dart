@@ -1,13 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-/// Layout that copes with big text.
-///
-/// People who raise the system font size (and shrink the screen with "display
-/// size") need the same content in less room. Two things decide whether a
-/// side-by-side layout still fits, so they are judged together: the width on
-/// offer and how much the font is scaled. Everything here compares
-/// `width / textScale` against the width the layout was designed for, so large
-/// text on a wide screen and normal text on a narrow one are treated alike.
+/// Layout that copes with big text. A side-by-side layout is judged on `width / textScale` against the width it
+/// was designed for, so large text on a wide screen and normal text on a narrow one are treated alike.
 extension TextScaleContext on BuildContext {
   /// How much the user's font setting enlarges text; 1.0 is the default size.
   double get textScale => MediaQuery.textScalerOf(this).scale(14) / 14;
@@ -36,12 +30,8 @@ int adaptiveColumns(
   return min;
 }
 
-/// Two widgets side by side while each keeps enough room, one above the other
-/// when large text or a narrow screen leaves too little. For a pair of form
-/// fields or similar equal halves; both sides share the width equally.
-///
-/// [minWidth] is the total width, at the default font size, below which they
-/// stack. Needs a bounded width.
+/// Two widgets side by side while each keeps enough room, stacked when large text or a narrow screen leaves too
+/// little. [minWidth] is the total width, at the default font size, below which they stack. Needs a bounded width.
 class TwoUp extends StatelessWidget {
   const TwoUp({super.key, required this.left, required this.right, this.minWidth = 270, this.gap = 12});
 
@@ -74,21 +64,16 @@ extension LargeTextContext on BuildContext {
   /// wrap instead of being cut to one line with an ellipsis.
   bool get largeText => textScale > 1.15;
 
-  /// `maxLines` for primary text: one line at normal size, free to wrap when the
-  /// font is enlarged. A name cut to "iP…" is of no use to the person reading it.
+  /// `maxLines` for primary text: one line at normal size, free to wrap when the font is enlarged.
   int? get primaryLines => largeText ? null : 1;
 
   /// Pair of [primaryLines]: an ellipsis only while the text is held to one line.
   TextOverflow? get primaryOverflow => largeText ? null : TextOverflow.ellipsis;
 }
 
-/// A list-tile body: a [leading] image or icon, text, and a trailing [badge]
-/// (a days-left pill). The badge sits beside the text while there is room and
-/// drops under it when there isn't, so large text doesn't squeeze the text to a
-/// few letters a line. Needs a bounded width.
-///
-/// [body] builds the text; it is told whether it may wrap, which it should
-/// honour by dropping its `maxLines` (names wrap rather than truncate).
+/// A list-tile body: [leading] image or icon, text, and a trailing [badge] (a days-left pill). The badge sits
+/// beside the text while there is room and drops under it otherwise. Needs a bounded width.
+/// [body] builds the text and is told whether it may wrap; it should drop its `maxLines` when it may.
 class BadgedTile extends StatelessWidget {
   const BadgedTile({
     super.key,

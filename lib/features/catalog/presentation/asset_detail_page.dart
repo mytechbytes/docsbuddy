@@ -107,14 +107,12 @@ class AssetDetailPage extends ConsumerWidget {
 
   AssetActions _actions(WidgetRef ref) => ref.read(assetActionsProvider(assetId));
 
-  /// Picks an image and uploads it as the asset's photo.
   Future<void> _changePhoto(BuildContext context, WidgetRef ref, Asset asset) async {
     final f = await pickImage(context);
     if (f == null || !context.mounted) return;
     await runAction(context, () => _actions(ref).setPhoto(f), loading: context.l10n.loadingUploadingPhoto);
   }
 
-  /// Marks a service done — recurring ones roll their due date forward.
   Future<void> _complete(BuildContext context, WidgetRef ref, Reminder r) async {
     final confirmed = await _confirm(
       context,

@@ -4,12 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../error/app_failure.dart';
 
-/// Base for form controllers: `state` is the in-flight status the form
-/// watches (spinner / disabled CTA); failures are normalised to
-/// [AppFailure], stored in `state` and rethrown so the caller can show them.
-///
-/// Subclasses resolve their dependencies *before* the first `await`: form
-/// controllers auto-dispose, so `ref` may be gone by the time a save ends.
+/// Base for form controllers: `state` is the in-flight status, failures are normalised to [AppFailure],
+/// stored in `state` and rethrown. Subclasses must resolve dependencies before the first `await`:
+/// auto-disposed controllers may have lost `ref` by the time a save ends.
 abstract class SubmitController extends AsyncNotifier<void> {
   @override
   FutureOr<void> build() {}

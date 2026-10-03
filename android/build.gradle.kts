@@ -19,22 +19,11 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// Third-party Flutter plugin modules need two things aligned with the app:
-//  - JVM target: some compile Kotlin at 1.8 / Java at 11, which AGP rejects as
-//    "Inconsistent JVM-target compatibility". Pin both to 17.
-//  - compileSdk: Flutter doesn't propagate the app's compileSdk to plugins, so
-//    they sit at flutter.compileSdkVersion (34); a transitive dependency
-//    (flutter_plugin_android_lifecycle) now requires consumers to compile
-//    against 36. Bump to 36.
-//
-// Both are set via the AGP variant API's finalizeDsl hook — it runs after the
-// plugin's own build script has configured its `android {}` block, but before
-// AGP locks/reads the DSL. Earlier attempts (plugins.withId immediate set, or
-// afterEvaluate) lost to the plugin's own script body, or hit "too late to set
-// compileSdk … already been read". Keyed on com.android.library so the app
-// (com.android.application, already pinned to 36 / 17 itself) is untouched.
-// Kotlin's jvmTarget isn't AGP-managed, so a lazy configureEach override is
-// enough for that half.
+// Plugin modules need two things aligned with the app: JVM target 17 (some compile at 1.8/11, which AGP rejects) and
+// compileSdk 36 (a transitive dependency requires it, and Flutter doesn't propagate the app's compileSdk to plugins).
+// Both are set in the AGP `finalizeDsl` hook, which runs after a plugin's own script configures `android {}` but before
+// AGP locks the DSL (earlier attempts lost to the plugin's script or hit "too late to set compileSdk").
+// Kotlin's jvmTarget isn't AGP-managed, so a lazy `configureEach` override covers that half.
 subprojects {
     plugins.withId("com.android.library") {
         extensions.findByType(com.android.build.api.variant.LibraryAndroidComponentsExtension::class.java)

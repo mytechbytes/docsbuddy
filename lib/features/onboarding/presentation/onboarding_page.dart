@@ -60,7 +60,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top row: logo + skip
             Padding(
               padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
               child: Row(
@@ -156,7 +155,6 @@ class _Slide extends StatelessWidget {
                       child: FittedBox(fit: BoxFit.scaleDown, child: illustration),
                     ),
                     const SizedBox(height: 20),
-                    // Page indicator
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -174,7 +172,6 @@ class _Slide extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    // Copy
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 30),
                       child: Column(
@@ -209,7 +206,6 @@ class _Slide extends StatelessWidget {
             ),
           ),
         ),
-        // Buttons (pinned to the bottom)
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 26, 24, 4),
           child: Column(

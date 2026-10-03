@@ -1,8 +1,6 @@
-// Every screen, as the real page widget wired to the fake backend. Data-backed
-// screens come in the four states a user meets (Populated, Empty, Loading,
-// Error); forms and static screens have one entry. Navigation out of a screen
-// lands on a placeholder that names the route, and a screen that closes itself
-// shows "This screen closed itself" with a way back in.
+// Every screen as the real page widget wired to the fake backend. Data-backed screens come in the four states a user
+// meets (Populated, Empty, Loading, Error); navigation out lands on a placeholder naming the route, and a screen that
+// closes itself shows "This screen closed itself" with a way back in.
 import 'package:docsbuddy/features/auth/presentation/forgot_password_page.dart';
 import 'package:docsbuddy/features/auth/presentation/otp_verify_page.dart';
 import 'package:docsbuddy/features/auth/presentation/reset_password_page.dart';

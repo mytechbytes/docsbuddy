@@ -9,7 +9,6 @@ import '../domain/common_categories.dart';
 import '../domain/reminder_ordering.dart';
 import 'rooms_controller.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final catalogRepositoryProvider = Provider<CatalogRepository>(
   (ref) => throw UnimplementedError('catalogRepositoryProvider must be overridden'),
 );
@@ -32,10 +31,8 @@ final assetRemindersProvider = FutureProvider.family<List<Reminder>, String>((re
   return ref.watch(catalogRepositoryProvider).remindersFor(assetId);
 });
 
-/// The appliance/vehicle type catalog (only specific types — generic group
-/// rows exist for the enum backfill). Falls back to the built-in common types
-/// when the backend catalog is empty or unreachable, so the picker is never
-/// blank.
+/// The appliance/vehicle type catalog (specific types only). Falls back to the built-in common types when the
+/// backend catalog is empty or unreachable, so the picker is never blank.
 final categoriesProvider = FutureProvider<List<AssetCategory>>((ref) async {
   try {
     final all = await ref.watch(catalogRepositoryProvider).categories();

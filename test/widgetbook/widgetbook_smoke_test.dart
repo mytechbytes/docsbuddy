@@ -1,20 +1,15 @@
-// Mounts every Widgetbook use case through the real Widgetbook route and fails
-// on any exception or layout overflow, so the catalog can't quietly rot as the
-// app changes.
+// Mounts every Widgetbook use case through the real Widgetbook route and fails on any exception or layout overflow, so
+// the catalog can't quietly rot as the app changes.
 //
 //   flutter test test/widgetbook
 //
-// The default run uses Widgetbook's defaults (light, 1.0× text, iPhone 13) and
-// must be clean. A second, opt-in pass renders every use case the hard way at
-// once (dark theme, large text, the 320dp "compact" phone, tall enough to build
-// a whole scrolling page: what someone who raised their system font size sees) and must be clean too. When it isn't, it
-// prints where the layout breaks, grouped by the widget responsible, and writes
-// the same list to build/widgetbook_stress_report.txt:
+// The default run (light, 1.0× text, iPhone 13) must be clean. An opt-in second pass renders every use case the hard way
+// at once (dark theme, large text, the 320dp "compact" phone, tall enough to build a whole scrolling page) and prints where
+// the layout breaks, grouped by widget, also writing build/widgetbook_stress_report.txt:
 //
 //   flutter test test/widgetbook --dart-define=WIDGETBOOK_STRESS=true --plain-name stress
 //
-// The text scale defaults to 2.0 (Android's largest). iOS accessibility sizes
-// go further; try them with --dart-define=WIDGETBOOK_STRESS_SCALE=3.0.
+// The text scale defaults to 2.0 (Android's largest); try iOS accessibility sizes with WIDGETBOOK_STRESS_SCALE=3.0.
 import 'dart:io';
 
 import 'package:docsbuddy/core/theme/app_theme.dart';

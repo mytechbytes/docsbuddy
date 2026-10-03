@@ -11,15 +11,10 @@ import '../domain/common_categories.dart';
 import 'catalog_mappers.dart';
 import 'catalog_remote_data_source.dart';
 
-/// Backend catalog over the 0001 schema:
-///   - `assets` with real columns (only the custom type/properties ride in
-///     `metadata`),
-///   - `locations` find-or-created by name on asset save,
-///   - `asset_dates` as the **service** rows,
-///   - the `complete_asset_date` RPC for completion/recurrence.
-///
-/// Everything is family-scoped; the caller's family is resolved (and a default
-/// "My Home" created) on first use. RLS scopes all reads/writes.
+/// Backend catalog over the 0001 schema: `assets` (only the custom type/properties ride in `metadata`), `locations`
+/// find-or-created by name on asset save, `asset_dates` as the **service** rows, and the `complete_asset_date` RPC for
+/// completion/recurrence. Everything is family-scoped: the caller's family is resolved (a default "My Home" is created
+/// on first use) and RLS scopes all reads and writes.
 class RemoteCatalogRepository implements CatalogRepository {
   RemoteCatalogRepository(this._remote, this._files, {required this._logger, Clock clock = DateTime.now})
       : _now = clock;

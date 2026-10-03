@@ -3,10 +3,8 @@ import 'dart:io';
 import 'package:docsbuddy/core/l10n/app_language.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The OS only offers (and only hands the app) languages the platform
-/// config declares. Each list below must match [AppLanguage] — adding a
-/// language in Dart alone would make it invisible in Android's per-app
-/// language picker and unrecognised by iOS.
+/// The OS only offers languages the platform config declares; each list must match [AppLanguage], or a language added in
+/// Dart alone is invisible in Android's per-app picker and unrecognised by iOS.
 void main() {
   // Platform tags: Chinese is declared by script, the rest by language.
   final platformTags = {for (final l in AppLanguage.explicit) l.code == 'zh' ? 'zh-Hans' : l.code};

@@ -10,14 +10,10 @@ import '../application/security_providers.dart';
 import '../domain/security_models.dart';
 import 'security_names.dart';
 
-/// Full-screen gate shown while the app is locked: the fingerprint / Face ID
-/// quick-unlock surface (design screens 09/17).
-///
-/// It prompts as soon as it appears and again on tap, tells the person what
-/// happened when the prompt didn't unlock (not recognised, too many attempts),
-/// and always offers a way out: signing out, or — when the device no longer has
-/// any screen lock — turning the lock off. A lock with no exit would strand
-/// someone whose sensor stops working.
+/// Full-screen gate shown while the app is locked (design screens 09/17). It prompts as soon as it appears and again on
+/// tap, says what happened when the prompt didn't unlock (not recognised, too many attempts), and always offers a way
+/// out: signing out, or, when the device has no screen lock any more, turning the lock off. A lock with no exit would
+/// strand someone whose sensor stops working.
 class LockScreen extends ConsumerStatefulWidget {
   const LockScreen({super.key});
 

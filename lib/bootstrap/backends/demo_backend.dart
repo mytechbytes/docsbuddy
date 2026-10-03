@@ -1,10 +1,6 @@
-// A fully-populated in-memory backend: a signed-in user, a family, documents
-// and a realistic home inventory, so every screen looks lived-in without a
-// server. Shared by the Play Store screenshot harness (`main_store_screenshots`)
-// and the Widgetbook catalog (`widgetbook/`). Never reached from `main.dart`,
-// so it is tree-shaken out of the shipped app.
-//
-// Everything here is fictional demo data.
+// Fully-populated in-memory backend (signed-in user, family, documents, a home inventory) so every screen looks
+// lived-in without a server. Shared by the store-screenshot harness and the Widgetbook catalog; never reached from
+// `main.dart`, so it is tree-shaken out of the shipped app. All data is fictional.
 import '../../features/auth/data/fake_auth_repository.dart';
 import '../../features/catalog/data/fake_catalog_repository.dart';
 import '../../features/catalog/domain/catalog_enums.dart';
@@ -209,9 +205,8 @@ Future<void> seedDemoCatalog(FakeCatalogRepository catalog) async {
   );
 }
 
-/// The demo backend. [latency] is the catalog's simulated network delay: the
-/// screenshot harness keeps a little so loading states are real, the catalog
-/// uses none so each use case is ready instantly.
+/// The demo backend. [latency] is the simulated network delay: the screenshot harness keeps a little so loading
+/// states are real, the catalog uses none.
 Future<FakeBackend> createDemoBackend({Duration latency = const Duration(milliseconds: 40)}) async {
   final catalog = FakeCatalogRepository(latency: latency);
   await seedDemoCatalog(catalog);

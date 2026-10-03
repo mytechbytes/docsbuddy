@@ -54,8 +54,7 @@ void main() {
           )).called(1);
     });
 
-    // local_auth 3.x reports these by throwing — they used to escape the app's
-    // adapter and leave the lock screen stuck on its spinner.
+    // local_auth 3.x reports these by throwing, so the adapter must map them rather than let them escape.
     test('backing out of the prompt is not an error', () async {
       for (final code in [
         LocalAuthExceptionCode.userCanceled,
@@ -147,8 +146,7 @@ void main() {
     });
 
     test('someone who switched on the old "Unlock with biometrics" now has app lock on', () async {
-      // That switch used to do nothing on its own; turning it on was the
-      // person asking for exactly the lock this now provides.
+      // Turning the old switch on was asking for the app lock, which is what it now maps to.
       final store = await storeWith({'security_biometric_unlock': true});
       expect(store.load().appLock, isTrue);
     });

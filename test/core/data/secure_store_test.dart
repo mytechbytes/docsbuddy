@@ -77,7 +77,7 @@ void main() {
       when(() => storage.write(key: 'verifier', value: 'abc')).thenThrow(_keystoreFailure());
       when(() => storage.read(key: 'verifier')).thenThrow(_keystoreFailure());
 
-      await store.write('verifier', 'abc'); // must not throw
+      await store.write('verifier', 'abc');
 
       expect(await store.containsKey('verifier'), isTrue);
       expect(await store.read('verifier'), 'abc');

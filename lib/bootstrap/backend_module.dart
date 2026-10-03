@@ -18,12 +18,8 @@ import '../features/security/domain/security_repository.dart';
 import '../features/settings/application/settings_providers.dart';
 import '../features/settings/domain/notification_prefs_repository.dart';
 
-/// Abstract factory for everything that talks to a backend.
-///
-/// One implementation per backend (Supabase, the in-memory fake, and later
-/// your own API). Every repository the app needs is a method here, so a new
-/// backend that forgets one fails to compile. Screens, controllers and
-/// domain code never know which module is active.
+/// Abstract factory for everything that talks to a backend. One implementation per backend (Supabase, the in-memory
+/// fake); every repository is a method here, so a backend that forgets one fails to compile.
 abstract interface class BackendModule {
   /// Shown in Settings → App → Backend.
   String get label;

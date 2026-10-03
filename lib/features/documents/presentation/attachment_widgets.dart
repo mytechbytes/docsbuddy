@@ -30,7 +30,7 @@ IconData fileTypeIcon(String name, [String? mime]) => switch (fileExtension(name
           'audio' => Icons.audiotrack_outlined,
           'video' => Icons.videocam_outlined,
           'text' => Icons.notes_outlined,
-          _ => Icons.insert_drive_file_outlined, // unknown type
+          _ => Icons.insert_drive_file_outlined,
         },
     };
 
@@ -57,7 +57,6 @@ extension DocKindStyle on DocKind {
       };
 }
 
-/// Shares raw bytes as a file via the platform share sheet.
 Future<void> shareBytes(Uint8List bytes, {required String name, required String mime}) {
   return SharePlus.instance.share(ShareParams(
     files: [XFile.fromData(bytes, mimeType: mime, name: name)],
@@ -65,7 +64,6 @@ Future<void> shareBytes(Uint8List bytes, {required String name, required String 
   ));
 }
 
-/// Downloads a stored document and opens the share sheet.
 Future<void> shareDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
   Uint8List? bytes;
   final downloaded = await runAction(

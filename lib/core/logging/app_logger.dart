@@ -2,9 +2,8 @@ import 'dart:developer' as developer;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Diagnostics sink. Best-effort code paths (photo upload after save,
-/// timezone sync, push) still swallow failures so the user isn't blocked,
-/// but report them here instead of disappearing.
+/// Diagnostics sink. Best-effort paths (photo upload, timezone sync, push) swallow failures so users aren't
+/// blocked, but report them here.
 abstract interface class AppLogger {
   void info(String message);
 
@@ -32,7 +31,6 @@ class DebugAppLogger implements AppLogger {
       developer.log(message, name: 'docsbuddy', level: 1000, error: error, stackTrace: stackTrace);
 }
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final appLoggerProvider = Provider<AppLogger>(
   (ref) => throw UnimplementedError('appLoggerProvider must be overridden'),
 );

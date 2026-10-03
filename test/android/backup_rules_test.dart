@@ -2,10 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// The Keystore key that protects flutter_secure_storage's files is not backed
-/// up, so a restored copy can never be decrypted — it used to leave the app
-/// stuck on its start-up error screen after a Play Store reinstall. Pin the
-/// exclusions so a manifest edit can't quietly bring that back.
+/// The Keystore key behind flutter_secure_storage's files isn't backed up, so a restored copy can never be decrypted;
+/// pin the exclusions so a manifest edit can't bring back a stuck start-up screen after a reinstall.
 void main() {
   const secureFiles = ['FlutterSecureStorage.xml', 'FlutterSecureKeyStorage.xml'];
   String read(String path) => File(path).readAsStringSync();

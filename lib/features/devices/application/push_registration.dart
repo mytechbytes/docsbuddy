@@ -7,7 +7,6 @@ import '../../../core/logging/app_logger.dart';
 import '../../../core/push/push_messaging_service.dart';
 import '../domain/device_repository.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final deviceRepositoryProvider = Provider<DeviceRepository>(
   (ref) => throw UnimplementedError('deviceRepositoryProvider must be overridden'),
 );

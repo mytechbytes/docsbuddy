@@ -131,10 +131,8 @@ class BiometricTypesRow extends ConsumerWidget {
   }
 }
 
-/// The one switch for the app lock — on Settings and on the Security screen
-/// alike, both driving the same preference. Worded for what the device offers
-/// ("Lock with Face ID", "Lock with fingerprint", …); disabled, with the reason,
-/// on a device that can't authenticate at all.
+/// The one switch for the app lock, on Settings and Security alike (same preference). Worded for what the device offers
+/// ("Lock with Face ID", "Lock with fingerprint", …); disabled, with the reason, on a device that can't authenticate.
 class AppLockToggleRow extends ConsumerWidget {
   const AppLockToggleRow({super.key});
 

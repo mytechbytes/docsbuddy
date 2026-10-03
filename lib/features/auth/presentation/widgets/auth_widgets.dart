@@ -73,7 +73,6 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-/// Title + optional subtitle block.
 class AuthHero extends StatelessWidget {
   const AuthHero({super.key, required this.title, this.subtitle, this.big = false, this.center = false});
 
@@ -132,7 +131,6 @@ class HeroBadge extends StatelessWidget {
   }
 }
 
-/// "OR CONTINUE WITH" divider.
 class OrDivider extends StatelessWidget {
   const OrDivider({super.key, this.label});
 

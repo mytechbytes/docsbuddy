@@ -46,11 +46,8 @@ extension FeedbackContext on BuildContext {
   }
 }
 
-/// Runs a controller action from a widget callback, behind a loader that says
-/// what is happening ([loading], required so no remote call goes unannounced).
-/// Once the loader has closed it shows the failure (or [success]) as a snackbar
-/// and reports whether it succeeded. Keeps widgets free of try/catch and error
-/// wording.
+/// Runs a controller action behind a loader that says what is happening ([loading] is required so no remote
+/// call goes unannounced), then shows the failure (or [success]) as a snackbar. Returns whether it succeeded.
 Future<bool> runAction(
   BuildContext context,
   Future<void> Function() action, {
@@ -59,9 +56,7 @@ Future<bool> runAction(
 }) =>
     runLocalAction(context, () => withLoader(context, loading, action), success: success);
 
-/// [runAction] without a loader, for work that is not a remote call — opening
-/// the share sheet or an external viewer. Failures and [success] are reported
-/// the same way.
+/// [runAction] without a loader, for work that isn't a remote call (opening the share sheet or an external viewer).
 Future<bool> runLocalAction(BuildContext context, Future<void> Function() action, {String? success}) async {
   try {
     await action();

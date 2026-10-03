@@ -51,7 +51,6 @@ String fileExtension(String name) {
 
 bool isImageFileName(String name) => _imageExtensions.contains(fileExtension(name));
 
-/// Kind for a file added from the asset's documents section.
 DocKind kindForFileName(String name) => isImageFileName(name) ? DocKind.photo : DocKind.other;
 
 /// Human-readable size, e.g. "512 B", "42 KB", "1.3 MB".

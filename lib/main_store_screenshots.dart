@@ -1,12 +1,7 @@
-// Play Store screenshot harness — the real app on the in-memory fakes (no
-// Supabase), pre-seeded with a signed-in user, a family, documents and a
-// realistic home inventory (see `bootstrap/backends/demo_backend.dart`) so
-// every screen looks lived-in.
-// NOT shipped — run it only to capture store screenshots:
+// Play Store screenshot harness: the real app on in-memory fakes, pre-seeded with a signed-in user, a family,
+// documents and a home inventory (see `bootstrap/backends/demo_backend.dart`). NOT shipped.
 //
 //   flutter run -t lib/main_store_screenshots.dart -d <simulator>
-//
-// Everything here is fictional demo data.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';

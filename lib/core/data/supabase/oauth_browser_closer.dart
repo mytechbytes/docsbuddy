@@ -3,13 +3,9 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Dismisses the in-app browser sheet that hosted an OAuth flow once the
-/// session is established.
-///
-/// When the redirect lands on the hosted `/login-callback` page (instead of
-/// opening the app directly) the sheet hands off to the app but stays on top of
-/// it, so a signed-in user is left looking at "Opening DocsBuddy…". Returns the
-/// subscription so the caller can cancel it.
+/// Closes the in-app browser sheet that hosted an OAuth flow once the session is established.
+/// When the redirect lands on the hosted `/login-callback` page the sheet stays on top of the app, leaving a
+/// signed-in user on "Opening DocsBuddy…". Returns the subscription so the caller can cancel it.
 StreamSubscription<AuthState> closeBrowserOnSignIn(
   Stream<AuthState> events, {
   Future<void> Function() close = closeInAppWebView,

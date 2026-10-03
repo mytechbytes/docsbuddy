@@ -4,13 +4,9 @@ import '../../../core/logging/app_logger.dart';
 import '../domain/auth_repository.dart';
 import 'auth_remote_data_source.dart';
 
-/// Auth over GoTrue. The data source is a thin SDK wrapper; this class owns
-/// input normalisation and error translation (`guardBackend` maps GoTrue's
-/// `AuthException` to a user-safe `AuthFailure`).
-///
-/// NOTE: OAuth (Google/Apple/Microsoft) additionally requires the providers to be enabled
-/// in the Supabase dashboard and a deep-link redirect configured per platform;
-/// the recovery-code flow assumes email OTP is enabled.
+/// Auth over GoTrue. The data source is a thin SDK wrapper; this class owns input normalisation and error translation.
+/// OAuth needs the providers enabled in the Supabase dashboard and a deep-link redirect per platform; the recovery-code
+/// flow assumes email OTP is enabled.
 class RemoteAuthRepository implements AuthRepository {
   RemoteAuthRepository(
     this._remote, {
@@ -37,10 +33,8 @@ class RemoteAuthRepository implements AuthRepository {
   @override
   Stream<AppFailure> get callbackFailures async* {
     await for (final error in _remote.callbackErrors()) {
-      // The hosted redirect page can deliver the same link twice; the second
-      // exchange always fails ("code verifier not found") even though the
-      // first one already signed the user in. Wait for that to land, and only
-      // report a failure if there is still no session.
+      // The hosted redirect page can deliver the same link twice and the second exchange always fails; wait for the
+      // first to land and only report a failure if there is still no session.
       await Future<void>.delayed(_callbackGrace);
       if (isSignedIn) continue;
       _logger?.warning('Sign-in callback failed', error: error);

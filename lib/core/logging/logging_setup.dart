@@ -3,9 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'app_logger.dart';
 import 'crashlytics_logger.dart';
 
-/// The app's logger: Crashlytics in release builds when Firebase is up, the
-/// debug console otherwise. Everything that logs goes through the [AppLogger]
-/// this returns (see `appLoggerProvider`).
+/// Crashlytics in release builds when Firebase is up, the debug console otherwise.
 AppLogger createLogger({required bool firebaseReady}) =>
     firebaseReady && !kDebugMode ? CrashlyticsAppLogger() : const DebugAppLogger();
 

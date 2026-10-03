@@ -5,7 +5,6 @@ import '../../../core/providers/core_providers.dart';
 import '../domain/family_models.dart';
 import '../domain/family_repository.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final familyRepositoryProvider = Provider<FamilyRepository>(
   (ref) => throw UnimplementedError('familyRepositoryProvider must be overridden'),
 );

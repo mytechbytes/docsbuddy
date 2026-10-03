@@ -1,16 +1,11 @@
 import '../../../core/notifications/local_alert.dart';
 import '../../catalog/domain/catalog_models.dart';
 
-/// Pure: turn reminders into the local notifications to schedule. Each
-/// reminder fires at its own `notifyOffsets` thresholds (days before due,
-/// plus the due day itself) at [hour] local time, shifted out of the quiet
-/// window when one is set. Past thresholds are skipped; the soonest [cap]
-/// are kept (iOS and Android cap pending local notifications around 64).
-///
-/// [dueText] words the countdown ("Due in 7 days") for a given number of days
-/// before the due date (0 = the day itself). The caller supplies it because
-/// the wording belongs to the user's language, which this pure function must
-/// not know about.
+/// Pure: turns reminders into the local notifications to schedule. Each reminder fires at its own `notifyOffsets`
+/// thresholds (days before due, plus the due day) at [hour] local time, shifted out of the quiet window; past thresholds
+/// are skipped and the soonest [cap] kept (iOS and Android cap pending notifications around 64).
+/// [dueText] words the countdown ("Due in 7 days") for a given days-before (0 = the day itself); the caller supplies it
+/// because the wording belongs to the user's language, which this pure function must not know about.
 List<LocalAlert> buildReminderAlerts(
   List<Reminder> reminders, {
   required String Function(int daysBefore) dueText,

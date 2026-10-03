@@ -1,19 +1,12 @@
 import 'package:flutter/foundation.dart';
 
-/// Which backend implementation the app talks to. Adding a backend means
-/// adding a value here and a `BackendModule` for it (see
-/// `bootstrap/backend_module.dart`).
+/// Which backend the app talks to. A new one needs a value here and a `BackendModule`.
 enum BackendKind { fake, supabase }
 
-/// Compile-time configuration, supplied via `--dart-define`.
+/// Compile-time configuration from `--dart-define`.
 ///
-/// Example:
-///   flutter run --dart-define=SUPABASE_URL=https://xyz.supabase.co \
-///               --dart-define=SUPABASE_ANON_KEY=eyJ...
-///
-/// `BACKEND` picks the implementation explicitly (`fake`, `supabase`); when
-/// absent, Supabase is used if its credentials are present, else the fake
-/// in-memory backend so every screen still runs without a server.
+/// `BACKEND` selects the implementation (`fake`, `supabase`); when absent, Supabase is used if its
+/// credentials are present, otherwise the in-memory fake so every screen runs without a server.
 abstract final class Env {
   static const _backend = String.fromEnvironment('BACKEND');
 
@@ -26,13 +19,8 @@ abstract final class Env {
   /// Custom-scheme fallback registered in Info.plist / AndroidManifest.
   static const authRedirectScheme = 'in.mytechbytes.docsbuddy://login-callback';
 
-  /// Where auth emails / OAuth redirect back into the app. Both URLs must be
-  /// listed in the backend's allowed redirect URLs.
-  ///
-  /// iOS uses the custom scheme until Associated Domains + the hosted
-  /// apple-app-site-association file are in place (the https link would
-  /// otherwise open the website instead of the app). Set
-  /// `--dart-define=IOS_UNIVERSAL_LINKS=true` once they are.
+  /// Where auth emails / OAuth redirect back into the app; both URLs must be allowed in the backend.
+  /// iOS uses the custom scheme until Associated Domains are set up (`--dart-define=IOS_UNIVERSAL_LINKS=true` after).
   static String get authRedirectUrl =>
       defaultTargetPlatform == TargetPlatform.iOS && !_iosUniversalLinks ? authRedirectScheme : authRedirectAppLink;
 

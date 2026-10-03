@@ -22,12 +22,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_app.dart';
 
-/// Every language on a representative set of real screens, on a phone-sized
-/// window: the screen has to build, lay out without overflowing, and run the
-/// right way round (Arabic mirrors). Layout is judged with the app's real
-/// font, so Latin scripts — the longest strings, Spanish and French — are
-/// measured honestly; the other scripts fall back to the test font, which is
-/// wider than any real one, so a clean pass there is the stricter result.
+/// Every language on a representative set of real screens in a phone-sized window: each must build, fit without overflow,
+/// and run the right way round (Arabic mirrors). Latin scripts are judged with the app's real font; other scripts fall back
+/// to the test font, which is wider than any real one, so a clean pass there is the stricter result.
 void main() {
   setUpAll(() async {
     final font = FontLoader(AppTheme.fontFamily)..addFont(rootBundle.load('assets/fonts/PlusJakartaSans-Variable.ttf'));

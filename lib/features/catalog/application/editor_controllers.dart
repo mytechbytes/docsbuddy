@@ -10,10 +10,8 @@ import '../domain/catalog_models.dart';
 import '../domain/default_reminders.dart';
 import 'catalog_providers.dart';
 
-/// Creates or edits an asset. On create it also seeds the type's default
-/// services and attaches invoices; the photo is uploaded in both modes.
-/// Photo/invoice/seed failures don't fail the save — they can be redone from
-/// the asset page.
+/// Creates or edits an asset. On create it also seeds the type's default services and attaches invoices; photo, invoice
+/// and seed failures don't fail the save (they can be redone from the asset page).
 class AssetEditorController extends SubmitController {
   Future<Asset> save({
     required AssetDraft draft,

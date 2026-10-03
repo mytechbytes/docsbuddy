@@ -14,12 +14,8 @@ Future<T> guardBackend<T>(Future<T> Function() run) async {
   }
 }
 
-/// The single translation from what the SDKs throw to what the app shows.
-///
-/// GoTrue reports a stable `code` for most failures; those become a
-/// [FailureReason] so the message is shown in the user's language. A message
-/// we don't recognise passes through as the server wrote it (English) rather
-/// than being hidden behind "something went wrong".
+/// The single translation from SDK exceptions to [AppFailure]. GoTrue's stable `code` becomes a
+/// [FailureReason] so the message is localised; an unrecognised message passes through as the server wrote it.
 AppFailure translateBackendError(Object e) {
   switch (e) {
     case AppFailure():

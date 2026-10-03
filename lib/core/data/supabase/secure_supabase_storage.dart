@@ -2,13 +2,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../secure_store.dart';
 
-/// Persists the Supabase session in secure storage instead of the SDK's default
-/// SharedPreferences (architecture review #9). The session string is treated as
-/// an opaque blob — exactly how `SharedPreferencesLocalStorage` treats it.
-///
-/// The SDK reads this during `Supabase.initialize` without guarding against
-/// exceptions, so [store] must never throw (see [SecureStore]); an unreadable
-/// session comes back as `null`, i.e. signed out.
+/// Persists the Supabase session in secure storage (as an opaque string) instead of SharedPreferences.
+/// The SDK reads it during `Supabase.initialize` unguarded, so the store must never throw (see [SecureStore]);
+/// an unreadable session reads as `null`, i.e. signed out.
 class SecureLocalStorage extends LocalStorage {
   const SecureLocalStorage(this._store);
 

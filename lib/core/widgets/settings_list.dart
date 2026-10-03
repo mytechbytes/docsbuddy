@@ -42,14 +42,12 @@ class SettingsCard extends StatelessWidget {
   }
 }
 
-/// Settings-style tiles stop growing with the font at this scale: they are
-/// one-line titles in a fixed-width column, so beyond it a single long word
-/// ("notifications") would no longer fit and would break across lines.
+/// Settings tiles stop growing with the font at this scale: one-line titles in a fixed-width column would
+/// otherwise break a long word ("notifications") across lines.
 const _tileMaxScale = 1.6;
 
-/// ListTile spacing for the user's font size. The default chrome (a 40dp leading
-/// box, 16dp gaps) takes a quarter of a phone's width; with large text that is
-/// what leaves the title too little room.
+/// ListTile spacing for the user's font size; the default chrome takes a quarter of a phone's width,
+/// which leaves the title too little room with large text.
 ({EdgeInsets? padding, double? gap, double? leading}) _tileChrome(BuildContext context) =>
     context.textScale > 1.3
         ? (padding: const EdgeInsets.symmetric(horizontal: 12), gap: 10.0, leading: 24.0)
@@ -181,11 +179,8 @@ class SettingsToggleRow extends StatelessWidget {
   }
 }
 
-/// A switch for something that may not be connected to anything yet. While
-/// it isn't [live] (an [AppFeature]'s `live`) it is dimmed, shown off, disabled and labelled "Coming
-/// soon" — and can't change a saved preference — instead of promising what the
-/// app can't deliver. Once the feature is live it is an ordinary
-/// [SettingsToggleRow].
+/// A switch for something that isn't connected yet. While not [live] it is dimmed, shown off, disabled and
+/// labelled "Coming soon", and can't change a saved preference. Once live it is an ordinary [SettingsToggleRow].
 class FeatureToggleRow extends StatelessWidget {
   const FeatureToggleRow({
     super.key,

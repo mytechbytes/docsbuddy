@@ -1,13 +1,9 @@
 import 'catalog_models.dart';
 import 'catalog_inputs.dart';
 
-/// Pure: expand a category's `default_dates` into the services to create.
-/// Dues are [DefaultReminder.startMonths] after [purchaseDate] (falling back
-/// to [now]); dues already in the past roll forward by the recurrence until
-/// they're upcoming (a 2-year-old car still gets a *future* PUC date), and
-/// one-off defaults whose date has passed are skipped.
-/// [amcDate] overrides the AMC default's due date; when the category has no
-/// AMC default but [amcDate] is set, a yearly AMC service is added.
+/// Pure: expands a category's `default_dates` into the services to create. Dues fall [DefaultReminder.startMonths] after
+/// [purchaseDate] (else [now]); past dues roll forward by the recurrence until upcoming, and past one-offs are skipped.
+/// [amcDate] overrides the AMC default's due date, and adds a yearly AMC when the category has none.
 List<ReminderInput> expandDefaultReminders(
   AssetCategory? category, {
   DateTime? purchaseDate,

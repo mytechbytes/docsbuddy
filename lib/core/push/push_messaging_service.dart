@@ -5,15 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../logging/app_logger.dart';
 
-/// Background isolate handler — must be a top-level function. In the local-first
-/// model these are silent data pushes; the real sync happens when the app next
-/// opens, so there's nothing heavy to do here.
+/// Background isolate handler (must be top-level). Pushes are silent data pushes and sync happens on next open,
+/// so there is nothing to do here.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
-/// Transport-only wrapper over FCM **silent data pushes** (docs/push-setup.md).
-/// It knows nothing about the backend or features: callers register the
-/// token themselves and react to [remoteChanges].
+/// Transport-only wrapper over FCM silent data pushes (docs/push-setup.md). It knows nothing about the backend:
+/// callers register the token themselves and react to [remoteChanges].
 abstract interface class PushMessagingService {
   /// Asks for permission and starts listening. Returns false when push
   /// isn't available here (no Firebase config, desktop, tests).
@@ -28,7 +26,6 @@ abstract interface class PushMessagingService {
 }
 
 class FirebasePushMessagingService implements PushMessagingService {
-  /// [firebaseReady] is whether Firebase initialised at startup.
   FirebasePushMessagingService({required this.firebaseReady, required this._logger});
 
   final bool firebaseReady;
@@ -73,7 +70,6 @@ class FirebasePushMessagingService implements PushMessagingService {
   Stream<void> get remoteChanges => _changes.stream;
 }
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final pushMessagingServiceProvider = Provider<PushMessagingService>(
   (ref) => throw UnimplementedError('pushMessagingServiceProvider must be overridden'),
 );

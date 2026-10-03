@@ -4,23 +4,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../logging/app_logger.dart';
 
-/// A Keychain / Keystore vault that can't take the app down with it.
+/// Keychain / Keystore vault that degrades instead of throwing.
 ///
-/// `flutter_secure_storage` fails in ways the app has no control over: an Auto
-/// Backup restore brings back ciphertext written under another device's key,
-/// some OEM keystores refuse to unwrap or generate keys, and one plugin code
-/// path neither succeeds nor fails. Its callers are the start-up and sign-in
-/// paths, where an exception means a dead app, so every operation degrades
-/// instead of throwing:
-///
-///  * an entry that can't be read is dropped and reads as absent (the user
-///    signs in again — they would have to anyway);
-///  * a write that fails is kept in memory for this process, so the flow in
-///    flight (e.g. an OAuth round-trip) still completes;
-///  * every call is bounded by [timeout].
-///
-/// Each failure is reported to [logger] so a device-specific problem shows up
-/// in Crashlytics instead of as a silent dead end.
+/// `flutter_secure_storage` can fail on devices we don't control (Auto Backup restores ciphertext whose key is
+/// gone, some OEM keystores refuse keys, one plugin path never answers) and its callers are startup and sign-in.
+/// So unreadable entries are dropped and read as absent, failed writes are kept in memory for the process,
+/// every call is bounded by [timeout], and each failure is reported to [logger].
 class SecureStore {
   SecureStore(this._storage, {this._logger, this.timeout = const Duration(seconds: 5)});
 

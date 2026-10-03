@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 
-/// Screen sizes worth checking, smallest and most awkward first within each
-/// group. Reused from Widgetbook where it ships a matching device; the rest
-/// cover what it lacks: the narrowest phones still in use, and landscape.
-///
-/// "Compact" is also what an Android phone becomes with Settings → Display →
-/// Display size at its largest, so it pairs with the text-scale addon to give
-/// the worst case a real user can configure.
+/// Screen sizes worth checking, smallest and most awkward first within each group: Widgetbook's own devices plus the
+/// narrowest phones still in use, and landscape. "Compact" is also what an Android phone becomes at its largest display
+/// size, so it pairs with the text-scale addon to give the worst case a user can configure.
 abstract final class ScreenSizes {
   static const compactPhone = ViewportData(
     name: 'Phone · compact 320×568',

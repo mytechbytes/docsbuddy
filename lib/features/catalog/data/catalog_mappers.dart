@@ -17,8 +17,7 @@ abstract final class CatalogMapper {
   static AssetCategoryKind categoryKindFromName(String? n) =>
       AssetCategoryKind.values.asNameMap()[n] ?? AssetCategoryKind.other;
 
-  /// Kind comes from the stored `asset_dates.kind` (written since 0005);
-  /// label matching remains only as the fallback for old rows.
+  /// Kind comes from the stored `asset_dates.kind`; label matching remains only as the fallback for old rows.
   static ReminderKind reminderKindFor(String? kind, String label) =>
       ReminderKind.values.asNameMap()[kind] ??
       ReminderKind.values.firstWhere(

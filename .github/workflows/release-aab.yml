@@ -78,9 +78,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          # Features whose backend isn't ready stay off; switch one on by setting the
-          # repository variable (Settings → Secrets and variables → Actions → Variables)
-          # to "true" — see docs/feature-flags.md. Unset means off.
+          # Off unless the repository variable is "true" (docs/feature-flags.md).
           FEATURE_PUSH_REMINDERS: ${{ vars.FEATURE_PUSH_REMINDERS }}
           FEATURE_EMAIL_REMINDERS: ${{ vars.FEATURE_EMAIL_REMINDERS }}
           FEATURE_WHATSAPP_REMINDERS: ${{ vars.FEATURE_WHATSAPP_REMINDERS }}

@@ -16,10 +16,8 @@ import '../../features/settings/data/fake_notification_prefs_repository.dart';
 import '../../features/settings/domain/notification_prefs_repository.dart';
 import '../backend_module.dart';
 
-/// In-memory backend so every screen runs without a server (local dev, tests,
-/// the screenshot harness). Each repository is created once and reused, so
-/// its in-memory data survives provider rebuilds. Pass an instance to swap
-/// one fake (tests).
+/// In-memory backend so every screen runs without a server (dev, tests, screenshots). Each repository is created once
+/// so its data survives provider rebuilds; pass an instance to swap one.
 class FakeBackend implements BackendModule {
   FakeBackend({
     AuthRepository? auth,

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/onboarding_store.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final onboardingStoreProvider = Provider<OnboardingStore>(
   (ref) => throw UnimplementedError('onboardingStoreProvider must be overridden'),
 );

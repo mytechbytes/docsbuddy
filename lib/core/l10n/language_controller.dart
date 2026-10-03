@@ -6,12 +6,10 @@ import '../../l10n/app_localizations.dart';
 import 'app_language.dart';
 import 'language_store.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final languageStoreProvider = Provider<LanguageStore>(
   (ref) => throw UnimplementedError('languageStoreProvider must be overridden'),
 );
 
-/// The language the user picked (or [AppLanguage.system]).
 class LanguageController extends Notifier<AppLanguage> {
   @override
   AppLanguage build() => ref.watch(languageStoreProvider).load();
@@ -24,8 +22,7 @@ class LanguageController extends Notifier<AppLanguage> {
 
 final languageProvider = NotifierProvider<LanguageController, AppLanguage>(LanguageController.new);
 
-/// The device's preferred locales, most preferred first. A provider so tests
-/// can pretend to be a phone set to any language.
+/// The device's preferred locales; a provider so tests can fake any device language.
 final deviceLocalesProvider = Provider<List<Locale>>((ref) => PlatformDispatcher.instance.locales);
 
 /// The locale the app is showing in right now — the picked language, or the

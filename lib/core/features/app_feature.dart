@@ -1,15 +1,8 @@
-/// Features whose app side is built but that don't work end-to-end yet — they
-/// need something outside the app first (a deployed Edge Function, a provider
-/// account). Each is **off** until that exists; the UI shows it disabled,
-/// "Coming soon", rather than offering a switch that does nothing.
+/// Features that are built but not connected end-to-end yet (they need a deployed function or provider account).
+/// Each is off until its flag is set, and the UI shows it disabled as "Coming soon".
 ///
-/// This is the one place that says what is live. To turn one on once its
-/// backend is ready, build with its flag — no code change:
-///
-///     flutter build appbundle --dart-define=FEATURE_EMAIL_REMINDERS=true
-///
-/// (CI: add it next to `SUPABASE_URL` in the build step). Or flip the default
-/// here when it should ship on for everyone.
+/// Enable one per build with `--dart-define=FEATURE_EMAIL_REMINDERS=true` (CI: a repository variable of the
+/// same name). See docs/feature-flags.md.
 enum AppFeature {
   /// Settings → Push notifications. Nothing reads this preference: reminders
   /// are scheduled on the device whatever it says, and the push function

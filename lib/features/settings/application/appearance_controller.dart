@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/appearance.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final appearanceStoreProvider = Provider<AppearanceStore>(
   (ref) => throw UnimplementedError('appearanceStoreProvider must be overridden'),
 );

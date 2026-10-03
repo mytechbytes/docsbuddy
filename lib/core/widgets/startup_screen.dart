@@ -4,14 +4,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import 'db_logo.dart';
 
-/// The launch screen shown while the app gets ready: the stacked brand lockup
-/// (mark over wordmark) on the launcher-icon tint, with what the app is doing —
-/// a spinner and message — or what went wrong underneath.
-///
-/// Always light, like the native splash it follows, whatever the theme. The
-/// tint is the launcher icon's, so the OS splash, this screen and the app icon
-/// read as one brand moment; the OS splash shows the mark alone, so the
-/// wordmark appears as this screen takes over.
+/// The launch screen shown while the app gets ready: the stacked brand lockup on the launcher-icon tint with a
+/// spinner and message, or what went wrong. Always light, like the native splash it follows, whatever the theme.
 class StartupScreen extends StatelessWidget {
   /// Working: a spinner, what is happening, and where we are in the sequence.
   const StartupScreen.progress({super.key, required String this.message, required String this.stepLabel})

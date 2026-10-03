@@ -197,9 +197,7 @@ extension AppThemeContext on BuildContext {
   AppPalette get palette => Theme.of(this).extension<AppPalette>() ?? AppPalette.light;
 }
 
-/// App-wide Material 3 theme built from the design tokens. Typography is
-/// Plus Jakarta Sans, bundled in `assets/fonts/` and declared in
-/// `pubspec.yaml`.
+/// App-wide Material 3 theme built from the design tokens (Plus Jakarta Sans, bundled in `assets/fonts/`).
 abstract final class AppTheme {
   static const fontFamily = 'PlusJakartaSans';
 

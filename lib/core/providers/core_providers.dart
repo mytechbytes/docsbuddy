@@ -6,14 +6,11 @@ typedef Clock = DateTime Function();
 
 final clockProvider = Provider<Clock>((ref) => DateTime.now);
 
-/// Injected at the composition root after `SharedPreferences.getInstance()`.
 final sharedPreferencesProvider = Provider<SharedPreferences>(
   (ref) => throw UnimplementedError('sharedPreferencesProvider must be overridden at startup'),
 );
 
-/// Bumped whenever the signed-in user's family membership changes (create,
-/// join, leave). Repositories that cache family-scoped state watch this so
-/// they are rebuilt — without the family feature knowing who depends on it.
+/// Bumped when the user's family membership changes; repositories caching family-scoped state watch it and rebuild.
 class FamilyScope extends Notifier<int> {
   @override
   int build() => 0;

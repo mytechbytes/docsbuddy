@@ -7,16 +7,13 @@ import '../domain/auth_repository.dart';
 import '../domain/password_policy.dart';
 import 'auth_providers.dart';
 
-/// Drives the auth screens' async actions. `state` is the in-flight status;
-/// pages watch `isLoading` for the CTA spinner and show `state.error`
-/// (always an [AppFailure]). Actions return true on success so the page can
-/// navigate.
+/// Drives the auth screens' async actions: `state` is the in-flight status and holds the error the page shows
+/// (an [AppFailure]); actions return true on success so the page can navigate.
 class AuthController extends AsyncNotifier<void> {
   @override
   FutureOr<void> build() {
-    // A browser sign-in (Google / Apple / Microsoft) finishes after the call
-    // that started it returned, so its failures can only arrive here — as the
-    // same error state the pages already show.
+    // A browser sign-in (Google / Apple / Microsoft) finishes after the call that started it returned,
+    // so its failures can only arrive here.
     final failures = _repo.callbackFailures.listen((failure) {
       if (ref.mounted) state = AsyncError(failure, StackTrace.current);
     });

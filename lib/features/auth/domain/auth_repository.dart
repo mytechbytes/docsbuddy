@@ -8,9 +8,8 @@ abstract interface class AuthRepository {
 
   bool get isSignedIn;
 
-  /// Failures of a sign-in that left the app (Google / Apple / Microsoft open
-  /// the browser) and failed on the way back. They arrive after the call that
-  /// started the sign-in has already returned, so they can't be thrown from it.
+  /// Failures of a browser sign-in (Google / Apple / Microsoft) that failed on the way back; they arrive after the
+  /// starting call returned, so they can't be thrown from it.
   Stream<AppFailure> get callbackFailures;
 
   Future<void> signInWithPassword({required String email, required String password});

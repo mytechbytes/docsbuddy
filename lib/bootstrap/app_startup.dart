@@ -36,7 +36,6 @@ sealed class StartupState {
   const StartupState();
 }
 
-/// [step] is in progress.
 final class StartupRunning extends StartupState {
   const StartupRunning(this.step);
   final StartupStep step;
@@ -47,8 +46,7 @@ final class StartupFailed extends StartupState {
   const StartupFailed(this.error);
   final Object error;
 
-  /// One line saying what actually broke, for the failure screen. Without it a
-  /// tester can only report "it won't start" — and the screen can't tell a
+  /// One line saying what actually broke, for the failure screen: a tester can report it, and the screen can tell a
   /// network problem from a broken keystore.
   String get summary {
     final line = error.toString().split('\n').first.trim();
@@ -61,10 +59,8 @@ final class StartupReady extends StartupState {
   final AppBootstrap bootstrap;
 }
 
-/// Runs the one-off work that has to finish before the app can start, and
-/// reports each step so the UI can show what is happening instead of a frozen
-/// window. Steps that already succeeded are remembered, so a retry resumes at
-/// the step that failed rather than re-initialising Firebase or Supabase.
+/// Runs the one-off work that must finish before the app can start, reporting each step so the UI shows progress.
+/// Completed steps are remembered, so a retry resumes at the failed step instead of re-initialising Firebase or Supabase.
 class AppStartup {
   AppStartup({
     Future<bool> Function()? initFirebase,

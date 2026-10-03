@@ -2,14 +2,9 @@ import 'package:flutter/widgets.dart';
 
 final _slot = RegExp(r'\{(\w+)\}');
 
-/// Renders a translated sentence that has styled pieces inside it — a link, a
-/// bold name — without the code deciding where they go.
-///
-/// Ask the generated message for its placeholders as themselves
-/// (`l10n.authTermsAgreement('{terms}', '{privacy}')`) and pass the spans to
-/// drop in. The translator owns the word order, so "I agree to the {terms}" can
-/// become a sentence with the verb last (Hindi) or the pieces reversed
-/// (Arabic); code that glued `lead + link + tail` together could not.
+/// Renders a translated sentence with styled pieces (a link, a bold name) without the code fixing their position.
+/// Ask the generated message for its placeholders as themselves (`l10n.authTermsAgreement('{terms}', '{privacy}')`)
+/// and pass the spans to drop in, so the translation controls word order.
 List<InlineSpan> richTemplate(String template, Map<String, InlineSpan> slots) {
   final spans = <InlineSpan>[];
   var cursor = 0;

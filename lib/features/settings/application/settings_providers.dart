@@ -5,7 +5,6 @@ import '../../../core/notifications/notification_service.dart';
 import '../domain/notification_prefs.dart';
 import '../domain/notification_prefs_repository.dart';
 
-/// Bound at the composition root (`bootstrap/dependencies.dart`).
 final notificationPrefsRepositoryProvider = Provider<NotificationPrefsRepository>(
   (ref) => throw UnimplementedError('notificationPrefsRepositoryProvider must be overridden'),
 );

@@ -1,11 +1,8 @@
 import 'catalog_models.dart';
 
-/// Built-in appliance-type catalog, mirroring the `0005_asset_categories.sql`
-/// seed. Used by the fake repository and as the fallback whenever the backend
-/// catalog is empty/unreachable — the type picker is never blank.
-///
-/// The ids are NOT database UUIDs; repositories treat them as "no FK" and
-/// carry the type name in `assets.metadata` instead.
+/// Built-in appliance-type catalog mirroring the `0005_asset_categories.sql` seed; used by the fake repository and as the
+/// fallback whenever the backend catalog is empty or unreachable. The ids are not database UUIDs: repositories treat them
+/// as "no FK" and carry the type name in `assets.metadata` instead.
 const commonAssetCategories = <AssetCategory>[
   AssetCategory(id: 'cat_car', slug: 'vehicle-car', name: 'Car', iconToken: 'car', defaults: [
     DefaultReminder(kind: ReminderKind.insurance, label: 'Insurance', startMonths: 12, recurrence: Recurrence.yearly),

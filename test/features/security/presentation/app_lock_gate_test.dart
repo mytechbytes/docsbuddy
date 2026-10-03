@@ -15,8 +15,7 @@ class _SignedIn extends FakeAuthRepository {
   bool get isSignedIn => true;
 }
 
-/// A tab-like home with a text field, and a button that pushes a detail page
-/// over it — the case the old, home-screen-only lock missed.
+/// A tab-like home with a text field, and a button that pushes a detail page over it (the lock must cover pushed screens too).
 class _Home extends StatelessWidget {
   const _Home();
 

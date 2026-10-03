@@ -12,9 +12,7 @@ extension L10nContext on BuildContext {
 
   String get _locale => Localizations.localeOf(this).toString();
 
-  /// English keeps the app's day-first style ("5 Mar 2026"); every other
-  /// language uses its own conventions ("2026年3月5日", "5 mars 2026"), which
-  /// word order, separators and even the numerals differ in.
+  /// English keeps the app's day-first style; other languages use their own date conventions.
   bool get _isEnglish => Localizations.localeOf(this).languageCode == 'en';
 
   /// e.g. "5 Mar 2026".
@@ -33,10 +31,7 @@ extension L10nContext on BuildContext {
   String formatNumericDate(DateTime date) =>
       _latinDigits((_isEnglish ? DateFormat('dd / MM / yyyy', _locale) : DateFormat.yMd(_locale)).format(date));
 
-  /// Letter-spacing for localized text. Tracking — positive on small caps
-  /// labels, negative on headlines — is a Latin typographic device: in Arabic
-  /// it breaks the joins between letters, in Devanagari the headline bar, and
-  /// Chinese doesn't use it. Those languages get none.
+  /// Letter-spacing for localized text. Tracking breaks letter joins in Arabic and Devanagari, so ar/hi/zh get none.
   double tracking(double spacing) =>
       const {'ar', 'hi', 'zh'}.contains(Localizations.localeOf(this).languageCode) ? 0 : spacing;
 
@@ -47,9 +42,7 @@ extension L10nContext on BuildContext {
   String formatOffsets(List<int> offsets) => offsets.map(l10n.durationDaysShort).join(' · ');
 }
 
-/// Arabic dates default to Arabic-Indic digits ("٢٠٢٦") while every number the
-/// app prints (counts, amounts) uses Latin ones; one screen mixing the two
-/// reads as a bug, so dates use Latin digits too. A no-op for other languages.
+/// Arabic dates default to Arabic-Indic digits while every other number is Latin; normalised so a screen never mixes them.
 String _latinDigits(String text) => text.replaceAllMapped(RegExp('[\u0660-\u0669\u06F0-\u06F9]'), (m) {
       final unit = m[0]!.codeUnitAt(0);
       return String.fromCharCode(0x30 + (unit >= 0x06F0 ? unit - 0x06F0 : unit - 0x0660));

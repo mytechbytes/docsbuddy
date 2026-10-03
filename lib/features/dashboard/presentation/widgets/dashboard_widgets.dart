@@ -46,10 +46,8 @@ class AppBarIconButton extends StatelessWidget {
   }
 }
 
-/// 2×2 grid of coloured summary cards — every tile counts **services**
-/// (asset_dates rows) and deep-links to its filtered list — plus a
-/// full-width total-appliances card. With large text two cards no longer fit
-/// side by side, so they stack in one column.
+/// 2×2 grid of coloured summary cards; each counts **services** (asset_dates rows) and deep-links to its filtered list,
+/// plus a full-width total-appliances card. With large text two cards no longer fit side by side, so they stack.
 class StatGrid extends StatelessWidget {
   const StatGrid({super.key, required this.counts, required this.assetCount});
   final Map<ReminderFilter, int> counts;

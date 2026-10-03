@@ -1,9 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 
-/// Initialises Firebase once for the whole app (Crashlytics + push). False
-/// when this platform has no Firebase config (e.g. iOS without
-/// GoogleService-Info.plist, desktop). The logger that uses it lives in
-/// `core/logging`.
+/// Initialises Firebase once (Crashlytics + push); false when the platform has no Firebase config
+/// (e.g. iOS without GoogleService-Info.plist, desktop).
 Future<bool> initFirebase() async {
   if (Firebase.apps.isNotEmpty) return true; // already up (e.g. a startup retry)
   try {

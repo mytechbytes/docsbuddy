@@ -142,7 +142,6 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
     if (picked != null) setState(() => amc ? _amcDate = picked : _purchaseDate = picked);
   }
 
-  /// "Others" popup — name the custom appliance type.
   Future<void> _askCustomType() async {
     final controller = TextEditingController(text: _customType ?? '');
     final name = await showDialog<String>(

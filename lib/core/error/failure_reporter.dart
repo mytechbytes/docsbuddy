@@ -3,18 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../logging/app_logger.dart';
 import 'app_failure.dart';
 
-/// The one place that decides which failures are worth a log line.
-///
-/// Failures reach the user from many directions — a button's action, a screen
-/// that couldn't load, a sign-in callback — and before this each of them
-/// showed an unexpected error and then forgot it, so production never heard
-/// about the ones it most needed to. Every path now ends here:
-///
-///  * unexpected failures ([UnknownFailure], or an exception nobody
-///    translated) are errors, with the real cause;
-///  * the server refusing a request ([ServerFailure]) is a warning;
-///  * what users cause and the app expects (offline, wrong password, a form
-///    left blank) is not logged at all.
+/// Decides which failures are worth a log line, and logs each once.
+/// Unexpected failures ([UnknownFailure], or an untranslated exception) are errors with the real cause;
+/// [ServerFailure] is a warning; failures the user causes and the app expects (offline, wrong password,
+/// blank form) are not logged.
 class FailureReporter {
   FailureReporter(this._logger);
 
@@ -52,9 +44,7 @@ class FailureReporter {
 
 final failureReporterProvider = Provider<FailureReporter>((ref) => FailureReporter(ref.watch(appLoggerProvider)));
 
-/// Reports every provider that ends in an error — a screen's data failing to
-/// load, a controller entering its error state — without each screen having
-/// to remember to.
+/// Reports every provider that ends in an error (a screen failing to load, a controller in its error state).
 final class FailureObserver extends ProviderObserver {
   const FailureObserver(this._reporter);
 
