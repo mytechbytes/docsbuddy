@@ -724,6 +724,12 @@ abstract class AppLocalizations {
   /// **'Notifications are blocked in system settings.'**
   String get errorNotificationsBlocked;
 
+  /// No description provided for @errorSignInIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in didn’t finish. Please try again.'**
+  String get errorSignInIncomplete;
+
   /// No description provided for @commonAdd.
   ///
   /// In en, this message translates to:
@@ -2575,7 +2581,7 @@ abstract class AppLocalizations {
   /// No description provided for @startupFailedBody.
   ///
   /// In en, this message translates to:
-  /// **'Something went wrong while getting things ready. Check your connection and try again.'**
+  /// **'Something went wrong while getting things ready. Please try again. If it keeps happening, tell support what the line below says.'**
   String get startupFailedBody;
 
   /// No description provided for @startupRetry.

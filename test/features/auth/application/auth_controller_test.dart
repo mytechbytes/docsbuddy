@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:docsbuddy/core/error/app_failure.dart';
 import 'package:docsbuddy/features/auth/application/auth_controller.dart';
 import 'package:docsbuddy/features/auth/domain/auth_repository.dart';
@@ -11,10 +13,14 @@ class _MockAuth extends Mock implements AuthRepository {}
 
 void main() {
   late _MockAuth auth;
+  late StreamController<AppFailure> callbackFailures;
   late ProviderContainer container;
 
   setUp(() {
     auth = _MockAuth();
+    callbackFailures = StreamController<AppFailure>.broadcast();
+    addTearDown(callbackFailures.close);
+    when(() => auth.callbackFailures).thenAnswer((_) => callbackFailures.stream);
     container = makeContainer(overrides: testOverrides(auth: auth));
     container.listen(authControllerProvider, (_, _) {});
   });
@@ -63,5 +69,29 @@ void main() {
 
     when(() => auth.updatePassword('Secret123')).thenAnswer((_) async {});
     expect(await controller().resetPassword('Secret123', 'Secret123'), isTrue);
+  });
+
+  test('a sign-in that fails after the browser returns reaches the same error state the pages show', () async {
+    const failure = AuthFailure('Sign-in didn’t finish.', reason: FailureReason.signInIncomplete);
+
+    callbackFailures.add(failure);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(container.read(authControllerProvider).error, same(failure));
+  });
+
+  test('every callback failure notifies, even a repeat of the previous one', () async {
+    const failure = AuthFailure('Sign-in didn’t finish.', reason: FailureReason.signInIncomplete);
+    var notified = 0;
+    container.listen(authControllerProvider, (_, next) {
+      if (next is AsyncError) notified++;
+    });
+
+    callbackFailures.add(failure);
+    await Future<void>.delayed(Duration.zero);
+    callbackFailures.add(failure);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(notified, 2, reason: 'a second failed attempt must show its message again');
   });
 }

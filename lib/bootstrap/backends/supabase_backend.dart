@@ -1,10 +1,13 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/env.dart';
 import '../../core/data/file_storage.dart';
+import '../../core/data/secure_store.dart';
 import '../../core/data/supabase/oauth_browser_closer.dart';
 import '../../core/data/supabase/supabase_file_storage.dart';
+import '../../core/data/supabase/supabase_initializer.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/data/supabase/secure_supabase_storage.dart';
 import '../../features/auth/data/auth_remote_data_source.dart';
@@ -43,14 +46,17 @@ class SupabaseBackend implements BackendModule {
 
   /// Initialises the SDK from [Env] and returns the module.
   static Future<SupabaseBackend> initialize({required AppLogger logger}) async {
-    final supabase = await Supabase.initialize(
+    // Review #9: persist the session + PKCE verifier in Keychain/Keystore
+    // rather than the SDK's default SharedPreferences. The store degrades
+    // instead of throwing — a keystore that can't be read must not stop the
+    // app from starting.
+    final vault = SecureStore(const FlutterSecureStorage(), logger: logger);
+    final supabase = await initializeSupabase(
       url: Env.supabaseUrl,
       publishableKey: Env.supabaseAnonKey,
-      // Review #9: persist the session + PKCE verifier in Keychain/Keystore
-      // rather than the SDK's default SharedPreferences.
-      authOptions: const FlutterAuthClientOptions(
-        localStorage: SecureLocalStorage(),
-        pkceAsyncStorage: SecurePkceStorage(),
+      authOptions: FlutterAuthClientOptions(
+        localStorage: SecureLocalStorage(vault),
+        pkceAsyncStorage: SecurePkceStorage(vault),
       ),
     );
     closeBrowserOnSignIn(supabase.client.auth.onAuthStateChange);
@@ -62,7 +68,7 @@ class SupabaseBackend implements BackendModule {
 
   @override
   AuthRepository createAuthRepository() =>
-      RemoteAuthRepository(SupabaseAuthRemoteDataSource(_client), redirectUrl: Env.authRedirectUrl);
+      RemoteAuthRepository(SupabaseAuthRemoteDataSource(_client), redirectUrl: Env.authRedirectUrl, logger: _logger);
 
   @override
   CatalogRepository createCatalogRepository() =>

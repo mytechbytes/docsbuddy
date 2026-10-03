@@ -38,6 +38,25 @@ void main() {
     await sub.cancel();
     await events.close();
   });
+
+  test('authErrors is the other half: only the errors, as values', () async {
+    final events = StreamController<AuthState>();
+    final errors = <Object>[];
+    final done = Completer<void>();
+    final sub = authErrors(events.stream).listen(errors.add, onDone: done.complete);
+
+    final failure = const AuthException('Code verifier could not be found in local storage.');
+    events
+      ..add(AuthState(AuthChangeEvent.signedIn, Session(accessToken: 't', tokenType: 'bearer', user: _user)))
+      ..addError(failure)
+      ..add(AuthState(AuthChangeEvent.signedOut, null));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(errors, [failure]);
+    await events.close();
+    await done.future;
+    await sub.cancel();
+  });
 }
 
 const _user = User(id: 'u1', appMetadata: {}, userMetadata: {}, aud: 'authenticated', createdAt: '2026-01-01T00:00:00Z');

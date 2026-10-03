@@ -13,7 +13,15 @@ import 'auth_providers.dart';
 /// navigate.
 class AuthController extends AsyncNotifier<void> {
   @override
-  FutureOr<void> build() {}
+  FutureOr<void> build() {
+    // A browser sign-in (Google / Apple / Microsoft) finishes after the call
+    // that started it returned, so its failures can only arrive here — as the
+    // same error state the pages already show.
+    final failures = _repo.callbackFailures.listen((failure) {
+      if (ref.mounted) state = AsyncError(failure, StackTrace.current);
+    });
+    ref.onDispose(failures.cancel);
+  }
 
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 

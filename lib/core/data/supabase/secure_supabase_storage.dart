@@ -1,49 +1,48 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Default vault: iOS Keychain / Android Keystore-backed (hardware where
-/// available). One instance is shared by both adapters below.
-const _vault = FlutterSecureStorage();
+import '../secure_store.dart';
 
 /// Persists the Supabase session in secure storage instead of the SDK's default
 /// SharedPreferences (architecture review #9). The session string is treated as
 /// an opaque blob — exactly how `SharedPreferencesLocalStorage` treats it.
+///
+/// The SDK reads this during `Supabase.initialize` without guarding against
+/// exceptions, so [store] must never throw (see [SecureStore]); an unreadable
+/// session comes back as `null`, i.e. signed out.
 class SecureLocalStorage extends LocalStorage {
-  const SecureLocalStorage();
+  const SecureLocalStorage(this._store);
 
-  final FlutterSecureStorage _storage = _vault;
+  final SecureStore _store;
   static const _sessionKey = 'supabase_session';
 
   @override
   Future<void> initialize() async {}
 
   @override
-  Future<bool> hasAccessToken() => _storage.containsKey(key: _sessionKey);
+  Future<bool> hasAccessToken() => _store.containsKey(_sessionKey);
 
   @override
-  Future<String?> accessToken() => _storage.read(key: _sessionKey);
+  Future<String?> accessToken() => _store.read(_sessionKey);
 
   @override
-  Future<void> removePersistedSession() => _storage.delete(key: _sessionKey);
+  Future<void> removePersistedSession() => _store.delete(_sessionKey);
 
   @override
-  Future<void> persistSession(String persistSessionString) =>
-      _storage.write(key: _sessionKey, value: persistSessionString);
+  Future<void> persistSession(String persistSessionString) => _store.write(_sessionKey, persistSessionString);
 }
 
 /// Stores the PKCE code verifier in secure storage during the OAuth/OTP flow.
 class SecurePkceStorage extends GotrueAsyncStorage {
-  const SecurePkceStorage();
+  const SecurePkceStorage(this._store);
 
-  final FlutterSecureStorage _storage = _vault;
-
-  @override
-  Future<String?> getItem({required String key}) => _storage.read(key: key);
+  final SecureStore _store;
 
   @override
-  Future<void> setItem({required String key, required String value}) =>
-      _storage.write(key: key, value: value);
+  Future<String?> getItem({required String key}) => _store.read(key);
 
   @override
-  Future<void> removeItem({required String key}) => _storage.delete(key: key);
+  Future<void> setItem({required String key, required String value}) => _store.write(key, value);
+
+  @override
+  Future<void> removeItem({required String key}) => _store.delete(key);
 }

@@ -79,9 +79,10 @@ class _StartupGateState extends State<StartupGate> {
           },
           stepLabel: l10n.startupStepCount(step.index + 1, StartupStep.values.length),
         ),
-      _ => StartupScreen.failed(
+      final state => StartupScreen.failed(
           title: l10n.startupFailedTitle,
           body: l10n.startupFailedBody,
+          detail: state is StartupFailed ? state.summary : null,
           retryLabel: l10n.startupRetry,
           onRetry: _retry,
         ),

@@ -1,5 +1,6 @@
 import 'package:docsbuddy/bootstrap/app_startup.dart';
 import 'package:docsbuddy/bootstrap/backends/fake_backend.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,5 +68,21 @@ void main() {
     expect(retry.last, isA<StartupReady>());
     expect(firebaseRuns, 1, reason: 'Firebase must not be initialised twice');
     expect(backendRuns, 2);
+  });
+
+  group('StartupFailed.summary', () {
+    test('is the first line of the error, so the screen shows the real cause', () {
+      final failed = StartupFailed(
+        PlatformException(code: 'Exception encountered', message: 'read', details: 'Failed to unwrap key\n\tat javax.crypto.Cipher'),
+      );
+      expect(failed.summary, isNot(contains('\n')));
+      expect(failed.summary, contains('Exception encountered'));
+    });
+
+    test('is capped so a long stack trace cannot fill the screen', () {
+      final failed = StartupFailed(StateError('x' * 500));
+      expect(failed.summary.length, lessThanOrEqualTo(141));
+      expect(failed.summary, endsWith('…'));
+    });
   });
 }

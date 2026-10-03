@@ -33,5 +33,6 @@ String localizeFailure(AppLocalizations l10n, Object error) {
     FailureReason.filesUnavailable => l10n.errorFilesUnavailable,
     FailureReason.appOpenFailed => l10n.errorAppOpenFailed,
     FailureReason.notificationsBlocked => l10n.errorNotificationsBlocked,
+    FailureReason.signInIncomplete => l10n.errorSignInIncomplete,
   };
 }

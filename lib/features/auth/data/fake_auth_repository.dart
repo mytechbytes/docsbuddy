@@ -26,6 +26,9 @@ class FakeAuthRepository implements AuthRepository {
   bool get isSignedIn => _signedIn;
 
   @override
+  Stream<AppFailure> get callbackFailures => const Stream.empty();
+
+  @override
   Future<void> signInWithPassword({required String email, required String password}) async {
     await _delay();
     if (!_emailRe.hasMatch(email)) throw const AuthFailure('Enter a valid email address.');

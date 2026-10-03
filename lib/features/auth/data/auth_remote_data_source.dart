@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum OAuthProviderKind { google, apple, microsoft }
@@ -5,6 +7,9 @@ enum OAuthProviderKind { google, apple, microsoft }
 /// Thin GoTrue wrapper — no validation, no error translation.
 abstract interface class AuthRemoteDataSource {
   Stream<bool> sessionChanges();
+
+  /// Why a sign-in that returned from the browser did not produce a session.
+  Stream<Object> callbackErrors();
   bool get hasSession;
   Future<void> signInWithPassword(String email, String password);
   Future<void> signUp({required String email, required String password, required String fullName, String? redirectTo});
@@ -26,6 +31,16 @@ abstract interface class AuthRemoteDataSource {
 Stream<bool> sessionFlags(Stream<AuthState> events) =>
     events.map((s) => s.session != null).handleError((Object _) {});
 
+/// The other half of [sessionFlags]: just the errors, as values. They are what
+/// the SDK reports when it can't turn an OAuth / email-link redirect into a
+/// session — otherwise they would only reach the log.
+Stream<Object> authErrors(Stream<AuthState> events) => events.transform(
+      StreamTransformer<AuthState, Object>.fromHandlers(
+        handleData: (_, _) {},
+        handleError: (error, _, sink) => sink.add(error),
+      ),
+    );
+
 class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
   SupabaseAuthRemoteDataSource(this._client);
 
@@ -35,6 +50,9 @@ class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
 
   @override
   Stream<bool> sessionChanges() => sessionFlags(_auth.onAuthStateChange);
+
+  @override
+  Stream<Object> callbackErrors() => authErrors(_auth.onAuthStateChange);
 
   @override
   bool get hasSession => _auth.currentSession != null;

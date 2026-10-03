@@ -17,6 +17,7 @@ class StartupScreen extends StatelessWidget {
   const StartupScreen.progress({super.key, required String this.message, required String this.stepLabel})
       : title = null,
         body = null,
+        detail = null,
         retryLabel = null,
         onRetry = null;
 
@@ -25,6 +26,7 @@ class StartupScreen extends StatelessWidget {
     super.key,
     required String this.title,
     required String this.body,
+    this.detail,
     required String this.retryLabel,
     required VoidCallback this.onRetry,
   })  : message = null,
@@ -34,6 +36,9 @@ class StartupScreen extends StatelessWidget {
   final String? stepLabel;
   final String? title;
   final String? body;
+
+  /// What actually went wrong, small and selectable, so it can be reported.
+  final String? detail;
   final String? retryLabel;
   final VoidCallback? onRetry;
 
@@ -63,7 +68,7 @@ class StartupScreen extends StatelessWidget {
                         const DbLogo(size: 34, stacked: true),
                         const SizedBox(height: 40),
                         _failed
-                            ? _Failure(title: title!, body: body!, retryLabel: retryLabel!, onRetry: onRetry!)
+                            ? _Failure(title: title!, body: body!, detail: detail, retryLabel: retryLabel!, onRetry: onRetry!)
                             : _Progress(message: message!, stepLabel: stepLabel!),
                       ],
                     ),
@@ -115,9 +120,10 @@ class _Progress extends StatelessWidget {
 }
 
 class _Failure extends StatelessWidget {
-  const _Failure({required this.title, required this.body, required this.retryLabel, required this.onRetry});
+  const _Failure({required this.title, required this.body, this.detail, required this.retryLabel, required this.onRetry});
   final String title;
   final String body;
+  final String? detail;
   final String retryLabel;
   final VoidCallback onRetry;
 
@@ -135,6 +141,12 @@ class _Failure extends StatelessWidget {
         Text(body,
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 13.5, height: 1.4, color: AppColors.muted)),
+        if (detail != null) ...[
+          const SizedBox(height: 10),
+          SelectableText(detail!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 11.5, height: 1.35, color: AppColors.muted, fontFamily: 'monospace')),
+        ],
         const SizedBox(height: 18),
         FilledButton(
           onPressed: onRetry,

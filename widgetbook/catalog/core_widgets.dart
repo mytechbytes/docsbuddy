@@ -155,6 +155,18 @@ WidgetbookCategory coreWidgets() => WidgetbookCategory(
             ),
             root: true,
           ),
+          screen(
+            'Failed, with the cause',
+            (_) => StartupScreen.failed(
+              title: 'Couldn’t start DocsBuddy',
+              body: 'Something went wrong while getting things ready. Please try again. '
+                  'If it keeps happening, tell support what the line below says.',
+              detail: 'PlatformException(Exception encountered, read, java.security.InvalidKeyException: Failed to unwrap key',
+              retryLabel: 'Try again',
+              onRetry: _noop,
+            ),
+            root: true,
+          ),
         ]),
         WidgetbookComponent(name: 'Feedback snackbars', useCases: [
           component(

@@ -129,6 +129,7 @@
   "errorFilesUnavailable": "Connect a backend to open or share files.",
   "errorAppOpenFailed": "Could not open that app.",
   "errorNotificationsBlocked": "Notifications are blocked in system settings.",
+  "errorSignInIncomplete": "Sign-in didn’t finish. Please try again.",
   "commonAdd": "Add",
   "commonEdit": "Edit",
   "commonDelete": "Delete",
@@ -691,6 +692,6 @@
     }
   },
   "startupFailedTitle": "Couldn't start DocsBuddy",
-  "startupFailedBody": "Something went wrong while getting things ready. Check your connection and try again.",
+  "startupFailedBody": "Something went wrong while getting things ready. Please try again. If it keeps happening, tell support what the line below says.",
   "startupRetry": "Try again"
 }

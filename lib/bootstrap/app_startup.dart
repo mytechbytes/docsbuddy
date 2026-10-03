@@ -45,6 +45,14 @@ final class StartupRunning extends StartupState {
 final class StartupFailed extends StartupState {
   const StartupFailed(this.error);
   final Object error;
+
+  /// One line saying what actually broke, for the failure screen. Without it a
+  /// tester can only report "it won't start" — and the screen can't tell a
+  /// network problem from a broken keystore.
+  String get summary {
+    final line = error.toString().split('\n').first.trim();
+    return line.length <= 140 ? line : '${line.substring(0, 140)}…';
+  }
 }
 
 final class StartupReady extends StartupState {

@@ -1,4 +1,6 @@
 import '../../../core/data/supabase/supabase_guard.dart';
+import '../../../core/error/app_failure.dart';
+import '../../../core/logging/app_logger.dart';
 import '../domain/auth_repository.dart';
 import 'auth_remote_data_source.dart';
 
@@ -10,9 +12,18 @@ import 'auth_remote_data_source.dart';
 /// in the Supabase dashboard and a deep-link redirect configured per platform;
 /// the recovery-code flow assumes email OTP is enabled.
 class RemoteAuthRepository implements AuthRepository {
-  RemoteAuthRepository(this._remote, {required this.redirectUrl});
+  RemoteAuthRepository(
+    this._remote, {
+    required this.redirectUrl,
+    this._logger,
+    this._callbackGrace = const Duration(seconds: 1),
+  });
 
   final AuthRemoteDataSource _remote;
+  final AppLogger? _logger;
+
+  /// How long a callback error waits before it is believed (see [callbackFailures]).
+  final Duration _callbackGrace;
 
   /// Where confirm-email / OAuth flows return to (the app's deep link).
   final String redirectUrl;
@@ -22,6 +33,22 @@ class RemoteAuthRepository implements AuthRepository {
 
   @override
   bool get isSignedIn => _remote.hasSession;
+
+  @override
+  Stream<AppFailure> get callbackFailures async* {
+    await for (final error in _remote.callbackErrors()) {
+      // The hosted redirect page can deliver the same link twice; the second
+      // exchange always fails ("code verifier not found") even though the
+      // first one already signed the user in. Wait for that to land, and only
+      // report a failure if there is still no session.
+      await Future<void>.delayed(_callbackGrace);
+      if (isSignedIn) continue;
+      _logger?.warning('Sign-in callback failed', error: error);
+      yield isNetworkError(error)
+          ? const NetworkFailure()
+          : const AuthFailure('Sign-in didn’t finish. Please try again.', reason: FailureReason.signInIncomplete);
+    }
+  }
 
   @override
   Future<void> signInWithPassword({required String email, required String password}) =>

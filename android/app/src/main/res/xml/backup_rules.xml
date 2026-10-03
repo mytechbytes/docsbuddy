@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup rules for Android 6-11 (android:fullBackupContent).
+
+     flutter_secure_storage keeps its ciphertext in shared_prefs/FlutterSecureStorage.xml
+     and the wrapped AES key in shared_prefs/FlutterSecureKeyStorage.xml. The key that
+     unwraps them lives in the device's Android Keystore and is NOT backed up, so a
+     restored copy can never be decrypted on the new device ("Failed to unwrap key").
+     Leave both files out; everything else is backed up as usual. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
+    <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml" />
+</full-backup-content>

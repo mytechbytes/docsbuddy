@@ -343,6 +343,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications are blocked in system settings.';
 
   @override
+  String get errorSignInIncomplete =>
+      'Sign-in didn’t finish. Please try again.';
+
+  @override
   String get commonAdd => 'Add';
 
   @override
@@ -1406,7 +1410,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startupFailedBody =>
-      'Something went wrong while getting things ready. Check your connection and try again.';
+      'Something went wrong while getting things ready. Please try again. If it keeps happening, tell support what the line below says.';
 
   @override
   String get startupRetry => 'Try again';

@@ -88,4 +88,5 @@ enum FailureReason {
   filesUnavailable,
   appOpenFailed,
   notificationsBlocked,
+  signInIncomplete,
 }

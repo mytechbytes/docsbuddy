@@ -72,6 +72,9 @@ void main() {
     expect(find.text("Couldn't start DocsBuddy"), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
     expect(find.text('THE APP'), findsNothing);
+    // It says what broke, and does not blame the network when it wasn't.
+    expect(find.textContaining('offline'), findsOneWidget);
+    expect(find.textContaining('Check your connection'), findsNothing);
 
     failBackend = false;
     await tester.tap(find.text('Try again'));
