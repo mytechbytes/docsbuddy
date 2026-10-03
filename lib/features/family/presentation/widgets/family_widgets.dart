@@ -102,8 +102,8 @@ class FamilyOverview extends StatelessWidget {
         ),
         const SizedBox(height: 22),
         Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(context.l10n.familyMembers, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
+          padding: EdgeInsetsDirectional.only(start: 4, bottom: 8),
+          child: Text(context.l10n.familyMembers, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: context.tracking(1))),
         ),
         for (final m in members)
           MemberTile(
@@ -268,7 +268,7 @@ class MemberTile extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Padding(
-                padding: const EdgeInsets.only(left: 52),
+                padding: const EdgeInsetsDirectional.only(start: 52),
                 child: Wrap(
                   spacing: 4,
                   runSpacing: 4,

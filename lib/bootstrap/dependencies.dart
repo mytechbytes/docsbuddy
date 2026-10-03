@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/config/env.dart';
+import '../core/l10n/language_controller.dart';
+import '../core/l10n/language_store.dart';
 import '../core/logging/app_logger.dart';
 import '../core/notifications/notification_service.dart';
 import '../core/providers/core_providers.dart';
@@ -39,6 +41,7 @@ List<Override> platformOverrides(
       appLoggerProvider.overrideWithValue(logger),
       sharedPreferencesProvider.overrideWithValue(prefs),
       appearanceStoreProvider.overrideWith((ref) => SharedPrefsAppearanceStore(ref.watch(sharedPreferencesProvider))),
+      languageStoreProvider.overrideWith((ref) => SharedPrefsLanguageStore(ref.watch(sharedPreferencesProvider))),
       onboardingStoreProvider.overrideWith((ref) => SharedPrefsOnboardingStore(ref.watch(sharedPreferencesProvider))),
       securityPrefsStoreProvider
           .overrideWith((ref) => SharedPrefsSecurityPrefsStore(ref.watch(sharedPreferencesProvider))),

@@ -1,4 +1,5 @@
 import 'package:docsbuddy/core/error/app_failure.dart';
+import 'package:docsbuddy/core/l10n/app_language.dart';
 import 'package:docsbuddy/core/l10n/failure_text.dart';
 import 'package:docsbuddy/core/l10n/l10n.dart';
 import 'package:docsbuddy/features/catalog/domain/catalog_models.dart';
@@ -21,10 +22,15 @@ void main() {
     );
   });
 
-  test('every failure reason has a translation', () {
-    for (final reason in FailureReason.values) {
-      final args = reason == FailureReason.uploadsFailed ? const <Object>[1, 2] : const <Object>[];
-      expect(localizeFailure(l10n, ServerFailure('fallback', reason: reason, args: args)), isNot('fallback'));
+  test('every failure reason has a translation, in every language', () async {
+    for (final language in AppLanguage.explicit) {
+      final strings = await AppLocalizations.delegate.load(language.locale!);
+      for (final reason in FailureReason.values) {
+        final args = reason == FailureReason.uploadsFailed ? const <Object>[1, 2] : const <Object>[];
+        final text = localizeFailure(strings, ServerFailure('fallback', reason: reason, args: args));
+        expect(text, isNot('fallback'), reason: '$reason in ${language.code}');
+        expect(text.trim(), isNotEmpty, reason: '$reason in ${language.code}');
+      }
     }
   });
 

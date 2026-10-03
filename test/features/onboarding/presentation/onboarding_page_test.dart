@@ -58,4 +58,12 @@ void main() {
     expect(find.text('SIGN-UP'), findsOneWidget);
     expect(store.isComplete, isTrue);
   });
+
+  testWidgets('the illustration’s day count is worded in the user’s language, not hard-coded', (tester) async {
+    await tester.pumpWidget(testApp(const OnboardingPage(), locale: const Locale('es')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('25 d'), findsOneWidget, reason: 'Spanish "d" for días, with the space the language uses');
+    expect(find.text('25d'), findsNothing);
+  });
 }

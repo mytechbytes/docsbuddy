@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
 import '../../catalog/application/catalog_providers.dart';
@@ -96,11 +97,11 @@ class DashboardTab extends ConsumerWidget {
         backgroundColor: context.palette.background,
         elevation: 0,
         titleSpacing: 20,
-        title: const Align(alignment: Alignment.centerLeft, child: DbLogo(size: 20)),
+        title: const Align(alignment: AlignmentDirectional.centerStart, child: DbLogo(size: 20)),
         actions: [
           AppBarIconButton(Icons.search, onTap: () => context.push(AppRoutes.search)),
           AppBarIconButton(Icons.notifications_none, dot: overdue, onTap: () => context.push(AppRoutes.notifications)),
-          const Padding(padding: EdgeInsets.only(left: 8), child: ProfileAvatarButton()),
+          const Padding(padding: EdgeInsetsDirectional.only(start: 8), child: ProfileAvatarButton()),
           const SizedBox(width: 16),
         ],
       ),
@@ -118,7 +119,7 @@ class DashboardTab extends ConsumerWidget {
           await ref.read(dashboardViewProvider.future);
         },
         child: dashboard.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => LoadingView(message: context.l10n.loadingDashboard),
           error: (e, _) => Center(child: Text(context.failureText(e))),
           data: (view) {
             final filter = view.filter;

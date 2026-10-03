@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../../core/widgets/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/buttons.dart';
@@ -25,7 +26,6 @@ class TotpEnrollSheet extends ConsumerStatefulWidget {
 class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
   final _code = TextEditingController();
   String? _error;
-  bool _busy = false;
 
   @override
   void dispose() {
@@ -34,17 +34,16 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
   }
 
   Future<void> _verify() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    setState(() => _error = null);
     try {
-      await ref.read(securityActionsProvider).confirmTotp(widget.enrollment, _code.text);
+      await withLoader(
+        context,
+        context.l10n.loadingVerifyingCode,
+        () => ref.read(securityActionsProvider).confirmTotp(widget.enrollment, _code.text),
+      );
       if (mounted) Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) setState(() => _error = context.failureText(e));
-    } finally {
-      if (mounted) setState(() => _busy = false);
+    } catch (e, stack) {
+      if (mounted) setState(() => _error = context.failureMessage(e, stack));
     }
   }
 
@@ -104,7 +103,7 @@ class _TotpEnrollSheetState extends ConsumerState<TotpEnrollSheet> {
                 errorText: _error,
               ),
               const SizedBox(height: 16),
-              PrimaryButton(label: context.l10n.securityVerifyEnable, isLoading: _busy, onPressed: _verify),
+              PrimaryButton(label: context.l10n.securityVerifyEnable, onPressed: _verify),
             ],
           ),
         ),
@@ -123,7 +122,7 @@ class BiometricTypesRow extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: Text(context.l10n.securityAvailable(kinds.map((k) => k.displayName(context)).join(' · ')),
             style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
       ),

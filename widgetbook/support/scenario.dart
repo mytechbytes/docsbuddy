@@ -1,5 +1,7 @@
 // The "world" a use case runs in: which backend state the real controllers and
 // repositories see. Screens are shown in the same four states a user meets.
+import 'package:docsbuddy/core/l10n/language_controller.dart';
+import 'package:docsbuddy/core/l10n/language_store.dart';
 import 'package:docsbuddy/bootstrap/backend_module.dart';
 import 'package:docsbuddy/bootstrap/backends/demo_backend.dart';
 import 'package:docsbuddy/bootstrap/backends/fake_backend.dart';
@@ -132,6 +134,7 @@ Future<DemoRefs> _refsOf(CatalogRepository catalog) async {
 List<Override> _platform(SecurityPrefs securityPrefs) => [
       appLoggerProvider.overrideWithValue(const SilentLogger()),
       appearanceStoreProvider.overrideWithValue(InMemoryAppearanceStore()),
+      languageStoreProvider.overrideWithValue(InMemoryLanguageStore()),
       onboardingStoreProvider.overrideWithValue(InMemoryOnboardingStore()),
       notificationServiceProvider.overrideWithValue(const NoopNotificationService()),
       pushMessagingServiceProvider.overrideWithValue(const NoopPushMessagingService()),

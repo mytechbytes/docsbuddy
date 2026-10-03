@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:docsbuddy/bootstrap/backends/fake_backend.dart';
 import 'package:docsbuddy/bootstrap/dependencies.dart';
+import 'package:docsbuddy/core/l10n/app_language.dart';
 import 'package:docsbuddy/core/l10n/l10n.dart';
+import 'package:docsbuddy/core/l10n/language_controller.dart';
+import 'package:docsbuddy/core/l10n/language_store.dart';
 import 'package:docsbuddy/core/logging/app_logger.dart';
 import 'package:docsbuddy/core/notifications/local_alert.dart';
 import 'package:docsbuddy/core/notifications/notification_service.dart';
@@ -145,6 +148,8 @@ List<Override> testOverrides({
   SecurityPrefsStore? securityPrefs,
   AppLogger? logger,
   DateTime Function()? clock,
+  AppLanguage language = AppLanguage.english,
+  List<Locale>? deviceLocales,
 }) =>
     [
       ...backendOverrides(FakeBackend(
@@ -158,6 +163,8 @@ List<Override> testOverrides({
       )),
       appLoggerProvider.overrideWithValue(logger ?? RecordingLogger()),
       appearanceStoreProvider.overrideWithValue(InMemoryAppearanceStore()),
+      languageStoreProvider.overrideWithValue(InMemoryLanguageStore(language)),
+      if (deviceLocales != null) deviceLocalesProvider.overrideWithValue(deviceLocales),
       onboardingStoreProvider.overrideWithValue(onboarding ?? InMemoryOnboardingStore()),
       notificationServiceProvider.overrideWithValue(notifications ?? RecordingNotificationService()),
       pushMessagingServiceProvider.overrideWithValue(push ?? FakePushMessagingService()),
@@ -174,10 +181,11 @@ ProviderContainer makeContainer({List<Override> overrides = const []}) =>
     ProviderContainer.test(overrides: overrides.isEmpty ? testOverrides() : overrides, retry: noRetry);
 
 /// Wraps [child] in a ProviderScope with the fake bindings and a MaterialApp.
-Widget testApp(Widget child, {List<Override>? overrides}) => ProviderScope(
+Widget testApp(Widget child, {List<Override>? overrides, Locale? locale}) => ProviderScope(
       overrides: overrides ?? testOverrides(),
       retry: noRetry,
       child: MaterialApp(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: child,

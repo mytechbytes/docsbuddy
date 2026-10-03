@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/error/app_failure.dart';
 import '../../../core/providers/core_providers.dart';
 import '../../../core/widgets/feedback.dart';
@@ -15,6 +16,8 @@ import '../domain/notification_prefs.dart';
 import '../../../routing/app_routes.dart';
 import '../../../core/widgets/settings_list.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../core/l10n/language_controller.dart';
+import 'language_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../application/appearance_controller.dart';
 import '../domain/appearance.dart';
@@ -27,13 +30,16 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final loading = ref.watch(authControllerProvider).isLoading;
     final profile = ref.watch(profileProvider).value;
     final prefs = ref.watch(notificationPrefsProvider).value ?? const NotificationPrefs();
     final members = ref.watch(familyControllerProvider).value?.members ?? const [];
 
     void setChannel(NotificationChannel channel, bool enabled) =>
-        runAction(context, () => ref.read(notificationPrefsProvider.notifier).setChannel(channel, enabled));
+        runAction(
+          context,
+          () => ref.read(notificationPrefsProvider.notifier).setChannel(channel, enabled),
+          loading: context.l10n.loadingSavingSettings,
+        );
 
     return Scaffold(
       backgroundColor: context.palette.background,
@@ -122,6 +128,12 @@ class SettingsPage extends ConsumerWidget {
               trailing: SettingsValue(_appearanceName(context, ref.watch(appearanceProvider))),
             ),
             SettingsRow(
+              icon: Icons.language_outlined,
+              title: context.l10n.settingsLanguage,
+              onTap: () => pickLanguage(context, ref),
+              trailing: SettingsValue(languageLabel(context, ref.watch(languageProvider))),
+            ),
+            SettingsRow(
               icon: Icons.cloud_outlined,
               title: context.l10n.settingsBackend,
               trailing: SettingsValue(ref.watch(backendLabelProvider)),
@@ -161,12 +173,14 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.logout,
               title: context.l10n.commonSignOut,
               danger: true,
-              onTap: loading
-                  ? null
-                  : () async {
-                      final ok = await ref.read(authControllerProvider.notifier).signOut();
-                      if (ok && context.mounted) context.go(AppRoutes.signIn);
-                    },
+              onTap: () async {
+                final ok = await withLoader(
+                  context,
+                  context.l10n.loadingSigningOut,
+                  () => ref.read(authControllerProvider.notifier).signOut(),
+                );
+                if (ok && context.mounted) context.go(AppRoutes.signIn);
+              },
             ),
           ]),
         ],
@@ -234,7 +248,11 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
     if (saved == true && context.mounted) {
-      await runAction(context, () => ref.read(notificationPrefsProvider.notifier).setDefaultOffsets(selected));
+      await runAction(
+        context,
+        () => ref.read(notificationPrefsProvider.notifier).setDefaultOffsets(selected),
+        loading: context.l10n.loadingSavingSettings,
+      );
     }
   }
 }
@@ -266,6 +284,7 @@ Future<void> _editQuietHours(BuildContext context, WidgetRef ref, NotificationPr
           (hour: start.hour, minute: start.minute),
           (hour: end.hour, minute: end.minute),
         ),
+    loading: context.l10n.loadingSavingSettings,
   );
 }
 

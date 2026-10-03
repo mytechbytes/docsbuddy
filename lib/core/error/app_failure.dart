@@ -89,4 +89,11 @@ enum FailureReason {
   appOpenFailed,
   notificationsBlocked,
   signInIncomplete,
+  invalidCredentials,
+  emailNotConfirmed,
+  userExists,
+  weakPassword,
+  rateLimited,
+  codeInvalid,
+  samePassword,
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
@@ -10,6 +11,7 @@ import '../application/rooms_controller.dart';
 import '../domain/catalog_models.dart';
 import 'widgets/catalog_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/rich_template.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -31,7 +33,7 @@ class RoomDetailPage extends ConsumerWidget {
         iconTheme: IconThemeData(color: context.palette.text),
       ),
       body: detail.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => LoadingView(message: context.l10n.loadingRoom),
         error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (d) {
           if (d == null) {
@@ -88,13 +90,11 @@ class RoomDetailPage extends ConsumerWidget {
               ),
               Text.rich(
                 TextSpan(
-                  text: context.l10n.catalogRoomSummaryLead,
-                  children: [
-                    TextSpan(
+                  children: richTemplate(context.l10n.catalogRoomSummary('{appliances}'), {
+                    'appliances': TextSpan(
                         text: context.l10n.catalogApplianceCount(inRoom.length),
                         style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
-                    const TextSpan(text: '.'),
-                  ],
+                  }),
                 ),
                 style: TextStyle(fontSize: 13.5, color: context.palette.textMuted),
               ),
@@ -145,13 +145,21 @@ class RoomDetailPage extends ConsumerWidget {
     );
     controller.dispose();
     if (name == null || !context.mounted) return;
-    await runAction(context, () => ref.read(locationsProvider.notifier).rename(room, name));
+    await runAction(
+      context,
+      () => ref.read(locationsProvider.notifier).rename(room, name),
+      loading: context.l10n.loadingRenamingRoom,
+    );
   }
 
   Future<void> _changePhoto(BuildContext context, WidgetRef ref, Location room) async {
     final f = await pickImage(context);
     if (f == null || !context.mounted) return;
-    await runAction(context, () => ref.read(locationsProvider.notifier).setPhoto(room, f));
+    await runAction(
+      context,
+      () => ref.read(locationsProvider.notifier).setPhoto(room, f),
+      loading: context.l10n.loadingUploadingPhoto,
+    );
   }
 }
 
@@ -253,7 +261,7 @@ class _ApplianceGroupCard extends StatelessWidget {
             Padding(
               padding: EdgeInsets.fromLTRB(12, 0, 12, 10),
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: Text(context.l10n.catalogNoRemindersOnAppliance,
                     style: TextStyle(fontSize: 11.5, color: context.palette.textMuted)),
               ),

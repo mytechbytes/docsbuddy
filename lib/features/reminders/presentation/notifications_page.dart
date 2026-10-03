@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/reminder_providers.dart';
@@ -31,7 +32,7 @@ class NotificationsPage extends ConsumerWidget {
         title: Text(context.l10n.commonNotifications, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: inbox.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => LoadingView(message: context.l10n.loadingNotifications),
         error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (box) {
           final overdue = box.overdue;

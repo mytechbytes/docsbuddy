@@ -6,10 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/rich_template.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -64,19 +66,26 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
   }
 
   Future<void> _verify() async {
-    final ok = await ref.read(authControllerProvider.notifier).verifyResetCode(widget.email, _controller.text);
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingVerifyingCode,
+      () => ref.read(authControllerProvider.notifier).verifyResetCode(widget.email, _controller.text),
+    );
     if (ok && mounted) context.go(AppRoutes.resetPassword);
   }
 
   Future<void> _resend() async {
-    final ok = await ref.read(authControllerProvider.notifier).sendResetCode(widget.email);
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingSendingNewCode,
+      () => ref.read(authControllerProvider.notifier).sendResetCode(widget.email),
+    );
     if (ok) _startCountdown();
   }
 
   @override
   Widget build(BuildContext context) {
     listenAuthErrors(ref, context);
-    final loading = ref.watch(authControllerProvider).isLoading;
     final code = _controller.text;
 
     return AuthScaffold(
@@ -116,16 +125,15 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
           ],
         ),
         const SizedBox(height: 22),
-        PrimaryButton(label: context.l10n.authOtpVerify, isLoading: loading, onPressed: _verify),
+        PrimaryButton(label: context.l10n.authOtpVerify, onPressed: _verify),
         const SizedBox(height: 18),
         Center(
           child: _secondsLeft > 0
               ? Text.rich(TextSpan(
                   style: TextStyle(fontSize: 13, color: context.palette.textMuted),
-                  children: [
-                    TextSpan(text: context.l10n.authOtpResendIn),
-                    TextSpan(text: _countdownText, style: TextStyle(color: context.palette.text, fontWeight: FontWeight.w700)),
-                  ],
+                  children: richTemplate(context.l10n.authOtpResendIn('{time}'), {
+                    'time': TextSpan(text: _countdownText, style: TextStyle(color: context.palette.text, fontWeight: FontWeight.w700)),
+                  }),
                 ))
               : InlineLink(lead: context.l10n.authOtpNotReceivedLead, action: context.l10n.authOtpResend, onTap: _resend),
         ),

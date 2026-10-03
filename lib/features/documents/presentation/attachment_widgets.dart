@@ -66,22 +66,34 @@ Future<void> shareBytes(Uint8List bytes, {required String name, required String 
 }
 
 /// Downloads a stored document and opens the share sheet.
-Future<void> shareDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) => runAction(context, () async {
-      final bytes = await ref.read(assetDocumentsControllerProvider(doc.assetId)).download(doc);
-      await shareBytes(bytes, name: doc.title, mime: doc.mimeType);
-    });
+Future<void> shareDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
+  Uint8List? bytes;
+  final downloaded = await runAction(
+    context,
+    () async => bytes = await ref.read(assetDocumentsControllerProvider(doc.assetId)).download(doc),
+    loading: context.l10n.loadingPreparingDocument,
+  );
+  // The loader is gone before the share sheet opens over the page.
+  if (!downloaded || bytes == null || !context.mounted) return;
+  await runLocalAction(context, () => shareBytes(bytes!, name: doc.title, mime: doc.mimeType));
+}
 
 /// Opens a stored document: images in the in-app viewer, everything else in
 /// the platform viewer for its type.
-Future<void> openDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) => runAction(context, () async {
-      final url = await ref.read(assetDocumentsControllerProvider(doc.assetId)).viewUrl(doc);
-      if (!context.mounted) return;
-      if (doc.isImage) {
-        ImageViewerPage.open(context, title: doc.title, url: url, onShare: () => shareDocument(context, ref, doc));
-      } else {
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      }
-    });
+Future<void> openDocument(BuildContext context, WidgetRef ref, DocumentMeta doc) async {
+  String? url;
+  final found = await runAction(
+    context,
+    () async => url = await ref.read(assetDocumentsControllerProvider(doc.assetId)).viewUrl(doc),
+    loading: context.l10n.loadingOpeningDocument,
+  );
+  if (!found || url == null || !context.mounted) return;
+  if (doc.isImage) {
+    ImageViewerPage.open(context, title: doc.title, url: url!, onShare: () => shareDocument(context, ref, doc));
+  } else {
+    await runLocalAction(context, () => launchUrl(Uri.parse(url!), mode: LaunchMode.externalApplication));
+  }
+}
 
 /// Full-page image viewer: pinch-zoom / pan / double-tap zoom on a dark
 /// canvas, with the file name in the bar. Works from a URL (stored
@@ -141,7 +153,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
             fit: BoxFit.contain,
             loadingBuilder: (context, child, progress) => progress == null
                 ? child
-                : const Center(child: CircularProgressIndicator(color: Colors.white70)),
+                : Center(child: _ImageLoading(message: context.l10n.loadingImage)),
             errorBuilder: (context, _, _) => Center(
                 child: Text(context.l10n.docsImageLoadFailed, style: const TextStyle(color: Colors.white70))),
           );
@@ -262,9 +274,9 @@ class PickedMediaGrid extends StatelessWidget {
                       : Icon(fileTypeIcon(f.name), color: context.palette.textSecondary, size: 30),
                 ),
               ),
-              Positioned(
+              PositionedDirectional(
                 top: -6,
-                right: -6,
+                end: -6,
                 child: InkWell(
                   onTap: () => onRemove(i),
                   child: Container(
@@ -327,13 +339,34 @@ class DocumentGrid extends ConsumerWidget {
             onTap: () => openDocument(context, ref, docs[i]),
             onShare: () => shareDocument(context, ref, docs[i]),
             onDelete: canDelete
-                ? () => runAction(context, () => ref.read(assetDocumentsControllerProvider(assetId)).delete(docs[i]))
+                ? () => runAction(
+                      context,
+                      () => ref.read(assetDocumentsControllerProvider(assetId)).delete(docs[i]),
+                      loading: context.l10n.loadingDeletingDocument,
+                    )
                 : null,
           ),
         );
       },
     );
   }
+}
+
+/// The image viewer's loader: white on black like the rest of the viewer.
+class _ImageLoading extends StatelessWidget {
+  const _ImageLoading({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(color: Colors.white70),
+          const SizedBox(height: 16),
+          Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+        ],
+      );
 }
 
 class _DocCard extends ConsumerWidget {
@@ -362,7 +395,7 @@ class _DocCard extends ConsumerWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 6, 2, 6),
+              padding: const EdgeInsetsDirectional.fromSTEB(10, 6, 2, 6),
               child: Row(
                 children: [
                   Expanded(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/family_controller.dart';
@@ -30,7 +31,7 @@ class FamilyPage extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () => ref.read(familyControllerProvider.notifier).refresh(),
         child: state.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => LoadingView(message: context.l10n.loadingFamily),
           error: (e, _) => FamilyErrorState(message: context.failureText(e), onRetry: () => _family(ref).refresh()),
           data: (view) => !view.hasFamily
               ? ListView(
@@ -72,7 +73,7 @@ class FamilyPage extends ConsumerWidget {
       ),
     );
     if (name == null || name.trim().isEmpty || !context.mounted) return;
-    await runAction(context, () => _family(ref).createFamily(name));
+    await runAction(context, () => _family(ref).createFamily(name), loading: context.l10n.loadingCreatingFamily);
   }
 
   Future<void> _joinDialog(BuildContext context, WidgetRef ref) async {
@@ -97,13 +98,18 @@ class FamilyPage extends ConsumerWidget {
     await runAction(
       context,
       () => _family(ref).acceptInvite(code),
+      loading: context.l10n.loadingJoiningFamily,
       success: context.l10n.familyJoined,
     );
   }
 
   Future<void> _inviteSheet(BuildContext context, WidgetRef ref) async {
     FamilyInvite? invite;
-    await runAction(context, () async => invite = await _family(ref).invite());
+    await runAction(
+      context,
+      () async => invite = await _family(ref).invite(),
+      loading: context.l10n.loadingCreatingInvite,
+    );
     if (invite == null || !context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -143,7 +149,7 @@ class FamilyPage extends ConsumerWidget {
       ),
     );
     if (role == null || !context.mounted) return;
-    await runAction(context, () => _family(ref).changeRole(member, role));
+    await runAction(context, () => _family(ref).changeRole(member, role), loading: context.l10n.loadingUpdatingRole);
   }
 
   Future<void> _removeMember(BuildContext context, WidgetRef ref, FamilyMember member) async {
@@ -163,7 +169,7 @@ class FamilyPage extends ConsumerWidget {
       ),
     );
     if (confirm != true || !context.mounted) return;
-    await runAction(context, () => _family(ref).removeMember(member));
+    await runAction(context, () => _family(ref).removeMember(member), loading: context.l10n.loadingRemovingMember);
   }
 
   Future<void> _leave(BuildContext context, WidgetRef ref) async {
@@ -183,6 +189,6 @@ class FamilyPage extends ConsumerWidget {
       ),
     );
     if (confirm != true || !context.mounted) return;
-    await runAction(context, () => _family(ref).leave());
+    await runAction(context, () => _family(ref).leave(), loading: context.l10n.loadingLeavingFamily);
   }
 }

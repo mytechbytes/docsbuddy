@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/app_theme.dart';
 import 'adaptive_layout.dart';
 
@@ -16,7 +17,7 @@ class SectionLabel extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(4, topPadding, 4, 8),
       child: Text(text.toUpperCase(),
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: context.tracking(1))),
     );
   }
 }
@@ -169,7 +170,7 @@ class SettingsToggleRow extends StatelessWidget {
             subtitle: stacked
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [?hint, Align(alignment: Alignment.centerLeft, child: toggle)],
+                    children: [?hint, Align(alignment: AlignmentDirectional.centerStart, child: toggle)],
                   )
                 : hint,
             trailing: stacked ? null : toggle,

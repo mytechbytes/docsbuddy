@@ -6,7 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config/env.dart';
 import '../core/logging/app_logger.dart';
 import 'backend_module.dart';
-import 'crash_reporting.dart' as crash;
+import '../core/logging/logging_setup.dart' as logging;
+import 'firebase_init.dart' as firebase;
 import 'dependencies.dart' as deps;
 
 /// What the startup screen tells the user, in the order it happens.
@@ -71,9 +72,9 @@ class AppStartup {
     void Function(AppLogger logger)? reportUncaughtErrors,
     Future<BackendModule> Function(AppLogger logger)? createBackend,
     Future<SharedPreferences> Function()? loadPreferences,
-  })  : _initFirebase = initFirebase ?? crash.initFirebase,
-        _createLogger = createLogger ?? crash.createLogger,
-        _reportUncaughtErrors = reportUncaughtErrors ?? crash.reportUncaughtErrors,
+  })  : _initFirebase = initFirebase ?? firebase.initFirebase,
+        _createLogger = createLogger ?? logging.createLogger,
+        _reportUncaughtErrors = reportUncaughtErrors ?? logging.reportUncaughtErrors,
         _createBackend = createBackend ?? ((logger) => deps.createBackend(Env.backend, logger: logger)),
         _loadPreferences = loadPreferences ?? SharedPreferences.getInstance;
 

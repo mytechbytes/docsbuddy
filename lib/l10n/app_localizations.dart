@@ -5,7 +5,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_ar.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_hi.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +97,14 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
+    Locale('en'),
+    Locale('es'),
+    Locale('fr'),
+    Locale('hi'),
+    Locale('zh'),
+  ];
 
   /// No description provided for @commonCancel.
   ///
@@ -256,23 +268,11 @@ abstract class AppLocalizations {
   /// **'Already have an account? '**
   String get authHaveAccountLead;
 
-  /// No description provided for @authTermsLead.
-  ///
-  /// In en, this message translates to:
-  /// **'I agree to the '**
-  String get authTermsLead;
-
   /// No description provided for @authTermsOfService.
   ///
   /// In en, this message translates to:
   /// **'Terms of Service'**
   String get authTermsOfService;
-
-  /// No description provided for @authTermsAnd.
-  ///
-  /// In en, this message translates to:
-  /// **' and '**
-  String get authTermsAnd;
 
   /// No description provided for @authPrivacyPolicy.
   ///
@@ -319,8 +319,8 @@ abstract class AppLocalizations {
   /// No description provided for @authOtpResendIn.
   ///
   /// In en, this message translates to:
-  /// **'Didn\'t receive it? Resend in '**
-  String get authOtpResendIn;
+  /// **'Didn\'t receive it? Resend in {time}'**
+  String authOtpResendIn(String time);
 
   /// No description provided for @authOtpNotReceivedLead.
   ///
@@ -1324,12 +1324,6 @@ abstract class AppLocalizations {
   /// **'Add a room photo'**
   String get catalogAddRoomPhoto;
 
-  /// No description provided for @catalogRoomSummaryLead.
-  ///
-  /// In en, this message translates to:
-  /// **'The heart of your home, managing '**
-  String get catalogRoomSummaryLead;
-
   /// No description provided for @catalogApplianceCount.
   ///
   /// In en, this message translates to:
@@ -1984,12 +1978,6 @@ abstract class AppLocalizations {
   /// **'Edit Reminder'**
   String get reminderEditTitle;
 
-  /// No description provided for @reminderFor.
-  ///
-  /// In en, this message translates to:
-  /// **'For '**
-  String get reminderFor;
-
   /// No description provided for @reminderSaveChanges.
   ///
   /// In en, this message translates to:
@@ -2589,6 +2577,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get startupRetry;
+
+  /// No description provided for @loadingSigningIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing you in…'**
+  String get loadingSigningIn;
+
+  /// No description provided for @loadingOpeningGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Google…'**
+  String get loadingOpeningGoogle;
+
+  /// No description provided for @loadingOpeningApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Apple…'**
+  String get loadingOpeningApple;
+
+  /// No description provided for @loadingOpeningMicrosoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Microsoft…'**
+  String get loadingOpeningMicrosoft;
+
+  /// No description provided for @loadingCreatingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your account…'**
+  String get loadingCreatingAccount;
+
+  /// No description provided for @loadingSendingCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending your code…'**
+  String get loadingSendingCode;
+
+  /// No description provided for @loadingSendingNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending a new code…'**
+  String get loadingSendingNewCode;
+
+  /// No description provided for @loadingVerifyingCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying your code…'**
+  String get loadingVerifyingCode;
+
+  /// No description provided for @loadingUpdatingPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating your password…'**
+  String get loadingUpdatingPassword;
+
+  /// No description provided for @loadingSigningOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing you out…'**
+  String get loadingSigningOut;
+
+  /// No description provided for @loadingSavingAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving your asset…'**
+  String get loadingSavingAsset;
+
+  /// No description provided for @loadingSavingReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving your reminder…'**
+  String get loadingSavingReminder;
+
+  /// No description provided for @loadingDeletingAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting asset…'**
+  String get loadingDeletingAsset;
+
+  /// No description provided for @loadingDeletingReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting reminder…'**
+  String get loadingDeletingReminder;
+
+  /// No description provided for @loadingUploadingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo…'**
+  String get loadingUploadingPhoto;
+
+  /// No description provided for @loadingCreatingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating room…'**
+  String get loadingCreatingRoom;
+
+  /// No description provided for @loadingRenamingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Renaming room…'**
+  String get loadingRenamingRoom;
+
+  /// No description provided for @loadingSavingRoomOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving room order…'**
+  String get loadingSavingRoomOrder;
+
+  /// No description provided for @loadingCreatingFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your family…'**
+  String get loadingCreatingFamily;
+
+  /// No description provided for @loadingJoiningFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining family…'**
+  String get loadingJoiningFamily;
+
+  /// No description provided for @loadingCreatingInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating invite…'**
+  String get loadingCreatingInvite;
+
+  /// No description provided for @loadingUpdatingRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating role…'**
+  String get loadingUpdatingRole;
+
+  /// No description provided for @loadingRemovingMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing member…'**
+  String get loadingRemovingMember;
+
+  /// No description provided for @loadingLeavingFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaving family…'**
+  String get loadingLeavingFamily;
+
+  /// No description provided for @loadingUploadingDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading document…'**
+  String get loadingUploadingDocument;
+
+  /// No description provided for @loadingOpeningDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening document…'**
+  String get loadingOpeningDocument;
+
+  /// No description provided for @loadingPreparingDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing document to share…'**
+  String get loadingPreparingDocument;
+
+  /// No description provided for @loadingDeletingDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting document…'**
+  String get loadingDeletingDocument;
+
+  /// No description provided for @loadingSavingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving settings…'**
+  String get loadingSavingSettings;
+
+  /// No description provided for @loadingPreparingAuthenticator.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing authenticator setup…'**
+  String get loadingPreparingAuthenticator;
+
+  /// No description provided for @loadingTurningOffTwoStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning off two-step verification…'**
+  String get loadingTurningOffTwoStep;
+
+  /// No description provided for @loadingSigningOutOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing out other devices…'**
+  String get loadingSigningOutOthers;
+
+  /// No description provided for @loadingMarkingDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Marking as done…'**
+  String get loadingMarkingDone;
+
+  /// No description provided for @loadingSavingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving your profile…'**
+  String get loadingSavingProfile;
+
+  /// No description provided for @loadingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading image…'**
+  String get loadingImage;
+
+  /// No description provided for @loadingDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your dashboard…'**
+  String get loadingDashboard;
+
+  /// No description provided for @loadingAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your assets…'**
+  String get loadingAssets;
+
+  /// No description provided for @loadingCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading categories…'**
+  String get loadingCategories;
+
+  /// No description provided for @loadingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading room…'**
+  String get loadingRoom;
+
+  /// No description provided for @loadingAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading asset…'**
+  String get loadingAsset;
+
+  /// No description provided for @loadingReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading reminders…'**
+  String get loadingReminders;
+
+  /// No description provided for @loadingDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading documents…'**
+  String get loadingDocuments;
+
+  /// No description provided for @loadingRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading rooms…'**
+  String get loadingRooms;
+
+  /// No description provided for @loadingFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your family…'**
+  String get loadingFamily;
+
+  /// No description provided for @loadingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your profile…'**
+  String get loadingProfile;
+
+  /// No description provided for @loadingNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading notifications…'**
+  String get loadingNotifications;
+
+  /// No description provided for @loadingSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking security settings…'**
+  String get loadingSecurity;
+
+  /// No description provided for @authTermsAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the {terms} and {privacy}.'**
+  String authTermsAgreement(String terms, String privacy);
+
+  /// No description provided for @catalogRoomSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'The heart of your home, managing {appliances}.'**
+  String catalogRoomSummary(String appliances);
+
+  /// No description provided for @reminderForAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'For {asset}'**
+  String reminderForAsset(String asset);
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @languageAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get languageAutomatic;
+
+  /// No description provided for @languageAutomaticHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your device language'**
+  String get languageAutomaticHint;
+
+  /// No description provided for @languageSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a language'**
+  String get languageSheetTitle;
+
+  /// No description provided for @errorInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password.'**
+  String get errorInvalidCredentials;
+
+  /// No description provided for @errorEmailNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your email first — check your inbox.'**
+  String get errorEmailNotConfirmed;
+
+  /// No description provided for @errorUserExists.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists.'**
+  String get errorUserExists;
+
+  /// No description provided for @errorWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'That password is too weak. Choose a stronger one.'**
+  String get errorWeakPassword;
+
+  /// No description provided for @errorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a moment and try again.'**
+  String get errorRateLimited;
+
+  /// No description provided for @errorCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is wrong or has expired.'**
+  String get errorCodeInvalid;
+
+  /// No description provided for @errorSamePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password you haven\'t used before.'**
+  String get errorSamePassword;
+
+  /// No description provided for @notificationDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get notificationDueToday;
+
+  /// No description provided for @notificationDueInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Due in 1 day} other{Due in {days} days}}'**
+  String notificationDueInDays(int days);
+
+  /// No description provided for @commonStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP {step} OF {total}'**
+  String commonStepOf(int step, int total);
 }
 
 class _AppLocalizationsDelegate
@@ -2601,8 +2973,14 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'ar',
+    'en',
+    'es',
+    'fr',
+    'hi',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2611,8 +2989,18 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
+    case 'hi':
+      return AppLocalizationsHi();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

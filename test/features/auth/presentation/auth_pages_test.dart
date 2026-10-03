@@ -101,6 +101,55 @@ void main() {
     expect(find.byType(SignInPage), findsOneWidget);
   });
 
+  testWidgets('sign-in shows its loader before the request finishes, and closes it on success', (tester) async {
+    await tester.pumpWidget(_harness());
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'anand@kumar.dev');
+    await tester.enterText(fields.at(1), 'secret123');
+    await tester.tap(find.text('Sign In'));
+    await tester.pump(const Duration(milliseconds: 200)); // the fake backend takes ~700 ms
+
+    expect(find.text('Signing you in…'), findsOneWidget, reason: 'the loader names what is happening');
+    expect(find.text('DASH'), findsNothing);
+
+    await settle(tester, const Duration(seconds: 1));
+    expect(find.text('Signing you in…'), findsNothing);
+    expect(find.text('DASH'), findsOneWidget);
+  });
+
+  testWidgets('a failed sign-in closes the loader and shows the reason', (tester) async {
+    await tester.pumpWidget(_harness());
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'anand@kumar.dev');
+    await tester.enterText(fields.at(1), '123');
+    await tester.tap(find.text('Sign In'));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('Signing you in…'), findsOneWidget);
+
+    await settle(tester, const Duration(seconds: 1));
+
+    expect(find.text('Signing you in…'), findsNothing);
+    expect(find.text('Incorrect email or password.'), findsOneWidget);
+    expect(find.byType(SignInPage), findsOneWidget);
+  });
+
+  testWidgets('the Google button says it is opening Google while it works', (tester) async {
+    await tester.pumpWidget(_harness());
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Continue with Google'));
+    await tester.tap(find.text('Continue with Google'));
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text('Opening Google…'), findsOneWidget);
+
+    await settle(tester, const Duration(seconds: 1));
+    expect(find.text('Opening Google…'), findsNothing);
+  });
+
   testWidgets('navigates from sign-in to sign-up', (tester) async {
     await tester.pumpWidget(_harness());
     await tester.pumpAndSettle();

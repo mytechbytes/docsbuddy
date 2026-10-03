@@ -90,13 +90,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authHaveAccountLead => 'Already have an account? ';
 
   @override
-  String get authTermsLead => 'I agree to the ';
-
-  @override
   String get authTermsOfService => 'Terms of Service';
-
-  @override
-  String get authTermsAnd => ' and ';
 
   @override
   String get authPrivacyPolicy => 'Privacy Policy';
@@ -122,7 +116,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authOtpVerify => 'Verify';
 
   @override
-  String get authOtpResendIn => 'Didn\'t receive it? Resend in ';
+  String authOtpResendIn(String time) {
+    return 'Didn\'t receive it? Resend in $time';
+  }
 
   @override
   String get authOtpNotReceivedLead => 'Didn\'t receive it? ';
@@ -697,9 +693,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogAddRoomPhoto => 'Add a room photo';
 
   @override
-  String get catalogRoomSummaryLead => 'The heart of your home, managing ';
-
-  @override
   String catalogApplianceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1068,9 +1061,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderEditTitle => 'Edit Reminder';
 
   @override
-  String get reminderFor => 'For ';
-
-  @override
   String get reminderSaveChanges => 'Save Changes';
 
   @override
@@ -1414,4 +1404,215 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startupRetry => 'Try again';
+
+  @override
+  String get loadingSigningIn => 'Signing you in…';
+
+  @override
+  String get loadingOpeningGoogle => 'Opening Google…';
+
+  @override
+  String get loadingOpeningApple => 'Opening Apple…';
+
+  @override
+  String get loadingOpeningMicrosoft => 'Opening Microsoft…';
+
+  @override
+  String get loadingCreatingAccount => 'Creating your account…';
+
+  @override
+  String get loadingSendingCode => 'Sending your code…';
+
+  @override
+  String get loadingSendingNewCode => 'Sending a new code…';
+
+  @override
+  String get loadingVerifyingCode => 'Verifying your code…';
+
+  @override
+  String get loadingUpdatingPassword => 'Updating your password…';
+
+  @override
+  String get loadingSigningOut => 'Signing you out…';
+
+  @override
+  String get loadingSavingAsset => 'Saving your asset…';
+
+  @override
+  String get loadingSavingReminder => 'Saving your reminder…';
+
+  @override
+  String get loadingDeletingAsset => 'Deleting asset…';
+
+  @override
+  String get loadingDeletingReminder => 'Deleting reminder…';
+
+  @override
+  String get loadingUploadingPhoto => 'Uploading photo…';
+
+  @override
+  String get loadingCreatingRoom => 'Creating room…';
+
+  @override
+  String get loadingRenamingRoom => 'Renaming room…';
+
+  @override
+  String get loadingSavingRoomOrder => 'Saving room order…';
+
+  @override
+  String get loadingCreatingFamily => 'Creating your family…';
+
+  @override
+  String get loadingJoiningFamily => 'Joining family…';
+
+  @override
+  String get loadingCreatingInvite => 'Creating invite…';
+
+  @override
+  String get loadingUpdatingRole => 'Updating role…';
+
+  @override
+  String get loadingRemovingMember => 'Removing member…';
+
+  @override
+  String get loadingLeavingFamily => 'Leaving family…';
+
+  @override
+  String get loadingUploadingDocument => 'Uploading document…';
+
+  @override
+  String get loadingOpeningDocument => 'Opening document…';
+
+  @override
+  String get loadingPreparingDocument => 'Preparing document to share…';
+
+  @override
+  String get loadingDeletingDocument => 'Deleting document…';
+
+  @override
+  String get loadingSavingSettings => 'Saving settings…';
+
+  @override
+  String get loadingPreparingAuthenticator => 'Preparing authenticator setup…';
+
+  @override
+  String get loadingTurningOffTwoStep => 'Turning off two-step verification…';
+
+  @override
+  String get loadingSigningOutOthers => 'Signing out other devices…';
+
+  @override
+  String get loadingMarkingDone => 'Marking as done…';
+
+  @override
+  String get loadingSavingProfile => 'Saving your profile…';
+
+  @override
+  String get loadingImage => 'Loading image…';
+
+  @override
+  String get loadingDashboard => 'Loading your dashboard…';
+
+  @override
+  String get loadingAssets => 'Loading your assets…';
+
+  @override
+  String get loadingCategories => 'Loading categories…';
+
+  @override
+  String get loadingRoom => 'Loading room…';
+
+  @override
+  String get loadingAsset => 'Loading asset…';
+
+  @override
+  String get loadingReminders => 'Loading reminders…';
+
+  @override
+  String get loadingDocuments => 'Loading documents…';
+
+  @override
+  String get loadingRooms => 'Loading rooms…';
+
+  @override
+  String get loadingFamily => 'Loading your family…';
+
+  @override
+  String get loadingProfile => 'Loading your profile…';
+
+  @override
+  String get loadingNotifications => 'Loading notifications…';
+
+  @override
+  String get loadingSecurity => 'Checking security settings…';
+
+  @override
+  String authTermsAgreement(String terms, String privacy) {
+    return 'I agree to the $terms and $privacy.';
+  }
+
+  @override
+  String catalogRoomSummary(String appliances) {
+    return 'The heart of your home, managing $appliances.';
+  }
+
+  @override
+  String reminderForAsset(String asset) {
+    return 'For $asset';
+  }
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get languageAutomatic => 'Automatic';
+
+  @override
+  String get languageAutomaticHint => 'Follows your device language';
+
+  @override
+  String get languageSheetTitle => 'Choose a language';
+
+  @override
+  String get errorInvalidCredentials => 'Incorrect email or password.';
+
+  @override
+  String get errorEmailNotConfirmed =>
+      'Please confirm your email first — check your inbox.';
+
+  @override
+  String get errorUserExists => 'An account with this email already exists.';
+
+  @override
+  String get errorWeakPassword =>
+      'That password is too weak. Choose a stronger one.';
+
+  @override
+  String get errorRateLimited =>
+      'Too many attempts. Please wait a moment and try again.';
+
+  @override
+  String get errorCodeInvalid => 'That code is wrong or has expired.';
+
+  @override
+  String get errorSamePassword => 'Choose a password you haven\'t used before.';
+
+  @override
+  String get notificationDueToday => 'Due today';
+
+  @override
+  String notificationDueInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Due in $days days',
+      one: 'Due in 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String commonStepOf(int step, int total) {
+    return 'STEP $step OF $total';
+  }
 }

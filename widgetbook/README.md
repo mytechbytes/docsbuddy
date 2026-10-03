@@ -29,6 +29,7 @@ Pick a use case in the tree, then use the panel on the right.
 |---|---|---|
 | Addons | **Theme** | Light or dark, using the app's own `AppTheme` |
 | Addons | **Text scale** | 0.8× to 3.0× font scaling (Android's "Large" is 1.3, "Largest" 2.0; iOS accessibility sizes reach about 3.1) |
+| Addons | **Locale** | Any shipped language (English, 中文, हिन्दी, Español, Français, العربية); *ar* also flips the layout right-to-left |
 | Addons | **Viewport** | Phone and tablet sizes, portrait and landscape, with safe areas. "Compact 320×568" is also what a phone becomes at Android's largest display size; "whole page" is that width but 4000dp tall, to see a long screen at once |
 | Addons | **Zoom** | Magnifies the preview to inspect detail; changes no layout |
 | Addons | **Inspector** | Tap a widget to see its size and padding |

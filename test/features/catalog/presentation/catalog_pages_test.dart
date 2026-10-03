@@ -6,6 +6,17 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../helpers/test_app.dart';
 
 void main() {
+  testWidgets('assets page says what it is loading, then shows the assets', (tester) async {
+    await tester.pumpWidget(testApp(const AssetsPage()));
+    await tester.pump();
+
+    expect(find.text('Loading your assets…'), findsOneWidget);
+
+    await settle(tester);
+    expect(find.text('Loading your assets…'), findsNothing);
+    expect(find.text('Samsung 340L Fridge'), findsOneWidget);
+  });
+
   testWidgets('assets page lists seeded assets and filters by search', (tester) async {
     await tester.pumpWidget(testApp(const AssetsPage()));
     await settle(tester);
@@ -32,6 +43,8 @@ void main() {
     await tester.tap(find.text('Save asset'));
     await settle(tester);
 
+    // Validation fails before any request, so the loader never lingers.
+    expect(find.text('Saving your asset…'), findsNothing);
     expect(find.text('Please enter a name.'), findsOneWidget);
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/security_providers.dart';
@@ -48,8 +49,8 @@ class SecurityPage extends ConsumerWidget {
           ]),
           SectionLabel(context.l10n.securityTwoFactorSection),
           status.when(
-            loading: () => const SettingsCard(children: [
-              Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
+            loading: () => SettingsCard(children: [
+              LoadingView.section(message: context.l10n.loadingSecurity),
             ]),
             error: (e, _) => SettingsCard(children: [
               Padding(
@@ -101,7 +102,11 @@ class SecurityPage extends ConsumerWidget {
   Future<void> _enroll(BuildContext context, WidgetRef ref) async {
     final actions = ref.read(securityActionsProvider);
     TotpEnrollment? enrollment;
-    await runAction(context, () async => enrollment = await actions.startTotpEnrollment());
+    await runAction(
+      context,
+      () async => enrollment = await actions.startTotpEnrollment(),
+      loading: context.l10n.loadingPreparingAuthenticator,
+    );
     if (enrollment == null || !context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -129,7 +134,11 @@ class SecurityPage extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    await runAction(context, () => ref.read(securityActionsProvider).disableTotp());
+    await runAction(
+      context,
+      () => ref.read(securityActionsProvider).disableTotp(),
+      loading: context.l10n.loadingTurningOffTwoStep,
+    );
   }
 
   Future<void> _pickAutoLock(BuildContext context, WidgetRef ref, int current) async {
@@ -199,6 +208,7 @@ class SecurityPage extends ConsumerWidget {
                   final ok = await runAction(
                     context,
                     () => ref.read(securityActionsProvider).signOutOtherDevices(),
+                    loading: context.l10n.loadingSigningOutOthers,
                     success: context.l10n.securityOthersSignedOut,
                   );
                   if (ok && context.mounted) Navigator.of(context).pop();

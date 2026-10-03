@@ -17,6 +17,7 @@ import '../../catalog/domain/catalog_models.dart';
 import '../../catalog/presentation/widgets/catalog_widgets.dart';
 import '../application/reminder_editor_controller.dart';
 import 'widgets/reminder_kind_tile.dart';
+import '../../../core/l10n/rich_template.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -116,6 +117,7 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
             editing: widget.editing,
             attachments: _attachments,
           ),
+      loading: context.l10n.loadingSavingReminder,
     );
     if (ok && mounted) Navigator.of(context).pop();
   }
@@ -125,7 +127,6 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
     final asset = ref.watch(assetProvider(widget.assetId)).value;
     final defaultOffsets = ref.watch(defaultNotifyOffsetsProvider);
     final offsets = _offsets ?? defaultOffsets.toSet();
-    final saving = ref.watch(reminderEditorControllerProvider).isLoading;
 
     return Scaffold(
       backgroundColor: context.palette.background,
@@ -147,11 +148,13 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: Text.rich(
-                  TextSpan(text: context.l10n.reminderFor, children: [
-                    TextSpan(text: asset.name, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
-                  ]),
+                  TextSpan(
+                    children: richTemplate(context.l10n.reminderForAsset('{asset}'), {
+                      'asset': TextSpan(text: asset.name, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
+                    }),
+                  ),
                   style: TextStyle(fontSize: 13, color: context.palette.textMuted),
                 ),
               ),
@@ -173,7 +176,6 @@ class _AddReminderPageState extends ConsumerState<AddReminderPage> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: StepNav(
                 step: _step,
-                busy: saving,
                 nextLabel: _step < _stepAttach
                     ? context.l10n.commonNext
                     : (_isEdit ? context.l10n.reminderSaveChanges : context.l10n.reminderSave),

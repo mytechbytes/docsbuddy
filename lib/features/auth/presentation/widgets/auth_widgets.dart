@@ -13,7 +13,7 @@ import '../../../../core/theme/app_colors.dart';
 void listenAuthErrors(WidgetRef ref, BuildContext context) {
   ref.listen<AsyncValue<void>>(authControllerProvider, (prev, next) {
     if (next is AsyncError) {
-      context.showFailure(next.error);
+      context.showFailure(next.error, next.stackTrace);
     }
   });
 }
@@ -48,7 +48,7 @@ class AuthScaffold extends StatelessWidget {
                     child: showBack
                         ? IconButton(
                             padding: EdgeInsets.zero,
-                            alignment: Alignment.centerLeft,
+                            alignment: AlignmentDirectional.centerStart,
                             icon: Icon(Icons.arrow_back, size: 22, color: context.palette.text),
                             onPressed: () => Navigator.of(context).maybePop(),
                           )
@@ -88,7 +88,7 @@ class AuthHero extends StatelessWidget {
     return Column(
       crossAxisAlignment: align,
       children: [
-        Text(title, textAlign: textAlign, style: TextStyle(fontSize: big ? 30 : 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: context.palette.text)),
+        Text(title, textAlign: textAlign, style: TextStyle(fontSize: big ? 30 : 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: context.tracking(-0.5), color: context.palette.text)),
         if (subtitle != null) ...[
           const SizedBox(height: 8),
           Text(subtitle!, textAlign: textAlign, style: TextStyle(fontSize: 14, height: 1.45, color: context.palette.textMuted)),
@@ -153,7 +153,7 @@ class OrDivider extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text((label ?? context.l10n.authOrContinueWith).toUpperCase(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 11, color: context.palette.textMuted, letterSpacing: 1.2)),
+                  style: TextStyle(fontSize: 11, color: context.palette.textMuted, letterSpacing: context.tracking(1.2))),
             ),
           ),
           Expanded(child: Divider(color: context.palette.hairline, height: 1)),

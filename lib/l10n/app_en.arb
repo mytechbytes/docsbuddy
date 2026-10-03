@@ -27,9 +27,7 @@
   "authFullNameHint": "Your name",
   "authCreateAccountCta": "Create Account",
   "authHaveAccountLead": "Already have an account? ",
-  "authTermsLead": "I agree to the ",
   "authTermsOfService": "Terms of Service",
-  "authTermsAnd": " and ",
   "authPrivacyPolicy": "Privacy Policy",
   "authForgotSendCode": "Send Verification Code",
   "authRememberLead": "Remember it? ",
@@ -44,7 +42,7 @@
     }
   },
   "authOtpVerify": "Verify",
-  "authOtpResendIn": "Didn't receive it? Resend in ",
+  "authOtpResendIn": "Didn't receive it? Resend in {time}",
   "authOtpNotReceivedLead": "Didn't receive it? ",
   "authOtpResend": "Resend code",
   "authResetTitle": "Set a new password",
@@ -344,7 +342,6 @@
   "catalogNoAssets": "No assets yet. Tap “Add asset”.",
   "catalogRoomNotFound": "Room not found.",
   "catalogAddRoomPhoto": "Add a room photo",
-  "catalogRoomSummaryLead": "The heart of your home, managing ",
   "catalogApplianceCount": "{count, plural, =1{1 appliance} other{{count} appliances}}",
   "@catalogApplianceCount": {
     "placeholders": {
@@ -517,7 +514,6 @@
   "profileInvite": "Invite",
   "reminderAddTitle": "Add Reminder",
   "reminderEditTitle": "Edit Reminder",
-  "reminderFor": "For ",
   "reminderSaveChanges": "Save Changes",
   "reminderSave": "Save Reminder",
   "reminderTypeTitle": "Reminder type",
@@ -693,5 +689,117 @@
   },
   "startupFailedTitle": "Couldn't start DocsBuddy",
   "startupFailedBody": "Something went wrong while getting things ready. Please try again. If it keeps happening, tell support what the line below says.",
-  "startupRetry": "Try again"
+  "startupRetry": "Try again",
+  "loadingSigningIn": "Signing you in…",
+  "loadingOpeningGoogle": "Opening Google…",
+  "loadingOpeningApple": "Opening Apple…",
+  "loadingOpeningMicrosoft": "Opening Microsoft…",
+  "loadingCreatingAccount": "Creating your account…",
+  "loadingSendingCode": "Sending your code…",
+  "loadingSendingNewCode": "Sending a new code…",
+  "loadingVerifyingCode": "Verifying your code…",
+  "loadingUpdatingPassword": "Updating your password…",
+  "loadingSigningOut": "Signing you out…",
+  "loadingSavingAsset": "Saving your asset…",
+  "loadingSavingReminder": "Saving your reminder…",
+  "loadingDeletingAsset": "Deleting asset…",
+  "loadingDeletingReminder": "Deleting reminder…",
+  "loadingUploadingPhoto": "Uploading photo…",
+  "loadingCreatingRoom": "Creating room…",
+  "loadingRenamingRoom": "Renaming room…",
+  "loadingSavingRoomOrder": "Saving room order…",
+  "loadingCreatingFamily": "Creating your family…",
+  "loadingJoiningFamily": "Joining family…",
+  "loadingCreatingInvite": "Creating invite…",
+  "loadingUpdatingRole": "Updating role…",
+  "loadingRemovingMember": "Removing member…",
+  "loadingLeavingFamily": "Leaving family…",
+  "loadingUploadingDocument": "Uploading document…",
+  "loadingOpeningDocument": "Opening document…",
+  "loadingPreparingDocument": "Preparing document to share…",
+  "loadingDeletingDocument": "Deleting document…",
+  "loadingSavingSettings": "Saving settings…",
+  "loadingPreparingAuthenticator": "Preparing authenticator setup…",
+  "loadingTurningOffTwoStep": "Turning off two-step verification…",
+  "loadingSigningOutOthers": "Signing out other devices…",
+  "loadingMarkingDone": "Marking as done…",
+  "loadingSavingProfile": "Saving your profile…",
+  "loadingImage": "Loading image…",
+  "loadingDashboard": "Loading your dashboard…",
+  "loadingAssets": "Loading your assets…",
+  "loadingCategories": "Loading categories…",
+  "loadingRoom": "Loading room…",
+  "loadingAsset": "Loading asset…",
+  "loadingReminders": "Loading reminders…",
+  "loadingDocuments": "Loading documents…",
+  "loadingRooms": "Loading rooms…",
+  "loadingFamily": "Loading your family…",
+  "loadingProfile": "Loading your profile…",
+  "loadingNotifications": "Loading notifications…",
+  "loadingSecurity": "Checking security settings…",
+  "authTermsAgreement": "I agree to the {terms} and {privacy}.",
+  "@authTermsAgreement": {
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogRoomSummary": "The heart of your home, managing {appliances}.",
+  "@catalogRoomSummary": {
+    "placeholders": {
+      "appliances": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderForAsset": "For {asset}",
+  "@reminderForAsset": {
+    "placeholders": {
+      "asset": {
+        "type": "String"
+      }
+    }
+  },
+  "@authOtpResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLanguage": "Language",
+  "languageAutomatic": "Automatic",
+  "languageAutomaticHint": "Follows your device language",
+  "languageSheetTitle": "Choose a language",
+  "errorInvalidCredentials": "Incorrect email or password.",
+  "errorEmailNotConfirmed": "Please confirm your email first — check your inbox.",
+  "errorUserExists": "An account with this email already exists.",
+  "errorWeakPassword": "That password is too weak. Choose a stronger one.",
+  "errorRateLimited": "Too many attempts. Please wait a moment and try again.",
+  "errorCodeInvalid": "That code is wrong or has expired.",
+  "errorSamePassword": "Choose a password you haven't used before.",
+  "notificationDueToday": "Due today",
+  "notificationDueInDays": "{days, plural, =1{Due in 1 day} other{Due in {days} days}}",
+  "@notificationDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "commonStepOf": "STEP {step} OF {total}",
+  "@commonStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

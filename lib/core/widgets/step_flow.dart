@@ -39,9 +39,9 @@ class StepHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
-        Text('STEP ${step + 1} OF $total',
+        Text(context.l10n.commonStepOf(step + 1, total),
             style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1.2)),
+                fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: context.tracking(1.2))),
         const SizedBox(height: 4),
         Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.palette.text)),
         if (subtitle != null) ...[

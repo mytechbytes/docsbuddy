@@ -105,7 +105,7 @@ class ServiceDetailSheet extends ConsumerWidget {
             if (docs.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(context.l10n.catalogServiceDocuments,
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: context.tracking(1))),
               const SizedBox(height: 8),
               DocumentGrid(assetId: reminder.assetId, docs: docs),
             ],
@@ -145,7 +145,7 @@ class ServiceDetailSheet extends ConsumerWidget {
                 // each at full width.
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [done, const SizedBox(height: 10), edit, const SizedBox(height: 10), Align(alignment: Alignment.centerLeft, child: delete)],
+                  children: [done, const SizedBox(height: 10), edit, const SizedBox(height: 10), Align(alignment: AlignmentDirectional.centerStart, child: delete)],
                 );
               },
             ),

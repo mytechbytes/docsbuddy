@@ -1,3 +1,5 @@
+import 'package:docsbuddy/core/l10n/app_language.dart';
+import 'package:docsbuddy/core/l10n/language_controller.dart';
 import 'package:docsbuddy/features/catalog/data/fake_catalog_repository.dart';
 import 'package:docsbuddy/features/reminders/application/reminder_notification_sync.dart';
 import 'package:docsbuddy/features/reminders/application/reminder_providers.dart';
@@ -51,5 +53,20 @@ void main() {
     await container.read(notificationPrefsProvider.future);
     await container.read(notificationPrefsProvider.notifier).setDefaultOffsets({1, 60});
     expect(container.read(defaultNotifyOffsetsProvider), [60, 1]);
+  });
+
+  test('notifications are worded in the language in use, and re-worded when it changes', () async {
+    container.listen(reminderNotificationSyncProvider, (_, _) {});
+    await container.read(upcomingRemindersProvider.future);
+    await container.read(notificationPrefsProvider.future);
+    await pumpEventQueue();
+    expect(notifications.scheduled.last.map((a) => a.body), everyElement(startsWith('Due')));
+
+    await container.read(languageProvider.notifier).set(AppLanguage.spanish);
+    await pumpEventQueue();
+
+    final spanish = notifications.scheduled.last.map((a) => a.body);
+    expect(spanish, everyElement(startsWith('Vence')));
+    expect(notifications.scheduled.last.first.title, contains('—'), reason: 'titles are the user’s own words');
   });
 }

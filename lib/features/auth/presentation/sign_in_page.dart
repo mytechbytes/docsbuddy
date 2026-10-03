@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
@@ -29,29 +30,44 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   Future<void> _submit() async {
-    final ok = await ref.read(authControllerProvider.notifier).signIn(_email.text, _password.text);
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingSigningIn,
+      () => ref.read(authControllerProvider.notifier).signIn(_email.text, _password.text),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _google() async {
-    final ok = await ref.read(authControllerProvider.notifier).google();
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingOpeningGoogle,
+      () => ref.read(authControllerProvider.notifier).google(),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _apple() async {
-    final ok = await ref.read(authControllerProvider.notifier).apple();
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingOpeningApple,
+      () => ref.read(authControllerProvider.notifier).apple(),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _microsoft() async {
-    final ok = await ref.read(authControllerProvider.notifier).microsoft();
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingOpeningMicrosoft,
+      () => ref.read(authControllerProvider.notifier).microsoft(),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   @override
   Widget build(BuildContext context) {
     listenAuthErrors(ref, context);
-    final loading = ref.watch(authControllerProvider).isLoading;
 
     return AuthScaffold(
       showBack: false,
@@ -65,14 +81,14 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         AppTextField(label: context.l10n.commonPassword, controller: _password, icon: Icons.lock_outline, hint: '••••••••', obscure: true, textInputAction: TextInputAction.done, onSubmitted: (_) => _submit()),
         const SizedBox(height: 8),
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerEnd,
           child: GestureDetector(
             onTap: () => context.push(AppRoutes.forgotPassword),
             child: Text(context.l10n.commonForgotPassword, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),
           ),
         ),
         const SizedBox(height: 16),
-        PrimaryButton(label: context.l10n.authSignInCta, isLoading: loading, onPressed: _submit),
+        PrimaryButton(label: context.l10n.authSignInCta, onPressed: _submit),
         const OrDivider(),
         SocialButton(provider: SocialProvider.google, onPressed: _google),
         const SizedBox(height: 10),

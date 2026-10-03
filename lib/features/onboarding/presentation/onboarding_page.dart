@@ -184,14 +184,14 @@ class _Slide extends StatelessWidget {
                             decoration: BoxDecoration(color: context.palette.accentSoft, borderRadius: BorderRadius.circular(999)),
                             child: Text(
                               data.eyebrow.toUpperCase(),
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.accent, letterSpacing: 0.66),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.accent, letterSpacing: context.tracking(0.66)),
                             ),
                           ),
                           const SizedBox(height: 10),
                           Text(
                             data.title,
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: -0.5, color: context.palette.text),
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, height: 1.1, letterSpacing: context.tracking(-0.5), color: context.palette.text),
                           ),
                           const SizedBox(height: 10),
                           Text(

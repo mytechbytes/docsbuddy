@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../domain/reminder_filters.dart';
@@ -31,7 +32,7 @@ class FilteredRemindersPage extends ConsumerWidget {
         title: Text(filter.displayName(context), style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: reminders.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => LoadingView(message: context.l10n.loadingReminders),
         error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (filtered) {
           if (filtered.isEmpty) {

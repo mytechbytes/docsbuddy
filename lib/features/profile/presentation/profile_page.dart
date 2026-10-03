@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/error/app_failure.dart';
 import '../../../core/theme/app_colors.dart';
@@ -38,7 +39,7 @@ class ProfilePage extends ConsumerWidget {
         title: Text(context.l10n.profileTitle, style: TextStyle(fontWeight: FontWeight.w800, color: context.palette.text)),
       ),
       body: profile.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => LoadingView(message: context.l10n.loadingProfile),
         error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (p) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -99,7 +100,11 @@ class ProfilePage extends ConsumerWidget {
                 title: context.l10n.commonSignOut,
                 danger: true,
                 onTap: () async {
-                  final ok = await ref.read(authControllerProvider.notifier).signOut();
+                  final ok = await withLoader(
+                    context,
+                    context.l10n.loadingSigningOut,
+                    () => ref.read(authControllerProvider.notifier).signOut(),
+                  );
                   if (ok && context.mounted) context.go(AppRoutes.signIn);
                 },
               ),
@@ -113,7 +118,11 @@ class ProfilePage extends ConsumerWidget {
   Future<void> _changeAvatar(BuildContext context, WidgetRef ref) async {
     final f = await pickImage(context);
     if (f == null || !context.mounted) return;
-    await runAction(context, () => ref.read(profileProvider.notifier).setAvatar(f));
+    await runAction(
+      context,
+      () => ref.read(profileProvider.notifier).setAvatar(f),
+      loading: context.l10n.loadingUploadingPhoto,
+    );
   }
 
   Future<void> _editInfo(BuildContext context, WidgetRef ref, Profile p) async {
@@ -152,14 +161,16 @@ class ProfilePage extends ConsumerWidget {
                     label: context.l10n.commonSave,
                     onPressed: () async {
                       try {
-                        await ref
-                            .read(profileProvider.notifier)
-                            .updateInfo(displayName: name.text, phone: phone.text);
+                        await withLoader(
+                          context,
+                          context.l10n.loadingSavingProfile,
+                          () => ref.read(profileProvider.notifier).updateInfo(displayName: name.text, phone: phone.text),
+                        );
                         if (context.mounted) Navigator.of(context).pop(true);
                       } on ValidationFailure catch (e) {
                         setSheetState(() => phoneError = e.message);
-                      } catch (e) {
-                        if (context.mounted) context.showFailure(e);
+                      } catch (e, stack) {
+                        if (context.mounted) context.showFailure(e, stack);
                       }
                     },
                   ),
@@ -205,8 +216,8 @@ class _Avatar extends StatelessWidget {
                   style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white)),
             ),
           ),
-          Positioned(
-            right: 0,
+          PositionedDirectional(
+            end: 0,
             bottom: 0,
             child: Container(
               width: 30,
@@ -305,8 +316,8 @@ class _FamilyCard extends ConsumerWidget {
                   child: Stack(
                     children: [
                       for (var i = 0; i < members.length && i < 5; i++)
-                        Positioned(
-                          left: i * 20.0,
+                        PositionedDirectional(
+                          start: i * 20.0,
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,

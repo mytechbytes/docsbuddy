@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
 import '../domain/catalog_models.dart';
@@ -79,7 +80,7 @@ class _AppliancePickerPageState extends ConsumerState<AppliancePickerPage> {
           const SizedBox(height: 12),
           Expanded(
             child: categories.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => LoadingView(message: context.l10n.loadingCategories),
               error: (e, _) => Center(child: Text(context.failureText(e), style: TextStyle(color: context.palette.textMuted))),
               data: (filtered) {
                 if (filtered.isEmpty) {

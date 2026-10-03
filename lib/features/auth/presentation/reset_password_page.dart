@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
@@ -38,7 +39,11 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   Future<void> _submit() async {
-    final ok = await ref.read(authControllerProvider.notifier).resetPassword(_password.text, _confirm.text);
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingUpdatingPassword,
+      () => ref.read(authControllerProvider.notifier).resetPassword(_password.text, _confirm.text),
+    );
     if (ok && mounted) {
       context.showSuccess(context.l10n.authResetDone);
       context.go(AppRoutes.signIn);
@@ -48,7 +53,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     listenAuthErrors(ref, context);
-    final loading = ref.watch(authControllerProvider).isLoading;
     final checks = checkPassword(_password.text);
 
     return AuthScaffold(
@@ -72,7 +76,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
           ],
         ),
         const SizedBox(height: 18),
-        PrimaryButton(label: context.l10n.authResetCta, isLoading: loading, onPressed: _submit),
+        PrimaryButton(label: context.l10n.authResetCta, onPressed: _submit),
       ],
     );
   }

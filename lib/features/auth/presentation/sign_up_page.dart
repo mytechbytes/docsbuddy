@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../application/auth_controller.dart';
 import '../domain/password_policy.dart';
 import 'widgets/auth_widgets.dart';
 import '../../../routing/app_routes.dart';
+import '../../../core/l10n/rich_template.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -39,31 +41,46 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 
   Future<void> _submit() async {
-    final ok = await ref
-        .read(authControllerProvider.notifier)
-        .signUp(_name.text, _email.text, _password.text, acceptedTerms: _agreed);
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingCreatingAccount,
+      () => ref
+          .read(authControllerProvider.notifier)
+          .signUp(_name.text, _email.text, _password.text, acceptedTerms: _agreed),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _google() async {
-    final ok = await ref.read(authControllerProvider.notifier).google();
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingOpeningGoogle,
+      () => ref.read(authControllerProvider.notifier).google(),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _apple() async {
-    final ok = await ref.read(authControllerProvider.notifier).apple();
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingOpeningApple,
+      () => ref.read(authControllerProvider.notifier).apple(),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   Future<void> _microsoft() async {
-    final ok = await ref.read(authControllerProvider.notifier).microsoft();
+    final ok = await withLoader(
+      context,
+      context.l10n.loadingOpeningMicrosoft,
+      () => ref.read(authControllerProvider.notifier).microsoft(),
+    );
     if (ok && mounted) context.go(AppRoutes.dashboard);
   }
 
   @override
   Widget build(BuildContext context) {
     listenAuthErrors(ref, context);
-    final loading = ref.watch(authControllerProvider).isLoading;
     final (strength, strengthHint) = signUpStrength(_password.text);
 
     return AuthScaffold(
@@ -84,7 +101,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         const SizedBox(height: 14),
         _TermsRow(value: _agreed, onChanged: (v) => setState(() => _agreed = v)),
         const SizedBox(height: 16),
-        PrimaryButton(label: context.l10n.authCreateAccountCta, isLoading: loading, onPressed: _submit),
+        PrimaryButton(label: context.l10n.authCreateAccountCta, onPressed: _submit),
         const OrDivider(),
         SocialButton(provider: SocialProvider.google, onPressed: _google),
         const SizedBox(height: 10),
@@ -155,13 +172,10 @@ class _TermsRow extends StatelessWidget {
           child: Text.rich(
             TextSpan(
               style: TextStyle(fontSize: 12, height: 1.45, color: context.palette.textSecondary),
-              children: [
-                TextSpan(text: context.l10n.authTermsLead),
-                TextSpan(text: context.l10n.authTermsOfService, style: TextStyle(color: context.palette.accent, fontWeight: FontWeight.w700)),
-                TextSpan(text: context.l10n.authTermsAnd),
-                TextSpan(text: context.l10n.authPrivacyPolicy, style: TextStyle(color: context.palette.accent, fontWeight: FontWeight.w700)),
-                const TextSpan(text: '.'),
-              ],
+              children: richTemplate(context.l10n.authTermsAgreement('{terms}', '{privacy}'), {
+                'terms': TextSpan(text: context.l10n.authTermsOfService, style: TextStyle(color: context.palette.accent, fontWeight: FontWeight.w700)),
+                'privacy': TextSpan(text: context.l10n.authPrivacyPolicy, style: TextStyle(color: context.palette.accent, fontWeight: FontWeight.w700)),
+              }),
             ),
           ),
         ),

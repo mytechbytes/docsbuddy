@@ -20,15 +20,15 @@ class AppBarIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onTap,
-      padding: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsetsDirectional.only(start: 4),
       icon: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           Icon(icon, color: context.palette.textSecondary, size: 23),
           if (dot)
-            Positioned(
-              right: 1,
+            PositionedDirectional(
+              end: 1,
               top: 1,
               child: Container(
                 width: 8,
@@ -169,7 +169,7 @@ class StatCard extends StatelessWidget {
                   // A big count shrinks to fit rather than overflowing the card.
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
+                    alignment: AlignmentDirectional.centerStart,
                     child: Text(value, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: fg, height: 1.0)),
                   ),
                   const SizedBox(height: 4),

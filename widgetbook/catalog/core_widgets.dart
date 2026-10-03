@@ -2,6 +2,7 @@ import 'package:docsbuddy/core/error/app_failure.dart';
 import 'package:docsbuddy/core/widgets/buttons.dart';
 import 'package:docsbuddy/core/widgets/db_logo.dart';
 import 'package:docsbuddy/core/widgets/feedback.dart';
+import 'package:docsbuddy/core/widgets/loader.dart';
 import 'package:docsbuddy/core/widgets/settings_list.dart';
 import 'package:docsbuddy/core/widgets/startup_screen.dart';
 import 'package:docsbuddy/core/widgets/step_flow.dart';
@@ -166,6 +167,33 @@ WidgetbookCategory coreWidgets() => WidgetbookCategory(
               onRetry: _noop,
             ),
             root: true,
+          ),
+        ]),
+        WidgetbookComponent(name: 'Loaders', useCases: [
+          gallery('Blocking loader (dialog)', [
+            Labeled('Short message', const LoaderDialog(message: 'Signing you in…')),
+            Labeled(
+                'Long message wraps',
+                const LoaderDialog(
+                    message: 'Preparing your document to share. This can take a moment on a slow connection…')),
+          ]),
+          gallery('While a screen loads', [
+            Labeled('Screen body', const SizedBox(height: 220, child: LoadingView(message: 'Loading your assets…'))),
+            Labeled('Section inside a screen', const LoadingView.section(message: 'Loading documents…')),
+          ]),
+          component(
+            'Around a task (tap to run)',
+            (_) => Builder(
+              builder: (context) => PrimaryButton(
+                label: 'Run a 2 second task',
+                onPressed: () => runAction(
+                  context,
+                  () => Future<void>.delayed(const Duration(seconds: 2)),
+                  loading: 'Saving your asset…',
+                  success: 'Saved',
+                ),
+              ),
+            ),
           ),
         ]),
         WidgetbookComponent(name: 'Feedback snackbars', useCases: [

@@ -45,7 +45,7 @@ class DbLogo extends StatelessWidget {
     );
     // A logo scales *down* to the room it is given (an app bar title beside a
     // back arrow and three actions can be narrower than it) but never up.
-    Widget fit(Widget logo) => FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: logo);
+    Widget fit(Widget logo) => FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: logo);
 
     if (!showMark) return fit(wordmark);
 

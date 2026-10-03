@@ -226,6 +226,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
             invoices: _invoices,
             amcDate: _amcDate,
           ),
+      loading: context.l10n.loadingSavingAsset,
     );
     if (ok && mounted) Navigator.of(context).pop();
   }
@@ -233,7 +234,6 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).value ?? commonAssetCategories;
-    final saving = ref.watch(assetEditorControllerProvider).isLoading;
     final type = _effectiveType(categories);
 
     return Scaffold(
@@ -263,7 +263,6 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
               child: StepNav(
                 step: _step,
-                busy: saving,
                 nextLabel: switch (_step) {
                   _stepCategory => context.l10n.commonNext,
                   _stepType => type == null && _customType == null ? context.l10n.commonSkip : context.l10n.commonNext,
@@ -413,7 +412,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
       // ── Type-specific properties ──
       const SizedBox(height: 20),
       Text(context.l10n.catalogDetailsFor(type?.name ?? _customType ?? context.l10n.catalogThisAppliance).toUpperCase(),
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: context.tracking(1))),
       const SizedBox(height: 10),
       for (final spec in specs) ...[
         AppTextField(
@@ -443,7 +442,7 @@ class _AddAssetPageState extends ConsumerState<AddAssetPage> {
         const SizedBox(height: 12),
       ],
       Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: TextButton.icon(
           onPressed: () =>
               setState(() => _extraProps.add((TextEditingController(), TextEditingController()))),

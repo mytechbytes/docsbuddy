@@ -1,3 +1,5 @@
+import 'package:docsbuddy/core/l10n/app_language.dart';
+import 'package:docsbuddy/core/l10n/l10n.dart';
 import 'package:docsbuddy/core/theme/app_theme.dart';
 import 'package:widgetbook/widgetbook.dart';
 
@@ -27,5 +29,12 @@ List<WidgetbookAddon> buildAddons() => [
       ZoomAddon(),
       // Screen size, density and platform; sets MediaQuery for the use case.
       ViewportAddon(ScreenSizes.all),
+      // Every language the app ships, Arabic included: selecting it also
+      // mirrors the layout, so right-to-left problems show up here first.
+      LocalizationAddon(
+        locales: [for (final language in AppLanguage.explicit) language.locale!],
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        initialLocale: AppLanguage.english.locale,
+      ),
       InspectorAddon(),
     ];

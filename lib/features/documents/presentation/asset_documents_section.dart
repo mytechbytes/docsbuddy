@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/document_providers.dart';
@@ -17,16 +18,16 @@ class AssetDocumentsSection extends ConsumerStatefulWidget {
 }
 
 class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
-  bool _busy = false;
-
   /// Camera scan, gallery multi-select, or file browser multi-select —
   /// every picked file is uploaded.
   Future<void> _add() async {
     final files = await pickDocuments(context);
     if (files.isEmpty || !mounted) return;
-    setState(() => _busy = true);
-    await runAction(context, () => ref.read(assetDocumentsControllerProvider(widget.assetId)).attach(files));
-    if (mounted) setState(() => _busy = false);
+    await runAction(
+      context,
+      () => ref.read(assetDocumentsControllerProvider(widget.assetId)).attach(files),
+      loading: context.l10n.loadingUploadingDocument,
+    );
   }
 
   @override
@@ -38,20 +39,18 @@ class _AssetDocumentsSectionState extends ConsumerState<AssetDocumentsSection> {
         Row(
           children: [
             Expanded(
-              child: Text(context.l10n.docsTitle, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: 1)),
+              child: Text(context.l10n.docsTitle, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.palette.textMuted, letterSpacing: context.tracking(1))),
             ),
             const SizedBox(width: 8),
-            _busy
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : GestureDetector(
-                    onTap: _add,
-                    child: Text(context.l10n.docsAdd, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),
-                  ),
+            GestureDetector(
+              onTap: _add,
+              child: Text(context.l10n.docsAdd, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.palette.accent)),
+            ),
           ],
         ),
         const SizedBox(height: 10),
         docs.when(
-          loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
+          loading: () => LoadingView.section(message: context.l10n.loadingDocuments),
           error: (e, _) => Text(context.failureText(e), style: TextStyle(color: context.palette.textMuted)),
           data: (list) => list.isEmpty
               ? Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Text(context.l10n.docsEmpty, style: TextStyle(color: context.palette.textMuted)))

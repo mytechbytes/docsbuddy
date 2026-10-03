@@ -79,7 +79,7 @@ class _DayPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: AppColors.red, borderRadius: BorderRadius.circular(999)),
       child: Text(
-        '${days}d',
+        context.l10n.durationDaysShort(days),
         style: const TextStyle(
           color: Colors.white,
           fontSize: 11,

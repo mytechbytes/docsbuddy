@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/widgets/db_logo.dart';
 import '../../../core/widgets/feedback.dart';
@@ -58,7 +59,7 @@ class AssetDetailPage extends ConsumerWidget {
         ],
       ),
       body: asset.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => LoadingView(message: context.l10n.loadingAsset),
         error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (a) => ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
@@ -83,7 +84,7 @@ class AssetDetailPage extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             services.when(
-              loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
+              loading: () => LoadingView.section(message: context.l10n.loadingReminders),
               error: (e, _) => Text(context.failureText(e)),
               data: (s) => s.all.isEmpty
                   ? Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text(context.l10n.catalogNoRemindersForAsset, style: TextStyle(color: context.palette.textMuted))))
@@ -110,7 +111,7 @@ class AssetDetailPage extends ConsumerWidget {
   Future<void> _changePhoto(BuildContext context, WidgetRef ref, Asset asset) async {
     final f = await pickImage(context);
     if (f == null || !context.mounted) return;
-    await runAction(context, () => _actions(ref).setPhoto(f));
+    await runAction(context, () => _actions(ref).setPhoto(f), loading: context.l10n.loadingUploadingPhoto);
   }
 
   /// Marks a service done — recurring ones roll their due date forward.
@@ -128,6 +129,7 @@ class AssetDetailPage extends ConsumerWidget {
     await runAction(
       context,
       () => _actions(ref).completeService(r),
+      loading: context.l10n.loadingMarkingDone,
       success: r.isOneOff ? context.l10n.catalogMarkedDone(r.label) : context.l10n.catalogDoneRescheduled(r.label),
     );
   }
@@ -157,7 +159,9 @@ class AssetDetailPage extends ConsumerWidget {
           action: context.l10n.commonDelete,
           color: context.palette.danger,
         );
-        if (confirmed && context.mounted) await runAction(context, () => _actions(ref).deleteService(r));
+        if (confirmed && context.mounted) {
+          await runAction(context, () => _actions(ref).deleteService(r), loading: context.l10n.loadingDeletingReminder);
+        }
     }
   }
 
@@ -174,7 +178,7 @@ class AssetDetailPage extends ConsumerWidget {
       color: context.palette.danger,
     );
     if (!confirmed || !context.mounted) return;
-    final ok = await runAction(context, () => _actions(ref).deleteAsset());
+    final ok = await runAction(context, () => _actions(ref).deleteAsset(), loading: context.l10n.loadingDeletingAsset);
     if (ok && context.mounted) Navigator.of(context).pop();
   }
 

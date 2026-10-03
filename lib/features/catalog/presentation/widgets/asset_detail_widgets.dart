@@ -71,8 +71,8 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
                 child: Icon(asset.category.icon, color: context.palette.textSecondary, size: 30),
               ),
             ),
-            Positioned(
-              right: -4,
+            PositionedDirectional(
+              end: -4,
               bottom: -4,
               child: Container(
                 width: 22,
@@ -102,7 +102,7 @@ class _AssetInfoCardState extends State<AssetInfoCard> {
         children: [
           Text(asset.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.palette.text, height: 1.2)),
           const SizedBox(height: 6),
-          Align(alignment: Alignment.centerLeft, child: CategoryChip(asset.typeName(context))),
+          Align(alignment: AlignmentDirectional.centerStart, child: CategoryChip(asset.typeName(context))),
           const SizedBox(height: 8),
           Text(meta, style: TextStyle(fontSize: 12.5, color: context.palette.textMuted)),
           // Type-specific properties (Tonnage, IMEI, …) from Add asset.
@@ -246,7 +246,7 @@ class NextDueBanner extends StatelessWidget {
     final headline = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(context.l10n.catalogNextDue, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 1.2)),
+        Text(context.l10n.catalogNextDue, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: context.tracking(1.2))),
         const SizedBox(height: 4),
         Text('${reminder.label} · $phrase',
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white, height: 1.15)),

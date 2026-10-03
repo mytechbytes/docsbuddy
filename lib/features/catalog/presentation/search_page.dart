@@ -45,7 +45,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         iconTheme: IconThemeData(color: context.palette.text),
         titleSpacing: 0,
         title: Padding(
-          padding: const EdgeInsets.only(right: 16),
+          padding: const EdgeInsetsDirectional.only(end: 16),
           child: TextField(
             controller: _search,
             autofocus: true,

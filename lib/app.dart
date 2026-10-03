@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/l10n/l10n.dart';
+import 'core/l10n/language_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'features/settings/application/appearance_controller.dart';
 import 'features/settings/domain/appearance.dart';
@@ -22,6 +23,9 @@ class DocsBuddyApp extends ConsumerWidget {
         AppearanceMode.light => ThemeMode.light,
         AppearanceMode.dark => ThemeMode.dark,
       },
+      // Null (automatic) follows the device and falls back to English when the
+      // device language isn't one we translate.
+      locale: ref.watch(languageProvider).locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),

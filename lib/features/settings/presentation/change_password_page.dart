@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
 import '../../../core/widgets/feedback.dart';
@@ -37,14 +38,18 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   Future<void> _submit() async {
     setState(() => _error = null);
     try {
-      await ref
-          .read(changePasswordControllerProvider.notifier)
-          .submit(current: _current.text, fresh: _fresh.text, confirmation: _confirm.text);
+      await withLoader(
+        context,
+        context.l10n.loadingUpdatingPassword,
+        () => ref
+            .read(changePasswordControllerProvider.notifier)
+            .submit(current: _current.text, fresh: _fresh.text, confirmation: _confirm.text),
+      );
       if (!mounted) return;
       context.showSuccess(context.l10n.changePasswordDone);
       Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) setState(() => _error = context.failureText(e));
+    } catch (e, stack) {
+      if (mounted) setState(() => _error = context.failureMessage(e, stack));
     }
   }
 
@@ -94,7 +99,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
               obscure: true,
               errorText: _error),
           const SizedBox(height: 22),
-          PrimaryButton(label: context.l10n.changePasswordCta, isLoading: ref.watch(changePasswordControllerProvider).isLoading, onPressed: _submit),
+          PrimaryButton(label: context.l10n.changePasswordCta, onPressed: _submit),
           const SizedBox(height: 10),
           GhostButton(label: context.l10n.commonCancel, onPressed: () => Navigator.of(context).pop()),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/buttons.dart';
@@ -25,7 +26,6 @@ class MfaChallengeScreen extends ConsumerStatefulWidget {
 class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
   final _code = TextEditingController();
   String? _error;
-  bool _busy = false;
 
   @override
   void dispose() {
@@ -34,16 +34,15 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
   }
 
   Future<void> _verify() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    setState(() => _error = null);
     try {
-      await ref.read(securityActionsProvider).verifyMfaChallenge(_code.text);
-    } catch (e) {
-      if (mounted) setState(() => _error = context.failureText(e));
-    } finally {
-      if (mounted) setState(() => _busy = false);
+      await withLoader(
+        context,
+        context.l10n.loadingVerifyingCode,
+        () => ref.read(securityActionsProvider).verifyMfaChallenge(_code.text),
+      );
+    } catch (e, stack) {
+      if (mounted) setState(() => _error = context.failureMessage(e, stack));
     }
   }
 
@@ -84,11 +83,15 @@ class _MfaChallengeScreenState extends ConsumerState<MfaChallengeScreen> {
               onSubmitted: (_) => _verify(),
             ),
             const SizedBox(height: 18),
-            PrimaryButton(label: context.l10n.authOtpVerify, isLoading: _busy, onPressed: _verify),
+            PrimaryButton(label: context.l10n.authOtpVerify, onPressed: _verify),
             const SizedBox(height: 10),
             TextButton(
               onPressed: () async {
-                final ok = await ref.read(authControllerProvider.notifier).signOut();
+                final ok = await withLoader(
+                  context,
+                  context.l10n.loadingSigningOut,
+                  () => ref.read(authControllerProvider.notifier).signOut(),
+                );
                 if (ok && context.mounted) context.go(AppRoutes.signIn);
               },
               child: Text(context.l10n.commonSignOut, style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w700)),

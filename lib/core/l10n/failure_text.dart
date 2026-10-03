@@ -34,5 +34,12 @@ String localizeFailure(AppLocalizations l10n, Object error) {
     FailureReason.appOpenFailed => l10n.errorAppOpenFailed,
     FailureReason.notificationsBlocked => l10n.errorNotificationsBlocked,
     FailureReason.signInIncomplete => l10n.errorSignInIncomplete,
+    FailureReason.invalidCredentials => l10n.errorInvalidCredentials,
+    FailureReason.emailNotConfirmed => l10n.errorEmailNotConfirmed,
+    FailureReason.userExists => l10n.errorUserExists,
+    FailureReason.weakPassword => l10n.errorWeakPassword,
+    FailureReason.rateLimited => l10n.errorRateLimited,
+    FailureReason.codeInvalid => l10n.errorCodeInvalid,
+    FailureReason.samePassword => l10n.errorSamePassword,
   };
 }

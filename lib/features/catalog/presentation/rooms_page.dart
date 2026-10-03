@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/media/media_picker.dart';
 import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/buttons.dart';
@@ -24,7 +25,6 @@ class RoomsPage extends ConsumerStatefulWidget {
 
 class _RoomsPageState extends ConsumerState<RoomsPage> {
   final _newRoom = TextEditingController();
-  bool _adding = false;
 
   RoomsController get _rooms => ref.read(locationsProvider.notifier);
 
@@ -36,10 +36,8 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
 
   Future<void> _addRoom() async {
     if (_newRoom.text.trim().isEmpty) return;
-    setState(() => _adding = true);
-    final ok = await runAction(context, () => _rooms.create(_newRoom.text));
+    final ok = await runAction(context, () => _rooms.create(_newRoom.text), loading: context.l10n.loadingCreatingRoom);
     if (ok) _newRoom.clear();
-    if (mounted) setState(() => _adding = false);
   }
 
   /// FAB flow: name + optional photo (camera / gallery / files) in one sheet.
@@ -71,14 +69,14 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
         child: const Icon(Icons.add),
       ),
       body: locations.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => LoadingView(message: context.l10n.loadingRooms),
         error: (e, _) => Center(child: Text(context.failureText(e))),
         data: (list) {
           return Column(
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                child: _AddRoomComposer(controller: _newRoom, busy: _adding, onSubmit: _addRoom),
+                child: _AddRoomComposer(controller: _newRoom, onSubmit: _addRoom),
               ),
               Expanded(
                 // Pull-to-refresh works for both the list and the empty state
@@ -99,7 +97,11 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                       : ReorderableListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
                           itemCount: list.length,
-                          onReorderItem: (oldIndex, newIndex) => runAction(context, () => _rooms.reorder(oldIndex, newIndex)),
+                          onReorderItem: (oldIndex, newIndex) => runAction(
+                            context,
+                            () => _rooms.reorder(oldIndex, newIndex),
+                            loading: context.l10n.loadingSavingRoomOrder,
+                          ),
                           itemBuilder: (context, i) =>
                               _RoomCard(key: ValueKey(list[i].id), location: list[i]),
                         ),
@@ -125,7 +127,6 @@ class _AddRoomSheet extends ConsumerStatefulWidget {
 class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
   final _name = TextEditingController();
   PickedMedia? _photo;
-  bool _busy = false;
 
   @override
   void dispose() {
@@ -139,10 +140,12 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
   }
 
   Future<void> _create() async {
-    setState(() => _busy = true);
-    final ok = await runAction(context, () => ref.read(locationsProvider.notifier).create(_name.text, photo: _photo));
-    if (!mounted) return;
-    ok ? Navigator.of(context).pop() : setState(() => _busy = false);
+    final ok = await runAction(
+      context,
+      () => ref.read(locationsProvider.notifier).create(_name.text, photo: _photo),
+      loading: context.l10n.loadingCreatingRoom,
+    );
+    if (ok && mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -206,7 +209,7 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
             ),
           ),
           const SizedBox(height: 18),
-          PrimaryButton(label: context.l10n.catalogCreateRoom, isLoading: _busy, onPressed: _create),
+          PrimaryButton(label: context.l10n.catalogCreateRoom, onPressed: _create),
         ],
       ),
     );
@@ -215,15 +218,14 @@ class _AddRoomSheetState extends ConsumerState<_AddRoomSheet> {
 
 /// The design's inline "Add a new room" row with a ⊕ submit button.
 class _AddRoomComposer extends StatelessWidget {
-  const _AddRoomComposer({required this.controller, required this.busy, required this.onSubmit});
+  const _AddRoomComposer({required this.controller, required this.onSubmit});
   final TextEditingController controller;
-  final bool busy;
   final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 4, 8, 4),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 4, 8, 4),
       decoration: BoxDecoration(
           color: context.palette.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: context.palette.border)),
       child: Row(
@@ -240,15 +242,10 @@ class _AddRoomComposer extends StatelessWidget {
               ),
             ),
           ),
-          busy
-              ? const Padding(
-                  padding: EdgeInsets.all(10),
-                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                )
-              : IconButton(
-                  onPressed: onSubmit,
-                  icon: Icon(Icons.add_circle_outline, color: context.palette.textSecondary),
-                ),
+          IconButton(
+            onPressed: onSubmit,
+            icon: Icon(Icons.add_circle_outline, color: context.palette.textSecondary),
+          ),
         ],
       ),
     );
@@ -285,7 +282,7 @@ class _RoomCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+              padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 8, 12),
               child: Row(
                 children: [
                   Expanded(

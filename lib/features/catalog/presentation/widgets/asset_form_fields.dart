@@ -235,7 +235,7 @@ class DateField extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(minHeight: 50),
             padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             decoration: BoxDecoration(
               color: context.palette.surface,
               borderRadius: BorderRadius.circular(12),

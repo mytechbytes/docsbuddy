@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/loader.dart';
 import '../../../core/widgets/adaptive_layout.dart';
 import '../../../core/widgets/feedback.dart';
 import '../application/catalog_providers.dart';
@@ -76,7 +77,7 @@ class _AssetsPageState extends ConsumerState<AssetsPage> {
           ),
           Expanded(
             child: assets.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => LoadingView(message: context.l10n.loadingAssets),
               error: (e, _) => Center(child: Text(context.failureText(e))),
               data: (visible) {
                 if (visible.isEmpty) {
