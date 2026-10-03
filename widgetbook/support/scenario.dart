@@ -48,13 +48,17 @@ enum Scenario {
 
 /// Knobs for the parts of a scenario that aren't about data.
 class WorldOptions {
-  const WorldOptions({this.totpEnabled = false, this.appLock = false});
+  const WorldOptions({this.totpEnabled = false, this.appLock = false, this.unlockResult});
 
   /// Two-step verification already set up on the account.
   final bool totpEnabled;
 
   /// App lock switched on in the device-local security preferences.
   final bool appLock;
+
+  /// What the fingerprint / Face ID prompt ends in (default: success). Lets the
+  /// lock screen be shown after a failed attempt.
+  final BiometricResult? unlockResult;
 }
 
 /// The seeded records, looked up by name, so screens that take an id (or an
@@ -112,7 +116,7 @@ Future<World> buildWorld(Scenario scenario, {WorldOptions options = const WorldO
 
   return World(
     overrides: [
-      ..._platform(SecurityPrefs(appLock: options.appLock)),
+      ..._platform(SecurityPrefs(appLock: options.appLock), unlockResult: options.unlockResult),
       ...backendOverrides(backend),
     ],
     refs: refs,
@@ -131,14 +135,14 @@ Future<DemoRefs> _refsOf(CatalogRepository catalog) async {
 }
 
 /// Every device/platform port, bound to something harmless.
-List<Override> _platform(SecurityPrefs securityPrefs) => [
+List<Override> _platform(SecurityPrefs securityPrefs, {BiometricResult? unlockResult}) => [
       appLoggerProvider.overrideWithValue(const SilentLogger()),
       appearanceStoreProvider.overrideWithValue(InMemoryAppearanceStore()),
       languageStoreProvider.overrideWithValue(InMemoryLanguageStore()),
       onboardingStoreProvider.overrideWithValue(InMemoryOnboardingStore()),
       notificationServiceProvider.overrideWithValue(const NoopNotificationService()),
       pushMessagingServiceProvider.overrideWithValue(const NoopPushMessagingService()),
-      biometricAuthenticatorProvider.overrideWithValue(const DemoBiometrics()),
+      biometricAuthenticatorProvider.overrideWithValue(DemoBiometrics(result: unlockResult)),
       securityPrefsStoreProvider.overrideWithValue(InMemorySecurityPrefsStore(securityPrefs)),
     ];
 

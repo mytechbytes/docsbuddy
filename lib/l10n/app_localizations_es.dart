@@ -1185,14 +1185,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get securityTitle => 'Seguridad';
 
   @override
-  String get securityBiometricSection => 'Acceso biométrico';
-
-  @override
-  String get securityUnlockBiometrics => 'Desbloquear con biometría';
-
-  @override
-  String get securityNoBiometrics =>
-      'Este dispositivo no tiene biometría disponible';
+  String get securityBiometricSection => 'Bloqueo de la app';
 
   @override
   String get securityTwoFactorSection => 'Verificación en dos pasos';
@@ -1217,9 +1210,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get securityMoreSection => 'Más';
-
-  @override
-  String get securityAppLock => 'Bloqueo de la app';
 
   @override
   String get securityAppLockHint => 'Pedir desbloqueo al volver a abrir la app';
@@ -1635,4 +1625,50 @@ class AppLocalizationsEs extends AppLocalizations {
   String commonStepOf(int step, int total) {
     return 'PASO $step DE $total';
   }
+
+  @override
+  String get lockPromptUnlock => 'Desbloquear DocsBuddy';
+
+  @override
+  String get lockPromptEnable => 'Confirma para activar el bloqueo de la app';
+
+  @override
+  String get lockToggleFace => 'Bloquear con Face ID';
+
+  @override
+  String get lockToggleFingerprint => 'Bloquear con huella dactilar';
+
+  @override
+  String get lockToggleFaceOrFingerprint => 'Bloquear con Face ID o huella';
+
+  @override
+  String get lockToggleBiometrics => 'Bloquear con biometría';
+
+  @override
+  String get lockToggleDevice => 'Bloquear con el bloqueo de pantalla';
+
+  @override
+  String get lockNeedsScreenLock =>
+      'Configura un bloqueo de pantalla, huella o rostro en este dispositivo para usar el bloqueo de la app.';
+
+  @override
+  String get lockFailed => 'No se reconoció. Inténtalo de nuevo.';
+
+  @override
+  String get lockTooManyAttempts =>
+      'Demasiados intentos. Espera un momento o usa el PIN del dispositivo.';
+
+  @override
+  String get lockUnavailableBody =>
+      'Este dispositivo no tiene un bloqueo de pantalla configurado, por lo que no se puede bloquear la app.';
+
+  @override
+  String get lockTurnOff => 'Desactivar el bloqueo de la app';
+
+  @override
+  String get lockError =>
+      'No se pudo verificar tu identidad. Inténtalo de nuevo.';
+
+  @override
+  String get featureComingSoon => 'Próximamente';
 }

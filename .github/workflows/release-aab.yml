@@ -78,10 +78,23 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          # Features whose backend isn't ready stay off; switch one on by setting the
+          # repository variable (Settings → Secrets and variables → Actions → Variables)
+          # to "true" — see docs/feature-flags.md. Unset means off.
+          FEATURE_PUSH_REMINDERS: ${{ vars.FEATURE_PUSH_REMINDERS }}
+          FEATURE_EMAIL_REMINDERS: ${{ vars.FEATURE_EMAIL_REMINDERS }}
+          FEATURE_WHATSAPP_REMINDERS: ${{ vars.FEATURE_WHATSAPP_REMINDERS }}
+          FEATURE_APPLE_SIGN_IN: ${{ vars.FEATURE_APPLE_SIGN_IN }}
+          FEATURE_MICROSOFT_SIGN_IN: ${{ vars.FEATURE_MICROSOFT_SIGN_IN }}
         run: |
           flutter build appbundle --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=FEATURE_PUSH_REMINDERS="$FEATURE_PUSH_REMINDERS" \
+            --dart-define=FEATURE_EMAIL_REMINDERS="$FEATURE_EMAIL_REMINDERS" \
+            --dart-define=FEATURE_WHATSAPP_REMINDERS="$FEATURE_WHATSAPP_REMINDERS" \
+            --dart-define=FEATURE_APPLE_SIGN_IN="$FEATURE_APPLE_SIGN_IN" \
+            --dart-define=FEATURE_MICROSOFT_SIGN_IN="$FEATURE_MICROSOFT_SIGN_IN"
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4

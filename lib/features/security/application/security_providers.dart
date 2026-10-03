@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_failure.dart';
+import '../../../core/l10n/language_controller.dart';
 import '../../../core/providers/core_providers.dart';
+import '../../auth/application/auth_providers.dart';
 import '../domain/security_models.dart';
 import '../domain/security_repository.dart';
 
@@ -53,18 +55,19 @@ class SecurityPrefsController extends Notifier<SecurityPrefs> {
     state = next;
   }
 
-  /// Turning biometric unlock on requires a successful biometric check
-  /// first; returns false (and changes nothing) when it's declined.
-  Future<bool> setBiometricUnlock(bool enabled) async {
+  /// Turns the app lock on or off. Turning it **on** first asks the person to
+  /// authenticate once, so nobody locks themselves out behind a sensor that
+  /// doesn't work: anything but [BiometricResult.success] leaves it off and is
+  /// returned so the screen can say why. Turning it off needs no prompt.
+  Future<BiometricResult> setAppLock(bool enabled) async {
     if (enabled) {
-      final ok = await ref.read(biometricAuthenticatorProvider).authenticate('Confirm to enable biometric unlock');
-      if (!ok) return false;
+      final reason = ref.read(appLocalizationsProvider).lockPromptEnable;
+      final result = await ref.read(biometricAuthenticatorProvider).authenticate(reason);
+      if (!result.isSuccess) return result;
     }
-    await _save(state.copyWith(biometricUnlock: enabled));
-    return true;
+    await _save(state.copyWith(appLock: enabled));
+    return BiometricResult.success;
   }
-
-  Future<void> setAppLock(bool enabled) => _save(state.copyWith(appLock: enabled));
 
   Future<void> setAutoLockMinutes(int minutes) => _save(state.copyWith(autoLockMinutes: minutes));
 }
@@ -116,14 +119,26 @@ final securityActionsProvider = Provider<SecurityActions>((ref) => SecurityActio
 
 // ── App lock ──
 
-/// Whether the signed-in shell is locked. Starts locked when app lock is on
-/// (a fresh launch); re-locks after the app was away longer than the
-/// auto-lock window. The shell forwards lifecycle events.
+/// Whether the app is locked behind fingerprint / Face ID (or the device PIN).
+///
+/// Locked on a cold start when the lock is on and there is a saved session;
+/// locks again after the app was away longer than the auto-lock window (the
+/// gate forwards lifecycle events). It has nothing to protect when nobody is
+/// signed in, and signing in is itself authentication — so signing out, or
+/// turning the lock off, unlocks.
 class AppLockController extends Notifier<bool> {
   DateTime? _pausedAt;
 
   @override
-  bool build() => ref.read(securityPrefsProvider).appLock;
+  bool build() {
+    ref.listen(authStateProvider, (_, signedIn) {
+      if (signedIn.value == false) state = false;
+    });
+    ref.listen(securityPrefsProvider, (_, prefs) {
+      if (!prefs.appLock) state = false;
+    });
+    return ref.read(securityPrefsProvider).appLock && ref.read(authRepositoryProvider).isSignedIn;
+  }
 
   void appPaused() {
     if (!ref.read(securityPrefsProvider).appLock) return;
@@ -140,10 +155,18 @@ class AppLockController extends Notifier<bool> {
     }
   }
 
-  /// Runs the biometric prompt; unlocks on success.
-  Future<void> unlock() async {
-    if (await ref.read(biometricAuthenticatorProvider).authenticate('Unlock DocsBuddy')) state = false;
+  /// Runs the system prompt; unlocks on success. The result says why it did
+  /// not, so the lock screen can respond (retry, wait, or offer a way out).
+  Future<BiometricResult> unlock() async {
+    final reason = ref.read(appLocalizationsProvider).lockPromptUnlock;
+    final result = await ref.read(biometricAuthenticatorProvider).authenticate(reason);
+    if (result.isSuccess) state = false;
+    return result;
   }
+
+  /// The way out when the device can no longer authenticate (its screen lock
+  /// was removed): without it the app would be locked for good.
+  Future<void> turnOffAppLock() => ref.read(securityPrefsProvider.notifier).setAppLock(false);
 }
 
 final appLockProvider = NotifierProvider<AppLockController, bool>(AppLockController.new);

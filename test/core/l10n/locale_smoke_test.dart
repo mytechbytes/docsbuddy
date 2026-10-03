@@ -12,6 +12,8 @@ import 'package:docsbuddy/features/dashboard/presentation/dashboard_tab.dart';
 import 'package:docsbuddy/features/family/presentation/family_page.dart';
 import 'package:docsbuddy/features/profile/presentation/profile_page.dart';
 import 'package:docsbuddy/features/reminders/presentation/notifications_page.dart';
+import 'package:docsbuddy/features/security/domain/security_models.dart';
+import 'package:docsbuddy/features/security/presentation/lock_screen.dart';
 import 'package:docsbuddy/features/security/presentation/security_page.dart';
 import 'package:docsbuddy/features/settings/presentation/settings_page.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +34,13 @@ void main() {
     await font.load();
   });
 
+  // A phone with both Face ID and a fingerprint reader, so Settings and
+  // Security show the lock at its longest ("Lock with Face ID or fingerprint").
+  FakeBiometrics phone([BiometricResult result = BiometricResult.success]) => FakeBiometrics()
+    ..available = true
+    ..availableKinds = const [BiometricKind.face, BiometricKind.fingerprint]
+    ..result = result;
+
   final screens = <String, Widget Function()>{
     'sign in': () => const SignInPage(),
     'sign up': () => const SignUpPage(),
@@ -49,6 +58,12 @@ void main() {
     'settings': () => const SettingsPage(),
   };
 
+  // The lock screen in the states with the most on it.
+  final lockScreens = <String, BiometricResult>{
+    'lock screen (not recognised)': BiometricResult.failed,
+    'lock screen (no screen lock set up)': BiometricResult.unavailable,
+  };
+
   for (final language in AppLanguage.explicit) {
     group(language.code, () {
       for (final screen in screens.entries) {
@@ -58,12 +73,35 @@ void main() {
             ..devicePixelRatio = 1.0;
           addTearDown(tester.view.reset);
 
-          await tester.pumpWidget(testApp(screen.value(), locale: language.locale));
+          await tester.pumpWidget(testApp(
+            screen.value(),
+            locale: language.locale,
+            overrides: testOverrides(biometrics: phone()),
+          ));
           await settle(tester);
 
           expect(tester.takeException(), isNull, reason: '${screen.key} in ${language.code}');
           final direction = Directionality.of(tester.element(find.byType(Scaffold).first));
           expect(direction, language.isRtl ? TextDirection.rtl : TextDirection.ltr);
+        });
+      }
+      for (final lock in lockScreens.entries) {
+        testWidgets('${lock.key} fits a phone screen', (tester) async {
+          tester.view
+            ..physicalSize = const Size(360, 740)
+            ..devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
+
+          await tester.pumpWidget(testApp(
+            const LockScreen(),
+            locale: language.locale,
+            overrides: testOverrides(biometrics: phone(lock.value)),
+          ));
+          await tester.pump();
+          await tester.pump();
+
+          expect(tester.takeException(), isNull, reason: '${lock.key} in ${language.code}');
+          expect(find.byType(LockScreen), findsOneWidget);
         });
       }
     });

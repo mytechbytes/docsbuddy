@@ -570,9 +570,7 @@
   "mfaSubtitle": "Enter the 6-digit code from your authenticator app.",
   "mfaCodeLabel": "6-digit code",
   "securityTitle": "Security",
-  "securityBiometricSection": "Biometric login",
-  "securityUnlockBiometrics": "Unlock with biometrics",
-  "securityNoBiometrics": "No biometrics available on this device",
+  "securityBiometricSection": "App lock",
   "securityTwoFactorSection": "Two-factor authentication",
   "security2faEnabled": "2FA is enabled",
   "securityEnable2fa": "Enable 2FA",
@@ -587,7 +585,6 @@
   },
   "securityAuthenticatorHint": "Use Google Authenticator, Authy, 1Password, etc.",
   "securityMoreSection": "More",
-  "securityAppLock": "App lock",
   "securityAppLockHint": "Require unlock when reopening the app",
   "securityAutoLock": "Auto-lock after",
   "securityMinutesShort": "{minutes} min",
@@ -801,5 +798,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "lockPromptUnlock": "Unlock DocsBuddy",
+  "lockPromptEnable": "Confirm to turn on app lock",
+  "lockToggleFace": "Lock with Face ID",
+  "lockToggleFingerprint": "Lock with fingerprint",
+  "lockToggleFaceOrFingerprint": "Lock with Face ID or fingerprint",
+  "lockToggleBiometrics": "Lock with biometrics",
+  "lockToggleDevice": "Lock with your screen lock",
+  "lockNeedsScreenLock": "Set up a screen lock, fingerprint or face on this device to use app lock.",
+  "lockFailed": "Not recognised. Try again.",
+  "lockTooManyAttempts": "Too many attempts. Wait a moment, or use your device PIN.",
+  "lockUnavailableBody": "This device has no screen lock set up, so the app can't be locked.",
+  "lockTurnOff": "Turn off app lock",
+  "lockError": "Couldn't verify it's you. Please try again.",
+  "featureComingSoon": "Coming soon"
 }

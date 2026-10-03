@@ -26,6 +26,7 @@ import 'package:docsbuddy/features/reminders/presentation/add_reminder_page.dart
 import 'package:docsbuddy/features/reminders/presentation/filtered_reminders_page.dart';
 import 'package:docsbuddy/features/reminders/presentation/notifications_page.dart';
 import 'package:docsbuddy/features/roadmap/presentation/roadmap_page.dart';
+import 'package:docsbuddy/features/security/domain/security_models.dart';
 import 'package:docsbuddy/features/security/presentation/lock_screen.dart';
 import 'package:docsbuddy/features/security/presentation/mfa_challenge_screen.dart';
 import 'package:docsbuddy/features/security/presentation/security_page.dart';
@@ -122,7 +123,15 @@ WidgetbookCategory screens() => WidgetbookCategory(
             screen('Two-step verification on', (_) => const SecurityPage(), options: const WorldOptions(totpEnabled: true)),
             screen('App lock on', (_) => const SecurityPage(), options: const WorldOptions(appLock: true)),
           ]),
-          WidgetbookComponent(name: 'LockScreen', useCases: [screen('Default', (_) => const LockScreen(), root: true)]),
+          WidgetbookComponent(name: 'LockScreen', useCases: [
+            screen('Default', (_) => const LockScreen(), root: true),
+            screen('Not recognised', (_) => const LockScreen(),
+                root: true, options: const WorldOptions(unlockResult: BiometricResult.failed)),
+            screen('Too many attempts', (_) => const LockScreen(),
+                root: true, options: const WorldOptions(unlockResult: BiometricResult.lockedOut)),
+            screen('Device has no screen lock', (_) => const LockScreen(),
+                root: true, options: const WorldOptions(unlockResult: BiometricResult.unavailable)),
+          ]),
           WidgetbookComponent(name: 'MfaChallengeScreen', useCases: [screen('Default', (_) => const MfaChallengeScreen(), root: true)]),
           WidgetbookComponent(name: 'RoadmapPage', useCases: [screen('Default', (_) => const RoadmapPage())]),
         ]),

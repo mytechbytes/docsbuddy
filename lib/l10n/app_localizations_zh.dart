@@ -1140,13 +1140,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityTitle => '安全';
 
   @override
-  String get securityBiometricSection => '生物识别登录';
-
-  @override
-  String get securityUnlockBiometrics => '使用生物识别解锁';
-
-  @override
-  String get securityNoBiometrics => '此设备不支持生物识别';
+  String get securityBiometricSection => '应用锁';
 
   @override
   String get securityTwoFactorSection => '双重验证';
@@ -1171,9 +1165,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityMoreSection => '更多';
-
-  @override
-  String get securityAppLock => '应用锁';
 
   @override
   String get securityAppLockHint => '重新打开应用时需要解锁';
@@ -1571,4 +1562,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String commonStepOf(int step, int total) {
     return '第 $step 步，共 $total 步';
   }
+
+  @override
+  String get lockPromptUnlock => '解锁 DocsBuddy';
+
+  @override
+  String get lockPromptEnable => '请验证身份以开启应用锁';
+
+  @override
+  String get lockToggleFace => '使用 Face ID 锁定';
+
+  @override
+  String get lockToggleFingerprint => '使用指纹锁定';
+
+  @override
+  String get lockToggleFaceOrFingerprint => '使用 Face ID 或指纹锁定';
+
+  @override
+  String get lockToggleBiometrics => '使用生物识别锁定';
+
+  @override
+  String get lockToggleDevice => '使用屏幕锁定';
+
+  @override
+  String get lockNeedsScreenLock => '请先在此设备上设置屏幕锁定、指纹或面部识别，才能使用应用锁。';
+
+  @override
+  String get lockFailed => '未能识别，请重试。';
+
+  @override
+  String get lockTooManyAttempts => '尝试次数过多。请稍等片刻，或使用设备 PIN 码。';
+
+  @override
+  String get lockUnavailableBody => '此设备未设置屏幕锁定，因此无法锁定应用。';
+
+  @override
+  String get lockTurnOff => '关闭应用锁';
+
+  @override
+  String get lockError => '无法验证你的身份，请重试。';
+
+  @override
+  String get featureComingSoon => '即将推出';
 }

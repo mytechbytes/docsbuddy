@@ -60,10 +60,14 @@ class NoopPushMessagingService implements PushMessagingService {
 
 /// A device with Face ID and a fingerprint reader that always succeeds, so the
 /// security screens show their enabled state and the lock screen can be passed.
+/// [result] lets a scenario show how the lock screen reads when it doesn't.
 class DemoBiometrics implements BiometricAuthenticator {
-  const DemoBiometrics({this.available = true});
+  const DemoBiometrics({this.available = true, this.result});
 
   final bool available;
+
+  /// What every prompt ends in; by default success when [available], else unavailable.
+  final BiometricResult? result;
 
   @override
   Future<bool> isAvailable() async => available;
@@ -73,7 +77,8 @@ class DemoBiometrics implements BiometricAuthenticator {
       available ? const [BiometricKind.face, BiometricKind.fingerprint] : const [];
 
   @override
-  Future<bool> authenticate(String reason) async => available;
+  Future<BiometricResult> authenticate(String reason) async =>
+      result ?? (available ? BiometricResult.success : BiometricResult.unavailable);
 }
 
 class InMemorySecurityPrefsStore implements SecurityPrefsStore {

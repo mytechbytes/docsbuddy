@@ -22,15 +22,14 @@ class RoadmapPage extends StatelessWidget {
     ]),
     ('Pending — your setup', [
       (false, 'Play Console: send the store listing for review'),
-      (false, 'Deploy notify-family + service account + webhook'),
-      (false, 'WhatsApp: deploy sender + Meta API secrets + daily cron'),
-      (false, 'Email: deploy sender + Resend secrets + daily cron'),
+      (false, 'Deploy notify-family + service account + webhook (Settings → Push switch stays off until then)'),
+      (false, 'WhatsApp: deploy sender + Meta API secrets + daily cron (Settings switch stays off until then)'),
+      (false, 'Email: deploy sender + Resend secrets + daily cron (Settings switch stays off until then)'),
       (false, 'iOS: enable Associated Domains (universal links) in Xcode'),
     ]),
     ('Pending — next features', [
       (false, 'Apple sign-in (button disabled until Services ID + Supabase setup)'),
       (false, 'Microsoft sign-in (built; button disabled until Entra app + Supabase setup)'),
-      (false, 'More languages (every screen is localised; English only for now)'),
       (false, 'Bump KGP-legacy plugins (Built-in Kotlin)'),
       (false, 'iOS: push (APNs), signing & provisioning'),
     ]),
@@ -75,7 +74,8 @@ class RoadmapPage extends StatelessWidget {
       (true, 'Phone numbers validated to E.164'),
       (true, 'Settings: account / notification prefs / family sections'),
       (true, 'Change password with strength meter'),
-      (true, 'Security: 2FA (TOTP), biometric unlock, app lock, sessions'),
+      (true, 'Security: 2FA (TOTP), fingerprint / Face ID app lock, sessions'),
+      (true, 'App lock covers every screen, keeps your place, and hides the app in the app switcher'),
       (true, '2FA step-up challenge on sign-in (AAL2)'),
     ]),
     ('Shipped — notifications', [
@@ -89,7 +89,7 @@ class RoadmapPage extends StatelessWidget {
     ]),
     ('Shipped — look & feel', [
       (true, 'Dark mode with an Appearance setting (System / Light / Dark)'),
-      (true, 'Every screen localised (English for now; ready for more languages)'),
+      (true, 'Six languages with an in-app picker (English, 中文, हिन्दी, Español, Français, العربية) and Arabic right-to-left'),
       (true, 'App icon (flutter_launcher_icons)'),
       (true, 'Sign-in / sign-up headed by the app icon + name'),
       (true, 'One consistent header style on every screen'),

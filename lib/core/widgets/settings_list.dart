@@ -180,3 +180,41 @@ class SettingsToggleRow extends StatelessWidget {
     );
   }
 }
+
+/// A switch for something that may not be connected to anything yet. While
+/// it isn't [live] (an [AppFeature]'s `live`) it is dimmed, shown off, disabled and labelled "Coming
+/// soon" — and can't change a saved preference — instead of promising what the
+/// app can't deliver. Once the feature is live it is an ordinary
+/// [SettingsToggleRow].
+class FeatureToggleRow extends StatelessWidget {
+  const FeatureToggleRow({
+    super.key,
+    required this.live,
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final bool live;
+  final IconData icon;
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (live) return SettingsToggleRow(icon: icon, title: title, value: value, onChanged: onChanged);
+    return Opacity(
+      opacity: 0.55,
+      child: SettingsToggleRow(
+        icon: icon,
+        title: title,
+        subtitle: context.l10n.featureComingSoon,
+        value: false,
+        onChanged: null,
+      ),
+    );
+  }
+}
+

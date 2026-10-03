@@ -20,7 +20,6 @@ class SecurityPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(securityStatusProvider);
     final prefs = ref.watch(securityPrefsProvider);
-    final bioAvailable = ref.watch(biometricsAvailableProvider).value ?? false;
 
     return Scaffold(
       backgroundColor: context.palette.background,
@@ -36,16 +35,19 @@ class SecurityPage extends ConsumerWidget {
         children: [
           SectionLabel(context.l10n.securityBiometricSection),
           SettingsCard(children: [
-            SettingsToggleRow(
-              icon: Icons.fingerprint,
-              title: context.l10n.securityUnlockBiometrics,
-              subtitle: bioAvailable ? null : context.l10n.securityNoBiometrics,
-              value: prefs.biometricUnlock && bioAvailable,
-              onChanged: bioAvailable
-                  ? (v) => ref.read(securityPrefsProvider.notifier).setBiometricUnlock(v)
-                  : null,
-            ),
+            const AppLockToggleRow(),
             const BiometricTypesRow(),
+            // Only meaningful while the lock is on.
+            Opacity(
+              opacity: prefs.appLock ? 1 : 0.45,
+              child: SettingsRow(
+                icon: Icons.timer_outlined,
+                title: context.l10n.securityAutoLock,
+                onTap: prefs.appLock ? () => _pickAutoLock(context, ref, prefs.autoLockMinutes) : null,
+                trailing: Text(context.l10n.securityMinutesShort(prefs.autoLockMinutes),
+                    style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
+              ),
+            ),
           ]),
           SectionLabel(context.l10n.securityTwoFactorSection),
           status.when(
@@ -73,20 +75,6 @@ class SecurityPage extends ConsumerWidget {
           ),
           SectionLabel(context.l10n.securityMoreSection),
           SettingsCard(children: [
-            SettingsToggleRow(
-              icon: Icons.lock_outline,
-              title: context.l10n.securityAppLock,
-              subtitle: context.l10n.securityAppLockHint,
-              value: prefs.appLock,
-              onChanged: (v) => ref.read(securityPrefsProvider.notifier).setAppLock(v),
-            ),
-            SettingsRow(
-              icon: Icons.timer_outlined,
-              title: context.l10n.securityAutoLock,
-              onTap: () => _pickAutoLock(context, ref, prefs.autoLockMinutes),
-              trailing: Text(context.l10n.securityMinutesShort(prefs.autoLockMinutes),
-                  style: TextStyle(color: context.palette.textMuted, fontWeight: FontWeight.w600, fontSize: 12.5)),
-            ),
             SettingsRow(
               icon: Icons.devices_outlined,
               title: context.l10n.securityActiveSessions,

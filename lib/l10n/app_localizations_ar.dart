@@ -1187,13 +1187,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get securityTitle => 'الأمان';
 
   @override
-  String get securityBiometricSection => 'تسجيل الدخول بالبصمة';
-
-  @override
-  String get securityUnlockBiometrics => 'إلغاء القفل بالقياسات الحيوية';
-
-  @override
-  String get securityNoBiometrics => 'لا تتوفر قياسات حيوية على هذا الجهاز';
+  String get securityBiometricSection => 'قفل التطبيق';
 
   @override
   String get securityTwoFactorSection => 'المصادقة الثنائية';
@@ -1218,9 +1212,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get securityMoreSection => 'المزيد';
-
-  @override
-  String get securityAppLock => 'قفل التطبيق';
 
   @override
   String get securityAppLockHint => 'طلب إلغاء القفل عند إعادة فتح التطبيق';
@@ -1636,4 +1627,49 @@ class AppLocalizationsAr extends AppLocalizations {
   String commonStepOf(int step, int total) {
     return 'الخطوة $step من $total';
   }
+
+  @override
+  String get lockPromptUnlock => 'إلغاء قفل DocsBuddy';
+
+  @override
+  String get lockPromptEnable => 'أكّد لتفعيل قفل التطبيق';
+
+  @override
+  String get lockToggleFace => 'القفل باستخدام Face ID';
+
+  @override
+  String get lockToggleFingerprint => 'القفل ببصمة الإصبع';
+
+  @override
+  String get lockToggleFaceOrFingerprint => 'القفل بـ Face ID أو بصمة الإصبع';
+
+  @override
+  String get lockToggleBiometrics => 'القفل بالقياسات الحيوية';
+
+  @override
+  String get lockToggleDevice => 'القفل بقفل الشاشة';
+
+  @override
+  String get lockNeedsScreenLock =>
+      'اضبط قفل الشاشة أو بصمة الإصبع أو الوجه على هذا الجهاز لاستخدام قفل التطبيق.';
+
+  @override
+  String get lockFailed => 'لم يتم التعرّف عليك. حاول مرة أخرى.';
+
+  @override
+  String get lockTooManyAttempts =>
+      'محاولات كثيرة جدًا. انتظر قليلًا أو استخدم رمز PIN الخاص بجهازك.';
+
+  @override
+  String get lockUnavailableBody =>
+      'لم يتم ضبط قفل للشاشة على هذا الجهاز، لذلك لا يمكن قفل التطبيق.';
+
+  @override
+  String get lockTurnOff => 'إيقاف قفل التطبيق';
+
+  @override
+  String get lockError => 'تعذّر التحقق من هويتك. يُرجى المحاولة مرة أخرى.';
+
+  @override
+  String get featureComingSoon => 'قريبًا';
 }

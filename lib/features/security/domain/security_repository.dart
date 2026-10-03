@@ -20,11 +20,19 @@ abstract interface class SecurityRepository {
 }
 
 /// Platform biometrics (Face ID / fingerprint, with device-credential
-/// fallback). Never throws — unavailable means false/empty.
+/// fallback). Never throws — every outcome is a value: unavailable is
+/// false/empty, and [authenticate] reports why it didn't succeed.
 abstract interface class BiometricAuthenticator {
+  /// Whether the device can authenticate at all (biometrics, or a screen lock
+  /// to fall back to).
   Future<bool> isAvailable();
+
+  /// Which biometrics are enrolled (may be empty even when [isAvailable]:
+  /// a device with only a PIN).
   Future<List<BiometricKind>> kinds();
-  Future<bool> authenticate(String reason);
+
+  /// Shows the system prompt with [reason] as its explanation.
+  Future<BiometricResult> authenticate(String reason);
 }
 
 /// Persistence for [SecurityPrefs] (device-local).

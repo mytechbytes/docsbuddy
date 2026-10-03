@@ -821,7 +821,9 @@ as DateTime?,
 /// @nodoc
 mixin _$SecurityPrefs {
 
- bool get biometricUnlock; bool get appLock; int get autoLockMinutes;
+/// Ask for fingerprint / Face ID (or the device PIN) when the app opens.
+ bool get appLock;/// How long the app can be away before it locks again.
+ int get autoLockMinutes;
 /// Create a copy of SecurityPrefs
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -833,20 +835,20 @@ $SecurityPrefsCopyWith<SecurityPrefs> get copyWith => _$SecurityPrefsCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as SecurityPrefs;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityPrefs&&(identical(other.biometricUnlock, _this.biometricUnlock) || other.biometricUnlock == _this.biometricUnlock)&&(identical(other.appLock, _this.appLock) || other.appLock == _this.appLock)&&(identical(other.autoLockMinutes, _this.autoLockMinutes) || other.autoLockMinutes == _this.autoLockMinutes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityPrefs&&(identical(other.appLock, _this.appLock) || other.appLock == _this.appLock)&&(identical(other.autoLockMinutes, _this.autoLockMinutes) || other.autoLockMinutes == _this.autoLockMinutes));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SecurityPrefs;
-  return Object.hash(runtimeType,_this.biometricUnlock,_this.appLock,_this.autoLockMinutes);
+  return Object.hash(runtimeType,_this.appLock,_this.autoLockMinutes);
 }
 
 @override
 String toString() {
   final _this = this as SecurityPrefs;
-  return 'SecurityPrefs(biometricUnlock: ${_this.biometricUnlock}, appLock: ${_this.appLock}, autoLockMinutes: ${_this.autoLockMinutes})';
+  return 'SecurityPrefs(appLock: ${_this.appLock}, autoLockMinutes: ${_this.autoLockMinutes})';
 }
 
 
@@ -857,7 +859,7 @@ abstract mixin class $SecurityPrefsCopyWith<$Res>  {
   factory $SecurityPrefsCopyWith(SecurityPrefs value, $Res Function(SecurityPrefs) _then) = _$SecurityPrefsCopyWithImpl;
 @useResult
 $Res call({
- bool biometricUnlock, bool appLock, int autoLockMinutes
+ bool appLock, int autoLockMinutes
 });
 
 
@@ -874,10 +876,9 @@ class _$SecurityPrefsCopyWithImpl<$Res>
 
 /// Create a copy of SecurityPrefs
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? biometricUnlock = null,Object? appLock = null,Object? autoLockMinutes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appLock = null,Object? autoLockMinutes = null,}) {
   return _then(SecurityPrefs(
-biometricUnlock: null == biometricUnlock ? _self.biometricUnlock : biometricUnlock // ignore: cast_nullable_to_non_nullable
-as bool,appLock: null == appLock ? _self.appLock : appLock // ignore: cast_nullable_to_non_nullable
+appLock: null == appLock ? _self.appLock : appLock // ignore: cast_nullable_to_non_nullable
 as bool,autoLockMinutes: null == autoLockMinutes ? _self.autoLockMinutes : autoLockMinutes // ignore: cast_nullable_to_non_nullable
 as int,
   ));
@@ -964,10 +965,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool biometricUnlock,  bool appLock,  int autoLockMinutes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool appLock,  int autoLockMinutes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SecurityPrefs() when $default != null:
-return $default(_that.biometricUnlock,_that.appLock,_that.autoLockMinutes);case _:
+return $default(_that.appLock,_that.autoLockMinutes);case _:
   return orElse();
 
 }
@@ -985,10 +986,10 @@ return $default(_that.biometricUnlock,_that.appLock,_that.autoLockMinutes);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool biometricUnlock,  bool appLock,  int autoLockMinutes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool appLock,  int autoLockMinutes)  $default,) {final _that = this;
 switch (_that) {
 case _SecurityPrefs():
-return $default(_that.biometricUnlock,_that.appLock,_that.autoLockMinutes);case _:
+return $default(_that.appLock,_that.autoLockMinutes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1005,10 +1006,10 @@ return $default(_that.biometricUnlock,_that.appLock,_that.autoLockMinutes);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool biometricUnlock,  bool appLock,  int autoLockMinutes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool appLock,  int autoLockMinutes)?  $default,) {final _that = this;
 switch (_that) {
 case _SecurityPrefs() when $default != null:
-return $default(_that.biometricUnlock,_that.appLock,_that.autoLockMinutes);case _:
+return $default(_that.appLock,_that.autoLockMinutes);case _:
   return null;
 
 }
@@ -1020,11 +1021,12 @@ return $default(_that.biometricUnlock,_that.appLock,_that.autoLockMinutes);case 
 
 
 class _SecurityPrefs implements SecurityPrefs {
-  const _SecurityPrefs({this.biometricUnlock = false, this.appLock = false, this.autoLockMinutes = 1});
+  const _SecurityPrefs({this.appLock = false, this.autoLockMinutes = 1});
   
 
-@override@JsonKey() final  bool biometricUnlock;
+/// Ask for fingerprint / Face ID (or the device PIN) when the app opens.
 @override@JsonKey() final  bool appLock;
+/// How long the app can be away before it locks again.
 @override@JsonKey() final  int autoLockMinutes;
 
 /// Create a copy of SecurityPrefs
@@ -1037,18 +1039,18 @@ _$SecurityPrefsCopyWith<_SecurityPrefs> get copyWith => __$SecurityPrefsCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityPrefs&&(identical(other.biometricUnlock, biometricUnlock) || other.biometricUnlock == biometricUnlock)&&(identical(other.appLock, appLock) || other.appLock == appLock)&&(identical(other.autoLockMinutes, autoLockMinutes) || other.autoLockMinutes == autoLockMinutes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityPrefs&&(identical(other.appLock, appLock) || other.appLock == appLock)&&(identical(other.autoLockMinutes, autoLockMinutes) || other.autoLockMinutes == autoLockMinutes));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,biometricUnlock,appLock,autoLockMinutes);
+    return Object.hash(runtimeType,appLock,autoLockMinutes);
 }
 
 @override
 String toString() {
-    return 'SecurityPrefs(biometricUnlock: $biometricUnlock, appLock: $appLock, autoLockMinutes: $autoLockMinutes)';
+    return 'SecurityPrefs(appLock: $appLock, autoLockMinutes: $autoLockMinutes)';
 }
 
 
@@ -1059,7 +1061,7 @@ abstract mixin class _$SecurityPrefsCopyWith<$Res> implements $SecurityPrefsCopy
   factory _$SecurityPrefsCopyWith(_SecurityPrefs value, $Res Function(_SecurityPrefs) _then) = __$SecurityPrefsCopyWithImpl;
 @override @useResult
 $Res call({
- bool biometricUnlock, bool appLock, int autoLockMinutes
+ bool appLock, int autoLockMinutes
 });
 
 
@@ -1076,10 +1078,9 @@ class __$SecurityPrefsCopyWithImpl<$Res>
 
 /// Create a copy of SecurityPrefs
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? biometricUnlock = null,Object? appLock = null,Object? autoLockMinutes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appLock = null,Object? autoLockMinutes = null,}) {
   return _then(_SecurityPrefs(
-biometricUnlock: null == biometricUnlock ? _self.biometricUnlock : biometricUnlock // ignore: cast_nullable_to_non_nullable
-as bool,appLock: null == appLock ? _self.appLock : appLock // ignore: cast_nullable_to_non_nullable
+appLock: null == appLock ? _self.appLock : appLock // ignore: cast_nullable_to_non_nullable
 as bool,autoLockMinutes: null == autoLockMinutes ? _self.autoLockMinutes : autoLockMinutes // ignore: cast_nullable_to_non_nullable
 as int,
   ));

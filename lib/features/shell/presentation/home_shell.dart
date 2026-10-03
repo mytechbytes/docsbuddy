@@ -8,15 +8,14 @@ import '../../dashboard/presentation/dashboard_tab.dart';
 import '../../devices/application/push_registration.dart';
 import '../../family/presentation/family_page.dart';
 import '../../security/application/security_providers.dart';
-import '../../security/presentation/lock_screen.dart';
 import '../../security/presentation/mfa_challenge_screen.dart';
 import '../../settings/presentation/settings_page.dart';
 import '../../catalog/application/catalog_sync.dart';
 import '../../../core/l10n/l10n.dart';
 
 /// Signed-in app shell with bottom navigation. Gates on the MFA step-up and
-/// the app lock (whose rules live in [AppLockController]; this widget only
-/// forwards lifecycle events), and keeps the signed-in background syncs alive.
+/// keeps the signed-in background syncs alive. (The app lock sits above the
+/// whole app — see `AppLockGate` — so it also covers screens pushed over this.)
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
@@ -24,35 +23,10 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserver {
+class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
 
   static const _tabs = [DashboardTab(), RoomsPage(), AssetsPage(), FamilyPage(), SettingsPage()];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final lock = ref.read(appLockProvider.notifier);
-    switch (state) {
-      case AppLifecycleState.paused || AppLifecycleState.hidden:
-        lock.appPaused();
-      case AppLifecycleState.resumed:
-        lock.appResumed();
-      default:
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +39,6 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     // AAL2 step-up comes before everything: a session with an enrolled
     // authenticator must pass the TOTP check first.
     if (ref.watch(mfaChallengeRequiredProvider).value ?? false) return const MfaChallengeScreen();
-    if (ref.watch(appLockProvider)) return const LockScreen();
 
     return Scaffold(
       body: IndexedStack(index: _index, children: _tabs),

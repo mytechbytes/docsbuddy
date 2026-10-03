@@ -6,6 +6,7 @@ import 'core/l10n/language_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'features/settings/application/appearance_controller.dart';
 import 'features/settings/domain/appearance.dart';
+import 'features/security/presentation/app_lock_gate.dart';
 import 'routing/app_router.dart';
 
 class DocsBuddyApp extends ConsumerWidget {
@@ -29,6 +30,8 @@ class DocsBuddyApp extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
+      // Above the Navigator, so the app lock covers every screen.
+      builder: (context, child) => AppLockGate(child: child ?? const SizedBox.shrink()),
     );
   }
 }

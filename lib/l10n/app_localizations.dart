@@ -2173,20 +2173,8 @@ abstract class AppLocalizations {
   /// No description provided for @securityBiometricSection.
   ///
   /// In en, this message translates to:
-  /// **'Biometric login'**
+  /// **'App lock'**
   String get securityBiometricSection;
-
-  /// No description provided for @securityUnlockBiometrics.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlock with biometrics'**
-  String get securityUnlockBiometrics;
-
-  /// No description provided for @securityNoBiometrics.
-  ///
-  /// In en, this message translates to:
-  /// **'No biometrics available on this device'**
-  String get securityNoBiometrics;
 
   /// No description provided for @securityTwoFactorSection.
   ///
@@ -2229,12 +2217,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get securityMoreSection;
-
-  /// No description provided for @securityAppLock.
-  ///
-  /// In en, this message translates to:
-  /// **'App lock'**
-  String get securityAppLock;
 
   /// No description provided for @securityAppLockHint.
   ///
@@ -2961,6 +2943,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'STEP {step} OF {total}'**
   String commonStepOf(int step, int total);
+
+  /// No description provided for @lockPromptUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock DocsBuddy'**
+  String get lockPromptUnlock;
+
+  /// No description provided for @lockPromptEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to turn on app lock'**
+  String get lockPromptEnable;
+
+  /// No description provided for @lockToggleFace.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock with Face ID'**
+  String get lockToggleFace;
+
+  /// No description provided for @lockToggleFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock with fingerprint'**
+  String get lockToggleFingerprint;
+
+  /// No description provided for @lockToggleFaceOrFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock with Face ID or fingerprint'**
+  String get lockToggleFaceOrFingerprint;
+
+  /// No description provided for @lockToggleBiometrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock with biometrics'**
+  String get lockToggleBiometrics;
+
+  /// No description provided for @lockToggleDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock with your screen lock'**
+  String get lockToggleDevice;
+
+  /// No description provided for @lockNeedsScreenLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up a screen lock, fingerprint or face on this device to use app lock.'**
+  String get lockNeedsScreenLock;
+
+  /// No description provided for @lockFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recognised. Try again.'**
+  String get lockFailed;
+
+  /// No description provided for @lockTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a moment, or use your device PIN.'**
+  String get lockTooManyAttempts;
+
+  /// No description provided for @lockUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no screen lock set up, so the app can\'t be locked.'**
+  String get lockUnavailableBody;
+
+  /// No description provided for @lockTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off app lock'**
+  String get lockTurnOff;
+
+  /// No description provided for @lockError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t verify it\'s you. Please try again.'**
+  String get lockError;
+
+  /// No description provided for @featureComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get featureComingSoon;
 }
 
 class _AppLocalizationsDelegate

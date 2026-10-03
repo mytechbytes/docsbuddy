@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/widgets/loader.dart';
 import '../../../core/error/app_failure.dart';
 import '../../../core/providers/core_providers.dart';
+import '../../../core/features/app_feature.dart';
 import '../../../core/widgets/feedback.dart';
+import '../../security/presentation/widgets/security_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../family/application/family_controller.dart';
 import '../../onboarding/application/onboarding_controller.dart';
@@ -76,22 +78,27 @@ class SettingsPage extends ConsumerWidget {
               onTap: () => context.push(AppRoutes.security),
               trailing: SettingsValue(ref.watch(securityStatusProvider).value?.totpEnabled == true ? context.l10n.commonOn : context.l10n.commonOff),
             ),
+            const AppLockToggleRow(),
           ]),
           SectionLabel(context.l10n.commonNotifications),
           SettingsCard(children: [
-            SettingsToggleRow(
+            // Off until their backend is deployed (core/features/app_feature.dart).
+            FeatureToggleRow(
+              live: AppFeature.pushReminders.live,
               icon: Icons.notifications_active_outlined,
               title: context.l10n.settingsPush,
               value: prefs.has(NotificationChannel.push),
               onChanged: (v) => setChannel(NotificationChannel.push, v),
             ),
-            SettingsToggleRow(
+            FeatureToggleRow(
+              live: AppFeature.emailReminders.live,
               icon: Icons.mail_outline,
               title: context.l10n.settingsEmailReminders,
               value: prefs.has(NotificationChannel.email),
               onChanged: (v) => setChannel(NotificationChannel.email, v),
             ),
-            SettingsToggleRow(
+            FeatureToggleRow(
+              live: AppFeature.whatsappReminders.live,
               icon: Icons.chat_outlined,
               title: context.l10n.settingsWhatsappReminders,
               value: prefs.has(NotificationChannel.whatsapp),

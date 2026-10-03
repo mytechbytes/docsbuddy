@@ -1178,13 +1178,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get securityTitle => 'सुरक्षा';
 
   @override
-  String get securityBiometricSection => 'बायोमेट्रिक लॉगिन';
-
-  @override
-  String get securityUnlockBiometrics => 'बायोमेट्रिक से अनलॉक करें';
-
-  @override
-  String get securityNoBiometrics => 'इस डिवाइस पर बायोमेट्रिक उपलब्ध नहीं है';
+  String get securityBiometricSection => 'ऐप लॉक';
 
   @override
   String get securityTwoFactorSection => 'दो-कारक प्रमाणीकरण';
@@ -1209,9 +1203,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get securityMoreSection => 'और';
-
-  @override
-  String get securityAppLock => 'ऐप लॉक';
 
   @override
   String get securityAppLockHint => 'ऐप दोबारा खोलने पर अनलॉक ज़रूरी करें';
@@ -1623,4 +1614,51 @@ class AppLocalizationsHi extends AppLocalizations {
   String commonStepOf(int step, int total) {
     return 'चरण $step / $total';
   }
+
+  @override
+  String get lockPromptUnlock => 'DocsBuddy अनलॉक करें';
+
+  @override
+  String get lockPromptEnable => 'ऐप लॉक चालू करने के लिए पुष्टि करें';
+
+  @override
+  String get lockToggleFace => 'Face ID से लॉक करें';
+
+  @override
+  String get lockToggleFingerprint => 'फ़िंगरप्रिंट से लॉक करें';
+
+  @override
+  String get lockToggleFaceOrFingerprint =>
+      'Face ID या फ़िंगरप्रिंट से लॉक करें';
+
+  @override
+  String get lockToggleBiometrics => 'बायोमेट्रिक से लॉक करें';
+
+  @override
+  String get lockToggleDevice => 'स्क्रीन लॉक से लॉक करें';
+
+  @override
+  String get lockNeedsScreenLock =>
+      'ऐप लॉक इस्तेमाल करने के लिए इस डिवाइस पर स्क्रीन लॉक, फ़िंगरप्रिंट या चेहरा सेट करें।';
+
+  @override
+  String get lockFailed => 'पहचाना नहीं गया। फिर से कोशिश करें।';
+
+  @override
+  String get lockTooManyAttempts =>
+      'बहुत अधिक प्रयास हो गए। कुछ देर रुकें या डिवाइस का PIN इस्तेमाल करें।';
+
+  @override
+  String get lockUnavailableBody =>
+      'इस डिवाइस पर स्क्रीन लॉक सेट नहीं है, इसलिए ऐप को लॉक नहीं किया जा सकता।';
+
+  @override
+  String get lockTurnOff => 'ऐप लॉक बंद करें';
+
+  @override
+  String get lockError =>
+      'आपकी पहचान सत्यापित नहीं हो सकी। कृपया फिर से कोशिश करें।';
+
+  @override
+  String get featureComingSoon => 'जल्द आ रहा है';
 }

@@ -1193,14 +1193,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get securityTitle => 'Sécurité';
 
   @override
-  String get securityBiometricSection => 'Connexion biométrique';
-
-  @override
-  String get securityUnlockBiometrics => 'Déverrouiller avec la biométrie';
-
-  @override
-  String get securityNoBiometrics =>
-      'Aucune biométrie disponible sur cet appareil';
+  String get securityBiometricSection => 'Verrouillage de l\'application';
 
   @override
   String get securityTwoFactorSection => 'Authentification à deux facteurs';
@@ -1225,9 +1218,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get securityMoreSection => 'Plus';
-
-  @override
-  String get securityAppLock => 'Verrouillage de l\'application';
 
   @override
   String get securityAppLockHint =>
@@ -1643,4 +1633,52 @@ class AppLocalizationsFr extends AppLocalizations {
   String commonStepOf(int step, int total) {
     return 'ÉTAPE $step SUR $total';
   }
+
+  @override
+  String get lockPromptUnlock => 'Déverrouiller DocsBuddy';
+
+  @override
+  String get lockPromptEnable =>
+      'Confirmez pour activer le verrouillage de l\'application';
+
+  @override
+  String get lockToggleFace => 'Verrouiller avec Face ID';
+
+  @override
+  String get lockToggleFingerprint => 'Verrouiller avec l\'empreinte digitale';
+
+  @override
+  String get lockToggleFaceOrFingerprint =>
+      'Verrouiller avec Face ID ou l\'empreinte';
+
+  @override
+  String get lockToggleBiometrics => 'Verrouiller avec la biométrie';
+
+  @override
+  String get lockToggleDevice => 'Verrouiller avec le verrouillage de l\'écran';
+
+  @override
+  String get lockNeedsScreenLock =>
+      'Configurez un verrouillage d\'écran, une empreinte ou un visage sur cet appareil pour utiliser le verrouillage de l\'application.';
+
+  @override
+  String get lockFailed => 'Non reconnu. Veuillez réessayer.';
+
+  @override
+  String get lockTooManyAttempts =>
+      'Trop de tentatives. Patientez un instant ou utilisez le code de votre appareil.';
+
+  @override
+  String get lockUnavailableBody =>
+      'Cet appareil n\'a pas de verrouillage d\'écran configuré : l\'application ne peut pas être verrouillée.';
+
+  @override
+  String get lockTurnOff => 'Désactiver le verrouillage de l\'application';
+
+  @override
+  String get lockError =>
+      'Impossible de vérifier votre identité. Veuillez réessayer.';
+
+  @override
+  String get featureComingSoon => 'Bientôt disponible';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/features/app_feature.dart';
 import '../../../../core/widgets/feedback.dart';
 import '../../../../core/widgets/db_logo.dart';
 import '../../application/auth_controller.dart';
@@ -163,17 +164,20 @@ class OrDivider extends StatelessWidget {
   }
 }
 
-/// Social sign-in providers on the auth screens. [enabled] is the one switch
-/// for a provider's button: Apple and Microsoft stay off until their console
-/// and Supabase setup is done (docs/social-sign-in.md, Parts 4 and 5).
+/// Social sign-in providers on the auth screens. [enabled] follows the central
+/// [AppFeature] switch: Apple and Microsoft stay off until their console and
+/// Supabase setup is done (docs/social-sign-in.md, Parts 4 and 5).
 enum SocialProvider {
-  google(enabled: true),
-  apple(enabled: false),
-  microsoft(enabled: false);
+  google(null),
+  apple(AppFeature.appleSignIn),
+  microsoft(AppFeature.microsoftSignIn);
 
-  const SocialProvider({required this.enabled});
+  const SocialProvider(this._feature);
 
-  final bool enabled;
+  /// What has to be live for this provider; null when it always is (Google).
+  final AppFeature? _feature;
+
+  bool get enabled => _feature?.live ?? true;
 }
 
 /// Outlined "Continue with Google/Apple/Microsoft" button. Rendered dimmed and

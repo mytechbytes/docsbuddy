@@ -1174,13 +1174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityTitle => 'Security';
 
   @override
-  String get securityBiometricSection => 'Biometric login';
-
-  @override
-  String get securityUnlockBiometrics => 'Unlock with biometrics';
-
-  @override
-  String get securityNoBiometrics => 'No biometrics available on this device';
+  String get securityBiometricSection => 'App lock';
 
   @override
   String get securityTwoFactorSection => 'Two-factor authentication';
@@ -1205,9 +1199,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityMoreSection => 'More';
-
-  @override
-  String get securityAppLock => 'App lock';
 
   @override
   String get securityAppLockHint => 'Require unlock when reopening the app';
@@ -1615,4 +1606,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String commonStepOf(int step, int total) {
     return 'STEP $step OF $total';
   }
+
+  @override
+  String get lockPromptUnlock => 'Unlock DocsBuddy';
+
+  @override
+  String get lockPromptEnable => 'Confirm to turn on app lock';
+
+  @override
+  String get lockToggleFace => 'Lock with Face ID';
+
+  @override
+  String get lockToggleFingerprint => 'Lock with fingerprint';
+
+  @override
+  String get lockToggleFaceOrFingerprint => 'Lock with Face ID or fingerprint';
+
+  @override
+  String get lockToggleBiometrics => 'Lock with biometrics';
+
+  @override
+  String get lockToggleDevice => 'Lock with your screen lock';
+
+  @override
+  String get lockNeedsScreenLock =>
+      'Set up a screen lock, fingerprint or face on this device to use app lock.';
+
+  @override
+  String get lockFailed => 'Not recognised. Try again.';
+
+  @override
+  String get lockTooManyAttempts =>
+      'Too many attempts. Wait a moment, or use your device PIN.';
+
+  @override
+  String get lockUnavailableBody =>
+      'This device has no screen lock set up, so the app can\'t be locked.';
+
+  @override
+  String get lockTurnOff => 'Turn off app lock';
+
+  @override
+  String get lockError => 'Couldn\'t verify it\'s you. Please try again.';
+
+  @override
+  String get featureComingSoon => 'Coming soon';
 }

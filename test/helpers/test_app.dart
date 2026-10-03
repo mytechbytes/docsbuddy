@@ -83,9 +83,17 @@ class FakePushMessagingService implements PushMessagingService {
 
 class FakeBiometrics implements BiometricAuthenticator {
   bool available = false;
-  bool succeeds = true;
+
+  /// What the next prompts end in.
+  BiometricResult result = BiometricResult.success;
   List<BiometricKind> availableKinds = const [];
   int prompts = 0;
+
+  /// The text the last prompt was given to show.
+  String? lastReason;
+
+  /// Convenience for the common cases: recognised, or not.
+  set succeeds(bool value) => result = value ? BiometricResult.success : BiometricResult.failed;
 
   @override
   Future<bool> isAvailable() async => available;
@@ -94,9 +102,10 @@ class FakeBiometrics implements BiometricAuthenticator {
   Future<List<BiometricKind>> kinds() async => availableKinds;
 
   @override
-  Future<bool> authenticate(String reason) async {
+  Future<BiometricResult> authenticate(String reason) async {
     prompts++;
-    return succeeds;
+    lastReason = reason;
+    return result;
   }
 }
 

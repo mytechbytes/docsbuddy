@@ -32,14 +32,41 @@ abstract class SessionInfo with _$SessionInfo {
 @freezed
 abstract class SecurityPrefs with _$SecurityPrefs {
   const factory SecurityPrefs({
-    @Default(false) bool biometricUnlock,
+    /// Ask for fingerprint / Face ID (or the device PIN) when the app opens.
     @Default(false) bool appLock,
+
+    /// How long the app can be away before it locks again.
     @Default(1) int autoLockMinutes,
   }) = _SecurityPrefs;
 }
 
 /// Auto-lock choices offered in Security.
 const autoLockOptions = [1, 5, 15];
+
+/// How an attempt to authenticate the user ended. Only [success] unlocks;
+/// the rest say why not, so the screen can respond sensibly instead of
+/// showing a generic failure (or hanging).
+enum BiometricResult {
+  success,
+
+  /// Ran, and the person wasn't recognised. Try again.
+  failed,
+
+  /// The person backed out (or the system interrupted the prompt). Not an error.
+  canceled,
+
+  /// Too many wrong attempts; biometrics are locked for a while.
+  lockedOut,
+
+  /// This device can't authenticate at all — no screen lock, fingerprint or
+  /// face set up (or no biometric support on this platform).
+  unavailable,
+
+  /// Something unexpected went wrong.
+  error;
+
+  bool get isSuccess => this == success;
+}
 
 enum BiometricKind {
   face('Face ID'),

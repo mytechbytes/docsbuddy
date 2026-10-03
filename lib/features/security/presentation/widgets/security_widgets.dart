@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/feedback.dart';
+import '../../../../core/widgets/settings_list.dart';
 import '../../application/security_providers.dart';
 import '../../domain/security_models.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -126,6 +127,35 @@ class BiometricTypesRow extends ConsumerWidget {
         child: Text(context.l10n.securityAvailable(kinds.map((k) => k.displayName(context)).join(' · ')),
             style: TextStyle(fontSize: 12, color: context.palette.textMuted)),
       ),
+    );
+  }
+}
+
+/// The one switch for the app lock — on Settings and on the Security screen
+/// alike, both driving the same preference. Worded for what the device offers
+/// ("Lock with Face ID", "Lock with fingerprint", …); disabled, with the reason,
+/// on a device that can't authenticate at all.
+class AppLockToggleRow extends ConsumerWidget {
+  const AppLockToggleRow({super.key});
+
+  Future<void> _toggle(BuildContext context, WidgetRef ref, bool enabled) async {
+    final result = await ref.read(securityPrefsProvider.notifier).setAppLock(enabled);
+    if (!context.mounted) return;
+    final problem = result.message(context);
+    if (problem != null) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(problem)));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final available = ref.watch(biometricsAvailableProvider).value ?? false;
+    final kinds = ref.watch(biometricKindsProvider).value ?? const <BiometricKind>[];
+    final locked = ref.watch(securityPrefsProvider.select((p) => p.appLock));
+    return SettingsToggleRow(
+      icon: kinds.lockIcon,
+      title: kinds.lockTitle(context),
+      subtitle: available ? context.l10n.securityAppLockHint : context.l10n.lockNeedsScreenLock,
+      value: locked && available,
+      onChanged: available ? (enabled) => _toggle(context, ref, enabled) : null,
     );
   }
 }
